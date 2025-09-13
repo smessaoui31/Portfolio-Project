@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/ofrero-pizza-logo.png" alt="O'Frero Pizza Logo" width="150" />
+  <img src="ofrero-pizza-logo.png" alt="O'Frero Pizza Logo" width="150" />
 </p>
 
 <h1 align="center">🍕 O'Frero Pizza</h1>
