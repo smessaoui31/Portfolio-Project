@@ -9,13 +9,18 @@
   Built with Next.js, Tailwind CSS, Prisma & Stripe
 </p>
 
-<p align="center">
-  <a href="#-smart-method">🎯 SMART Method</a> •
-  <a href="#-identify-stakeholders-and-team-roles">👥 Stakeholders</a> •
-  <a href="#-project-scope">📌 Scope</a> •
-  <a href="#-identify-risks">⚠️ Risks</a> •
-  <a href="#-project-timeline">📅 Timeline</a>
-</p>
+
+## 📑 Table of Contents
+
+1. [🎯 SMART Method](#-smart-method)  
+2. [👥 Identify Stakeholders and Team Roles](#-identify-stakeholders-and-team-roles)  
+   - [Stakeholders](#stakeholders)  
+   - [Team Roles](#team-roles)  
+3. [📌 Project Scope](#-project-scope)  
+4. [⚠️ Identify Risks](#-identify-risks)  
+5. [🗺️ Develop a High-Level Plan](#-4-develop-a-high-level-plan)  
+   - [High-Level Plan](#high-level-plan)  
+   - [Timeline](#timeline)  
 
 ---
 
