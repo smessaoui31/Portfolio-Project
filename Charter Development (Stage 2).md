@@ -10,6 +10,8 @@
 </p>
 
 
+<div align="center">
+
 ## 📑 Table of Contents
 
 1. [🎯 SMART Method](#-smart-method)  
@@ -21,6 +23,8 @@
 5. [🗺️ Develop a High-Level Plan](#-4-develop-a-high-level-plan)  
    - [High-Level Plan](#high-level-plan)  
    - [Timeline](#timeline)  
+
+</div>
 
 ---
 
