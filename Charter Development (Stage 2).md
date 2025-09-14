@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="ofrero-pizza-logo.png" alt="O'Frero Pizza Logo" width="400" />
+  <img src="/Templates/ofrero-pizza-logo.png" alt="O'Frero Pizza Logo" width="400" />
 </p>
 
 <h1 align="center">🍕 O'Frero Pizza</h1>
@@ -114,5 +114,5 @@ To explain the main steps of the project in simple terms, from the start to the 
 ### Timeline
 You can see our timeline with the following Gantt Chart made by Philippe.
 <p align="center">
-  <img src="gantt.png" alt="Gantt chart project" width="800" />
+  <img src="/Templates/gantt.png" alt="Gantt chart project" width="800" />
 </p>

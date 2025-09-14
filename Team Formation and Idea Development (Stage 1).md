@@ -89,7 +89,7 @@
 ---
 
 ## 📊 User Journey MVP
-![User Journey MVP](user_journey_mvp_pizza_vertical_color.svg)
+![User Journey MVP](/Templates/user_journey_mvp_pizza_vertical_color.svg)
 
 ### Steps
 1. **Home** → landing page introducing O’Frero Pizza.
