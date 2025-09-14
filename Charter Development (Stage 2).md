@@ -44,7 +44,7 @@
 | **Type**       | **Stakeholder**                     | **Description / Interest** |
 |----------------|-------------------------------------|----------------------------|
 | **Internal**   | **Sofian Messaoui** (Project Manager) | Planning, coordination, and delivery of the project. Acts as the main point of contact. |
-|                | **Philippe** (Developer)            | Implements core features (frontend & backend), ensures code quality, and contributes to testing. |
+|                | **Doudou Philippe Fofana** (Developer)            | Implements core features (frontend & backend), ensures code quality, and contributes to testing. |
 |                | Project Team (if expanded)          | Additional contributors (design, QA). |
 | **External**   | **Hugo Chilemme, Fabien Chavonet**  | Provide guidance, evaluate progress, and validate the final project. |
 |                | **Pierre Dusart & Boris Dusart** (Customers) | Local pizzeria staff and clients who will use the website to order pizzas. |
@@ -89,3 +89,30 @@ To think ahead about possible problems during the project and how to solve them.
 | **Scope**      | Risk of adding too many features before MVP is done. | Focus only on MVP; extras added only after delivery. |
 
 ---
+
+## 🗺️ 4. Develop a High-Level Plan
+
+### Purpose
+To explain the main steps of the project in simple terms, from the start to the final delivery.
+
+### High-Level Plan
+
+| Step | What we do | What we get at the end |
+|------|-------------|-------------------------|
+| **1. Setup & Tools** | Create the GitHub repo, install Next.js + Tailwind, connect the database. | Project ready with an empty app and database. |
+| **2. Design** | Choose colors, fonts, and style. Create basic components (buttons, navbar, cards). | A simple and modern design system. |
+| **3. Frontend Pages** | Build the main pages: Home, Menu, Pizza detail, Cart, Checkout. | Website pages that the user can navigate. |
+| **4. Backend** | Create API routes for pizzas, orders, and cart. Add demo pizzas in the database. | A working backend with sample data. |
+| **5. Payments** | Add Stripe (Card, Apple Pay, Google Pay) and PayPal. | Checkout system working in test mode. |
+| **6. Admin Panel** | Make a page to view and update orders. | Admin dashboard for the pizzeria. |
+| **7. Testing** | Connect frontend and backend. Test the full order flow. Write small tests. | Confirmed that everything works. |
+| **8. Deployment** | Put the site online with Vercel and Supabase. Improve performance and SEO. | Live website available online. |
+| **9. Final Review** | Fix bugs, write documentation, prepare presentation. | Project ready to show at school. |
+
+---
+
+### Timeline
+You can see our timeline with the following Gantt Chart made by Philippe.
+<p align="center">
+  <img src="gantt.png" alt="Gantt chart project" width="800" />
+</p>
