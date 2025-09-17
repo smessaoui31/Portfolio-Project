@@ -24,3 +24,19 @@ Let me explain you now what this flowchart said
 
 👉 **In short:**  
 The **client** makes a request → the **backend** processes it → data is stored in the **database** → payments are handled by **Stripe**.
+
+A little bit data flow for an extra clarity for thoses who doesn't understand clearly our explanation?
+
+Just for you guys : 
+
+`Client (React)` → `Backend API (Node.js/Express)` → `PostgreSQL`
+
+`Client (React)` → `Backend API` → `Stripe (Payment)` → `Webhook` → `Backend API` → `PostgreSQL`
+
+**Step-by-step**
+1. Client requests (HTTPS) → Backend API  
+2. Backend validates & routes → Auth/Menu/Order services  
+3. Services read/write → PostgreSQL (via Prisma)  
+4. Checkout: Backend → Stripe (payment intent/confirm)  
+5. Stripe → Webhook → Backend (payment status)  
+6. Backend updates order status → PostgreSQL → Client sees result
