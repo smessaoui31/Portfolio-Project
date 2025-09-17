@@ -1,6 +1,6 @@
 ### 📌 Design System Architecture
 <p align="center">
-  <img src="/Templates/mermaid.svg" alt="Flowchart Documentation Architecture" width="800" />
+  <img src="/Templates/mermaid.png" alt="Flowchart Documentation Architecture" width="800" />
 </p>
 
 Let me explain you now what this flowchart said 
