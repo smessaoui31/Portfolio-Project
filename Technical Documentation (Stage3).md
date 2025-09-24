@@ -76,10 +76,11 @@ We group backend logic into **services** and **repositories**.
 Services = contain the business logic.  
 Repositories = talk to the database.  
 
-For this part , i will make two example of illustration to make sure you will understand how the back end working .
-For the first one , i did something more illustrative and less technical who looks like a map of responbilities.
+For this part , i will do a simple example of illustration to make sure you will understand how the back end working .
+ I did something more illustrative and less technical who looks like a map of responbilities.
+ This diagram provides a simple representation of how my back end works
 
-Don’t worry, I’ll give some clear explanations of this diagram right below.
+Don’t worry, I’ll give some clear explanations of this diagram right below, presented in a table so that it’s clearer and more pleasant to read for your lovely eyes haha. (Mainly because I know Fabien has a thing for tables 😄 ... or Hugo why not)
 
 <p align="center">
   <img src="/Templates/DiagramBackEndCasses.svg" alt="Diagram Back end Classes" width="1200" />
