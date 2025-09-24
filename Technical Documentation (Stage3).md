@@ -84,3 +84,21 @@ Don’t worry, I’ll give some clear explanations of this diagram right below.
 <p align="center">
   <img src="/Templates/DiagramBackEndCasses.svg" alt="Diagram Back end Classes" width="1200" />
 </p>
+
+### Backend Components Overview
+
+| Component          | Simple meaning            | What it does (job)                                  | Database table used |
+|--------------------|---------------------------|-----------------------------------------------------|---------------------|
+| **Auth Service**   | Login system              | Manages accounts: register, log in, stay connected. | **Users**           |
+| **Menu Service**   | Pizzas list               | Stores products (pizzas, drinks, categories).       | **Products**        |
+| **Order Service**  | Shopping cart             | Tracks what customers want to buy (orders).         | **Orders**          |
+| **Payment Service**| Credit card / Stripe      | Handles payments and saves results.                 | **Payments**        |
+
+👉 The **Order Service talks to the Payment Service**: when a customer checks out, the order is saved and then the payment is processed with Stripe.
+
+In short:
+
+	•	Auth = Who you are
+	•	Menu = What you can buy
+	•	Order = What you want to buy like pizza , soft drinks etc
+	•	Payment = How you pay (for this case  : Credit card or via Stripe)
