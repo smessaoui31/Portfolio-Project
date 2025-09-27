@@ -112,7 +112,7 @@ For the relational database we did a diagram directly on mermaid.
 Just note , i did this database based on our MVP. It is likely to change in the future with new implementations over time (for example , real-time delivery tracking on the map).
 
 <p align="center">
-  <img src="/Templates/databasediagram.svg" alt="Database diagram" width="1200" />
+  <img src="/Templates/dbdiagram.png" alt="Database diagram" width="1200" />
 </p>
 
 
