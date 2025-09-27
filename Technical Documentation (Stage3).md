@@ -103,3 +103,36 @@ In short:
 	•	Menu = What you can buy
 	•	Order = What you want to buy like pizza , soft drinks etc
 	•	Payment = How you pay (for this case  : Credit card or via Stripe)
+
+
+
+### 📌 Relational Database (MVP)
+
+For the relational database we did a diagram directly on mermaid.
+Just note , i did this database based on our MVP. It is likely to change in the future with new implementations over time (for example , real-time delivery tracking on the map).
+
+<p align="center">
+  <img src="/Templates/databasediagram.svg" alt="Database diagram" width="1200" />
+</p>
+
+
+Let me now give you somes explanations about this relational database to understand every tables and make in your mind how our database works.
+
+| Table        | What it represents          | Key fields and purpose                                                                 |
+|--------------|-----------------------------|----------------------------------------------------------------------------------------|
+| **Users**    | People using the app        | `id` (unique user ID), `email` (unique), `password_hash` (encrypted password), `name`. |
+| **Categories** | Groups of products        | `id`, `name` (e.g. “Pizza”, “Drinks”).                                                 |
+| **Products** | Items on the menu           | `id`, `name`, `price_cents`, `category_id` (links product to its category).            |
+| **Orders**   | Shopping cart or order      | `id`, `user_id` (who placed it), `status` (cart, pending, paid, cancelled), `total`.   |
+| **OrderItems** | Details of an order       | `id`, `order_id`, `product_id`, `quantity`, `unit_price`. Each line = one product in an order. |
+| **Payments** | Payment information (Stripe)| `id`, `order_id`, `provider` (e.g. Stripe), `status` (succeeded or failed), `intent_id`. |
+
+---
+
+👉 **In short**  
+- **Users** = who you are  
+- **Categories** = groups of products  
+- **Products** = what you can buy  
+- **Orders** = what you want to buy  
+- **OrderItems** = details of the order  
+- **Payments** = how you pay  
