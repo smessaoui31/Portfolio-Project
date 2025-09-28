@@ -26,7 +26,7 @@
   - [5.1 Source Control Management (SCM)](#51-source-control-management-scm)  
   - [5.2 QA (Quality Assurance)](#52-qa-quality-assurance)  
   - [5.3 Deployment Pipeline](#53-deployment-pipeline)  
-
+---
 </p>
 
 <p align="center">
@@ -40,6 +40,7 @@
 
 <p align="center">
   <b>React</b> • <b>Node.js</b> • <b>Express</b> • <b>PostgreSQL</b> • <b>Prisma</b> • <b>Stripe</b>
+  
 </p>
 
 ## 0) User Stories and Mockups
