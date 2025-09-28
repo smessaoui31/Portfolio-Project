@@ -140,6 +140,14 @@ Let me now give you somes explanations about this relational database to underst
 
 ## 3) High-Level Sequence Diagrams (MVP)
 
+In the case of the pizzeria website, we identified three common scenarios that users will encounter when placing an order.  
+
+The first scenario, unsurprisingly, is [**User Login**](#-user-login-simplified).  
+
+The second scenario (you have to eat!) is [**Browsing to view the products**](#-explanation-browse-menu--add-to-cart) offered by the pizzeria and adding them to the cart.  
+
+The third scenario (I don't know of any free pizzerias): [**Verification and Payment**](#-checkout--payment).  
+
 Below are three critical user flows: **Login**, **Browse & Add to Cart**, and **Checkout & Payment**.
 
 ---
@@ -160,3 +168,33 @@ For this case , I drew a lot of inspiration from our previous project on HBNB. I
 4. If the credentials are correct, the **Backend** generates a **JWT token**.  
 5. The **Frontend** receives the token.  
 6. The **User** is now logged in and can access protected pages.  
+
+### 3.2 Browsing and add to cart
+
+We've all placed an order on a website to get a delicious pizza or "dwich", but did we know exactly what was happening behind the scenes? 
+
+<p align="center">
+  <img src="/Templates/browseandaddtocart.png" alt="Browse and add to cart" width="800" />
+  </p>
+
+  This diagram requires a little more explanation than the previous one. 
+
+  ### 📝 Explanation: Browse Menu & Add to Cart
+
+1. **The User** opens the menu page.  
+2. The **Frontend** asks the **Backend** for the list of products.  
+3. The **Backend** requests the data from the **Database**.  
+4. The **Database** returns the list of products.  
+5. The **Backend** sends the product list back to the **Frontend**.  
+6. The **Frontend** displays the menu items to the **User**.  
+
+---
+
+7. The **User** clicks "Add to Cart".  
+8. The **Frontend** sends an add-to-cart request to the **Backend**.  
+9. The **Backend** updates the **Database** (cart and order items).  
+10. The **Database** confirms the update.  
+11. The **Backend** sends the updated cart back to the **Frontend**.  
+12. The **Frontend** shows the updated cart to the **User**.
+
+###
