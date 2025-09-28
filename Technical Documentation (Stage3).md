@@ -1,3 +1,36 @@
+<p align="center">
+  <img src="/Templates/ofrero-pizza-logo.png" alt="O'Frero Pizza Logo" width="400" />
+</p>
+
+<h1 align="center">🍕 O'Frero Pizza</h1>
+<p align="center">
+
+## Table of Contents
+
+- [0) User Stories and Mockups](#0-user-stories-and-mockups)  
+  - [0.1 User Stories](#01-user-stories)  
+  - [0.2 Mockups (Main Screens)](#02-mockups-main-screens)  
+- [1) Design System Architecture](#1-design-system-architecture)  
+- [2) Components, Classes & Database Design (MVP)](#2-components-classes--database-design-mvp)  
+  - [2.1 Front-end Components (React)](#21-front-end-components-react)  
+  - [2.2 Back-end Classes (Node.js + Express)](#22-back-end-classes-nodejs--express)  
+  - [Backend Components Overview](#backend-components-overview)  
+  - [Relational Database (MVP)](#relational-database-mvp)  
+- [3) High-Level Sequence Diagrams (MVP)](#3-high-level-sequence-diagrams-mvp)  
+  - [3.1 User Login (JWT)](#31-user-login-jwt)  
+  - [3.2 Browsing and add to cart](#32-browsing-and-add-to-cart)  
+  - [3.3 Checkout and payment (Stripe)](#33-checkout-and-payment-stripe)  
+- [4) API & Methods](#4-api--methods)  
+  - [4.1 External APIs Used](#41-external-apis-used)  
+  - [4.2 Internal API Endpoints (MVP)](#42-internal-api-endpoints-mvp)  
+- [5) SCM & QA Strategy](#5-scm--qa-strategy)  
+  - [5.1 Source Control Management (SCM)](#51-source-control-management-scm)  
+  - [5.2 QA (Quality Assurance)](#52-qa-quality-assurance)  
+  - [5.3 Deployment Pipeline](#53-deployment-pipeline)  
+
+</p>
+
+
 ## 0) User Stories and Mockups
 
 ### 0.1 User Stories
