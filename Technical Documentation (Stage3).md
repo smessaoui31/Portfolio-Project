@@ -1,7 +1,7 @@
 <div align="center">
   <img src="/Templates/ofrero-pizza-logo.png" alt="Logo 1" width="400"/>
   <span style="margin: 0 20px;"></span>
-  <img src="/Templates/instagram_feed180.jpg" alt="Logo 2" width="400"/>
+  <img src="/Templates/holberton.png" alt="Logo 2" width="400"/>
 </div>
 
 ## Table of Contents
