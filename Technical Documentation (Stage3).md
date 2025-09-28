@@ -226,3 +226,62 @@ This is definitely the most complicated part to explain to you because I'm reall
 - The **Frontend** collects card details.  
 - **Stripe** processes the payment and informs both sides.  
 - The **Database** saves the final status. 
+
+
+## 4) API & Methods
+
+### 4.1 External APIs Used
+
+| API       | Purpose | Why chosen |
+|-----------|---------|------------|
+| Stripe | Payment processing | Secure and widely used payment gateway, easy to integrate with Node.js. |
+| (Optional future) Google Maps / Mapbox | Address validation, delivery zones | Can be added later to improve delivery features. |
+| (Optional future) Twilio / SendGrid | SMS or email notifications | Useful for sending order confirmations, but not required for MVP. |
+
+---
+
+### 4.2 Internal API Endpoints (MVP)
+
+| Method | Endpoint              | Description | Input (JSON / Query) | Output (JSON) |
+|--------|-----------------------|-------------|----------------------|---------------|
+| **POST** | `/auth/register`    | Register a new user | `{ "email": "string", "password": "string", "fullName": "string" }` | `{ "id": "uuid", "email": "string", "fullName": "string" }` |
+| **POST** | `/auth/login`       | Log in user and get JWT | `{ "email": "string", "password": "string" }` | `{ "accessToken": "jwt_token" }` |
+| **GET**  | `/me`               | Get logged-in user info (JWT required) | Header: `Authorization: Bearer <token>` | `{ "id": "uuid", "email": "string", "fullName": "string" }` |
+
+---
+
+#### Menu & Products
+
+| Method | Endpoint              | Description | Input | Output |
+|--------|-----------------------|-------------|-------|--------|
+| **GET**  | `/categories`       | List all product categories | none | `[ { "id": "uuid", "name": "string" } ]` |
+| **GET**  | `/products`         | List all products (optionally filter by category) | Query: `?category=uuid` | `[ { "id": "uuid", "name": "string", "priceCents": 1200, "categoryId": "uuid" } ]` |
+| **GET**  | `/products/:id`     | Get product details | Path param: `id` | `{ "id": "uuid", "name": "string", "description": "string", "priceCents": 1200 }` |
+
+---
+
+#### Cart & Orders
+
+| Method | Endpoint                  | Description | Input | Output |
+|--------|---------------------------|-------------|-------|--------|
+| **GET**  | `/cart`                 | Get active cart for logged-in user | JWT required | `{ "id": "uuid", "items": [ ... ], "totalCents": 2400 }` |
+| **POST** | `/cart/items`           | Add item to cart | `{ "productId": "uuid", "quantity": 2 }` | Updated cart JSON |
+| **PATCH**| `/cart/items/:itemId`   | Update item quantity | `{ "quantity": 3 }` | Updated cart JSON |
+| **DELETE**| `/cart/items/:itemId`  | Remove item from cart | none | Updated cart JSON |
+
+---
+
+#### Checkout & Payment
+
+| Method | Endpoint                  | Description | Input | Output |
+|--------|---------------------------|-------------|-------|--------|
+| **POST** | `/orders/checkout`      | Start checkout process | `{ "addressLine": "string", "city": "string", "postalCode": "string", "phone": "string" }` | `{ "clientSecret": "stripe_secret" }` |
+| **POST** | `/webhooks/stripe`      | Receive payment confirmation from Stripe | Stripe webhook payload | `{ "status": "ok" }` |
+| **GET**  | `/orders/:id`           | Get order status | Path param: `id` | `{ "id": "uuid", "status": "pending|paid|failed" }` |
+
+---
+
+👉 **In short**:  
+- **External API:** Stripe for payments.  
+- **Internal API:** REST endpoints for Auth, Menu, Cart, and Payment.  
+All inputs/outputs are in **JSON** for easy integration with the React frontend.
