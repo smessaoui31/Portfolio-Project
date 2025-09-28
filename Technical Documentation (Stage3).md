@@ -197,4 +197,32 @@ We've all placed an order on a website to get a delicious pizza or "dwich", but 
 11. The **Backend** sends the updated cart back to the **Frontend**.  
 12. The **Frontend** shows the updated cart to the **User**.
 
-###
+### 3.3 Checkout and payment (Stripe)
+
+This is definitely the most complicated part to explain to you because I'm really starting from scratch, having never used Stripe before. You should know that I relied heavily on the [Stripe](https://stripe.com/fr/resources/more/how-to-integrate-a-payment-gateway-into-a-website) website and the [Stripe's Documentation](https://docs.stripe.com/checkout/fulfillment).
+
+<p align="center">
+  <img src="/Templates/CheckoutPayment.png" alt="Checkou and payment" width="800" />
+  </p>
+
+  ### 💳 Explanation : Checkout & Payment
+
+  | Step | Who does it?    | What happens                                                                 |
+|------|-----------------|------------------------------------------------------------------------------|
+| 1    | **User**        | Goes to checkout page and enters delivery info (address, phone).             |
+| 2    | **Frontend**    | Sends this information to the **Backend**.                                   |
+| 3    | **Backend**     | Checks the cart, calculates the total, and sets the order as *pending*.      |
+| 4    | **Backend → Stripe** | Asks Stripe to prepare the payment (*PaymentIntent*).                  |
+| 5    | **Stripe**      | Sends back a secret key (*client_secret*) for the payment.                   |
+| 6    | **Frontend**    | Shows a Stripe form to enter card details.                                   |
+| 7    | **Frontend → Stripe** | Sends the card details securely to Stripe.                             |
+| 8    | **Stripe**      | Tells if the payment succeeded or failed.                                    |
+| 9    | **Stripe → Backend** | Sends a *webhook* (automatic message) to confirm payment result.        |
+| 10   | **Backend → Database** | Updates the order status (paid or failed).                           |
+| 11   | **Frontend**    | Shows the final confirmation to the **User** (success or error).             |
+
+👉 **In short:**  
+- The **Backend** prepares the payment.  
+- The **Frontend** collects card details.  
+- **Stripe** processes the payment and informs both sides.  
+- The **Database** saves the final status. 
