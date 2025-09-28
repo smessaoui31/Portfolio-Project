@@ -1,9 +1,8 @@
-<p align="center">
-  <img src="/Templates/ofrero-pizza-logo.png" alt="O'Frero Pizza Logo" width="400" />
-</p>
-
-<h1 align="center">🍕 O'Frero Pizza</h1>
-<p align="center">
+<div align="center">
+  <img src="/Templates/ofrero-pizza-logo.png" alt="Logo 1" width="120"/>
+  <span style="margin: 0 20px;"></span>
+  <img src="/Templates/instagram_feed180.jpg" alt="Logo 2" width="120"/>
+</div>
 
 ## Table of Contents
 
