@@ -79,6 +79,8 @@ We designed simple wireframes for the MVP :
 - **Menu Page** → list of pizzas with “Add to Cart” button.  
 - **Cart Page** → list of selected items, total price, “Checkout” button.  
 - **Checkout Page** → address + phone form, Stripe payment integration.  
+
+👉 [View interactive mockups on Figma](https://www.figma.com/proto/rYvLPUFkhGivYnt6rPC6e0/Untitled?node-id=2-2&t=qpHdKDLOady4VOug-1)
  
 
 
