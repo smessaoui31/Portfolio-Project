@@ -33,7 +33,7 @@ We designed simple wireframes for the MVP :
 - **Menu Page** → list of pizzas with “Add to Cart” button.  
 - **Cart Page** → list of selected items, total price, “Checkout” button.  
 - **Checkout Page** → address + phone form, Stripe payment integration.  
-- **Admin Dashboard (basic)** → manage products, view orders.  
+ 
 
 
 ## 1) Design System Architecture
