@@ -1,5 +1,44 @@
-### 📌 Design System Architecture
+## 0) User Stories and Mockups
+
+### 0.1 User Stories
+
+#### Must Have (essential for MVP)
+- As a **customer**, I want to **register and log in**, so that I can place orders securely.  
+- As a **customer**, I want to **browse the pizza menu**, so that I can see what products are available.  
+- As a **customer**, I want to **add products to my cart**, so that I can prepare my order.  
+- As a **customer**, I want to **checkout and pay online with Stripe**, so that I can complete my purchase.  
+- As a **customer**, I want to **see my order status**, so that I know if my pizza is being prepared or delivered.  
+
+#### Should Have (important, but not critical for MVP)
+- As a **customer**, I want to **filter products by category (pizza, drinks, desserts)**, so that I can quickly find what I want.  
+- As an **admin**, I want to **manage the menu (create, update, delete products)**, so that the menu stays up to date.  
+- As an **admin**, I want to **see a list of orders**, so that I can process them efficiently.  
+
+#### Could Have (nice to have, future)
+- As a **customer**, I want to **save my favorite products**, so that I can reorder faster.  
+- As a **customer**, I want to **receive email/SMS confirmation** when my order is placed.  
+- As an **admin**, I want to **see sales statistics**, so that I can analyze business performance.  
+
+#### Won’t Have (excluded for MVP)
+- As a **customer**, I want to **track delivery on a map in real time** (too complex for MVP).  
+- As a **customer**, I want to **use loyalty points or discounts** (future feature).  
+
 ---
+
+### 0.2 Mockups (Main Screens)
+
+We designed simple wireframes for the MVP :
+
+- **Login/Register Page** → fields for email + password.  
+- **Menu Page** → list of pizzas with “Add to Cart” button.  
+- **Cart Page** → list of selected items, total price, “Checkout” button.  
+- **Checkout Page** → address + phone form, Stripe payment integration.  
+- **Admin Dashboard (basic)** → manage products, view orders.  
+
+
+## 1) Design System Architecture
+---
+
 <p align="center">
   <img src="/Templates/mermaid.png" alt="Flowchart Documentation Architecture" width="1200" />
 </p>
