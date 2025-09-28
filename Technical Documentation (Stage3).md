@@ -168,7 +168,7 @@ For this case , I drew a lot of inspiration from our previous project on HBNB. I
 4. If the credentials are correct, the **Backend** generates a **JWT token**.  
 5. The **Frontend** receives the token.  
 6. The **User** is now logged in and can access protected pages.  
-
+---
 ### 3.2 Browsing and add to cart
 
 We've all placed an order on a website to get a delicious pizza or "dwich", but did we know exactly what was happening behind the scenes? 
@@ -196,7 +196,7 @@ We've all placed an order on a website to get a delicious pizza or "dwich", but 
 10. The **Database** confirms the update.  
 11. The **Backend** sends the updated cart back to the **Frontend**.  
 12. The **Frontend** shows the updated cart to the **User**.
-
+---
 ### 3.3 Checkout and payment (Stripe)
 
 This is definitely the most complicated part to explain to you because I'm really starting from scratch, having never used Stripe before. You should know that I relied heavily on the [Stripe](https://stripe.com/fr/resources/more/how-to-integrate-a-payment-gateway-into-a-website) website and the [Stripe's Documentation](https://docs.stripe.com/checkout/fulfillment).
