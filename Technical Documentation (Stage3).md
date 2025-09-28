@@ -29,6 +29,18 @@
 
 </p>
 
+<p align="center">
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" alt="React" width="80" height="80"/>
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg" alt="Node.js" width="80" height="80"/>
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/express/express-original.svg" alt="Express" width="80" height="80"/>
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" alt="PostgreSQL" width="80" height="80"/>
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/prisma/prisma-original.svg" alt="Prisma" width="80" height="80"/>
+  <img src="https://cdn.worldvectorlogo.com/logos/stripe-4.svg" alt="Stripe" width="80" height="80"/>
+</p>
+
+<p align="center">
+  <b>React</b> • <b>Node.js</b> • <b>Express</b> • <b>PostgreSQL</b> • <b>Prisma</b> • <b>Stripe</b>
+</p>
 
 ## 0) User Stories and Mockups
 
