@@ -316,7 +316,7 @@ This is definitely the most complicated part to explain to you because I'm reall
 |--------|---------------------------|-------------|-------|--------|
 | **POST** | `/orders/checkout`      | Start checkout process | `{ "addressLine": "string", "city": "string", "postalCode": "string", "phone": "string" }` | `{ "clientSecret": "stripe_secret" }` |
 | **POST** | `/webhooks/stripe`      | Receive payment confirmation from Stripe | Stripe webhook payload | `{ "status": "ok" }` |
-| **GET**  | `/orders/:id`           | Get order status | Path param: `id` | `{ "id": "uuid", "status": "pending|paid|failed" }` |
+| **GET**  | `/orders/:id`           | Get order status | Path param: `id` | `{ "id": "uuid", "status": "pending;paid;failed"` |
 
 ---
 
