@@ -48,11 +48,12 @@
 ### 0.1 User Stories
 
 #### Must Have (essential for MVP)
-- As a **customer**, I want to **register and log in**, so that I can place orders securely.  
+- As a **customer**, I want to **register and log in**, so that I can place orders safely
 - As a **customer**, I want to **browse the pizza menu**, so that I can see what products are available.  
 - As a **customer**, I want to **add products to my cart**, so that I can prepare my order.  
 - As a **customer**, I want to **checkout and pay online with Stripe**, so that I can complete my purchase.  
 - As a **customer**, I want to **see my order status**, so that I know if my pizza is being prepared or delivered.  
+- As a **customer**, I want to **choose between takeaway or delivery** so that I can receive my pizza at home or if i'm motived i will go take away
 
 #### Should Have (important, but not critical for MVP)
 - As a **customer**, I want to **filter products by category (pizza, drinks, desserts)**, so that I can quickly find what I want.  
