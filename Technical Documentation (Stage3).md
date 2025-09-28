@@ -285,3 +285,56 @@ This is definitely the most complicated part to explain to you because I'm reall
 - **External API:** Stripe for payments.  
 - **Internal API:** REST endpoints for Auth, Menu, Cart, and Payment.  
 All inputs/outputs are in **JSON** for easy integration with the React frontend.
+
+
+## 5) SCM & QA Strategy
+
+### 5.1 Source Control Management (SCM)
+
+We use **Git** for version control.
+
+- **main** → always contains production-ready code.  
+- **developer** → each new feature or bugfix is developed in its own branch.(Philippe and Sofian) and when its ready we push it in the main branch.
+
+
+
+
+---
+
+### 5.2 QA (Quality Assurance)
+
+We want to make sure the code works and is easy to maintain.
+
+**Testing strategy:**
+- **Unit tests** → check small pieces of code (with **Jest**).  
+- **API tests** → check endpoints like `/auth/login` (with **Jest + Supertest**).  
+- **Manual tests** → check important flows manually (with **Postman**).  
+
+**Tools:**
+- **Jest** → run automated tests.  
+- **Postman** → test API calls manually.  
+- **ESLint + Prettier** → keep the code clean and formatted.  
+
+---
+
+### 5.3 Deployment Pipeline
+
+- **Development** → local machine, quick tests.  
+- **Staging** → test environment with real database and Stripe test keys.  
+- **Production** → real website, real payments.  (Maybe later but not for the moment)
+
+**Steps:**
+1. Push code to `develop`.  
+2. CI runs tests automatically.  
+3. If all tests pass → deploy to **staging**.  
+4. Manual check (login, order, payment).  
+5. Merge into `main` → deploy to **production**.  
+
+---
+
+👉 **In short:**  
+- Use Git branches (`developer → main`).  
+- Write small commits + do code reviews.  
+- Run automated tests with Jest.  
+- Test APIs with Postman.  
+- Deploy first to staging, then to production.
