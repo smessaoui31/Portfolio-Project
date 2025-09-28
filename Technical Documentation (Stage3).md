@@ -136,3 +136,27 @@ Let me now give you somes explanations about this relational database to underst
 - **Orders** = what you want to buy  
 - **OrderItems** = details of the order  
 - **Payments** = how you pay  
+
+
+## 3) High-Level Sequence Diagrams (MVP)
+
+Below are three critical user flows: **Login**, **Browse & Add to Cart**, and **Checkout & Payment**.
+
+---
+
+### 3.1 User Login (JWT)
+
+For this case , I drew a lot of inspiration from our previous project on HBNB. It was a great resource for illustrating and implementing the back end of the project. Although it was in a different language, the structure and understanding were very similar. 
+
+<p align="center">
+  <img src="/Templates/userlogin.png" alt="UserLogin" width="800" />
+  </p>
+
+  ### 📝 Explanation
+
+1. **The User** enters their email and password.  
+2. The **Frontend** sends the login request to the **Backend**.  
+3. The **Backend** checks the credentials in the **Database**.  
+4. If the credentials are correct, the **Backend** generates a **JWT token**.  
+5. The **Frontend** receives the token.  
+6. The **User** is now logged in and can access protected pages.  
