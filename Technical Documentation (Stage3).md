@@ -142,11 +142,11 @@ Let me now give you somes explanations about this relational database to underst
 
 In the case of the pizzeria website, we identified three common scenarios that users will encounter when placing an order.  
 
-The first scenario, unsurprisingly, is [**User Login**](#-user-login-simplified).  
+The first scenario, unsurprisingly, is [**User Login**](#31-user-login-jwt).  
 
-The second scenario (you have to eat!) is [**Browsing to view the products**](#-explanation-browse-menu--add-to-cart) offered by the pizzeria and adding them to the cart.  
+The second scenario (you have to eat!) is [**Browsing to view the products**](#32-browsing-and-add-to-cart) offered by the pizzeria and adding them to the cart.  
 
-The third scenario (I don't know of any free pizzerias): [**Verification and Payment**](#-checkout--payment).  
+The third scenario (I don't know of any free pizzerias): [**Verification and Payment**](#33-checkout-and-payment-stripe).  
 
 Below are three critical user flows: **Login**, **Browse & Add to Cart**, and **Checkout & Payment**.
 
