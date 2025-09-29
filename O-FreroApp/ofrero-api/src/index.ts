@@ -1,5 +1,4 @@
 import express from "express";
-
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 5000;
 

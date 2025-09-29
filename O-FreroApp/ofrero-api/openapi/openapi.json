@@ -1,0 +1,112 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "O'Frero API",
+    "version": "0.1.0",
+    "description": "MVP API for the pizzeria (products, health)."
+  },
+  "servers": [
+    { "url": "http://localhost:5050", "description": "Local Dev" }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean" },
+                    "service": { "type": "string" }
+                  }
+                },
+                "examples": {
+                  "ok": {
+                    "value": { "ok": true, "service": "ofrero-api" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/products": {
+      "get": {
+        "summary": "List products",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "schema": { "type": "string" },
+            "description": "Filter by name (contains, case-insensitive)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of products",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Product" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/products/{id}": {
+      "get": {
+        "summary": "Get product by id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Product" }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "error": { "type": "string" } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Product": {
+        "type": "object",
+        "required": ["id", "name", "priceCents"],
+        "properties": {
+          "id": { "type": "string", "example": "p2" },
+          "name": { "type": "string", "example": "Pepperoni" },
+          "priceCents": { "type": "integer", "minimum": 0, "example": 1100 }
+        }
+      }
+    }
+  }
+}
