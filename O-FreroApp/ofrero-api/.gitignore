@@ -1,0 +1,35 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build
+dist/
+build/
+
+# TypeScript
+*.tsbuildinfo
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Prisma
+prisma/dev.db
+prisma/*.sqlite
+prisma/migrations/
+
+# Logs
+logs/
+*.log
+*.pid
+*.seed
+
+# IDE / OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
