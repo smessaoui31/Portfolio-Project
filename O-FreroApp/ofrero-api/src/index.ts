@@ -1,9 +1,15 @@
 import express from "express";
 import swaggerUi from "swagger-ui-express";
 import openapi from "../openapi/openapi.json";
+import "dotenv/config";
+import bcrypt from "bcryptjs";
+import { z } from "zod";
 
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 5050;
+type User = { id: string; email: string; passwordHash: string; fullName: string };
+const USERS: User[] = [];
+const newId = () => "u_" + Math.random().toString(36).slice(2, 10);
 
 // Logger
 app.use((req, _res, next) => {
@@ -28,7 +34,7 @@ app.get("/health", (_req, res) => {
   res.status(200).json({ ok: true, service: "ofrero-api" });
 });
 
-// 👉 Swagger docs (juste avant le 404)
+// 👉 Swagger docs
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapi));
 
 // 404 handler
