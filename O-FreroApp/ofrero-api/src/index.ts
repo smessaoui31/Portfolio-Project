@@ -3,8 +3,7 @@ import swaggerUi from "swagger-ui-express";
 import openapi from "../openapi/openapi.json";
 import "dotenv/config";
 import bcrypt from "bcryptjs";
-import { z } from "zod";
-import { secureHeapUsed } from "crypto";
+import { flattenError, z } from "zod";
 
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 5050;
@@ -24,13 +23,13 @@ app.use(express.json());
 app.post("/auth/register", async (req, res) => {
   // 1) Valider le corps de requête
   const schema = z.object({
-    email: z.string().email(),
+    email: z.email(),
     password: z.string().min(6),
     fullName: z.string().min(2),
   });
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) {
-    return res.status(400).json({ error: "Invalid body", details: parsed.error.flatten() });
+    return res.status(400).json({ error: "Invalid body", details: flattenError(parsed.error) });
   }
   const { email, password, fullName } = parsed.data;
 
