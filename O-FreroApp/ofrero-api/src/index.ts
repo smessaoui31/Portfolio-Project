@@ -4,12 +4,19 @@ import openapi from "../openapi/openapi.json";
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { flattenError, z } from "zod";
+import jwt from "jsonwebtoken";
 
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 5050;
 type User = { id: string; email: string; passwordHash: string; fullName: string };
 const USERS: User[] = [];
 const newId = () => "u_" + Math.random().toString(36).slice(2, 10);
+const JWT_SECRET = process.env.JWT_SECRET!;
+if (!JWT_SECRET) throw new Error ("Missing JWT_SECRET in .env");
+
+function createJWT(user: User) {
+  return jwt.sign({ email: user.email }, JWT_SECRET, { subject: user.id, expiresIn: "7d" });
+}
 
 // Logger
 app.use((req, _res, next) => {
@@ -44,6 +51,28 @@ app.post("/auth/register", async (req, res) => {
 
   // 4) Répondre sans envoyer le mdp haché
   return res.status(201).json({ id: user.id, email: user.email, fullName: user.fullName });
+});
+// --- POST /auth/login ---
+app.post("/auth/login", async (req, res) => {
+  const schema = z.object({
+    email: z.email(),
+    password: z.string().min(6),
+  });
+  const parsed = schema.safeParse(req.body);
+   if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid body", details: flattenError(parsed.error)})
+  }
+  const { email, password } = parsed.data;
+
+  const user = USERS.find(u => u.email.toLowerCase() === email.toLowerCase());
+  if(!user) return res.status(401).json({ error: "Invalid credentials" });
+
+  const ok = await bcrypt.compare(password, user.passwordHash);
+  if (!ok) return res.status(401).json({ error : "Invalid credentials" });
+
+  const accessToken = createJWT(user);
+  return res.json({ accessToken });
+  
 });
 
 // Page d'accueil simple (GET /)
