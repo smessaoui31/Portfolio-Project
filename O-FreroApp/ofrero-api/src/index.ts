@@ -8,7 +8,15 @@ import jwt from "jsonwebtoken";
 
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 5050;
-type User = { id: string; email: string; passwordHash: string; fullName: string };
+type Role = "user" | "admin";
+
+type User = { 
+  id: string; 
+  email: string; 
+  passwordHash: string; 
+  fullName: string;
+  role: Role;
+};
 const USERS: User[] = [];
 const newId = () => "u_" + Math.random().toString(36).slice(2, 10);
 const JWT_SECRET = process.env.JWT_SECRET!;
@@ -46,7 +54,7 @@ app.post("/auth/register", async (req, res) => {
 
   // 3) Hache le mdp et crée l'user
   const passwordHash = await bcrypt.hash(password, 10);
-  const user: User = { id: newId(), email, fullName, passwordHash };
+  const user: User = { id: newId(), email, fullName, passwordHash, role: "user" };
   USERS.push(user);
 
   // 4) Répondre sans envoyer le mdp haché
