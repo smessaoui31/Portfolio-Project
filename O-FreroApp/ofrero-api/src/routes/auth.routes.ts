@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { loginUser, registerUser } from "../services/auth.service";
+import { registerUser } from "../services/auth.service";
 
 export const authRouter = Router();
 
@@ -9,6 +9,6 @@ authRouter.post("/register", async (req, res) => {
 });
 
 authRouter.post("/login", async (req, res) => {
-  const { status, body } = await loginUser(req.body);
-  res.status(status).json(body);
+  // TODO: Implement login functionality or import loginUser if it exists
+  res.status(501).json({ error: "Login functionality not implemented." });
 });
