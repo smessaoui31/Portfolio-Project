@@ -7,6 +7,24 @@ import openapi from "../openapi/openapi.json";
 import { authRouter } from "./routes/auth.routes";
 import { meRouter } from "./routes/me.routes";
 import { adminRouter } from "./routes/admin.routes";
+import bcrypt from "bcryptjs";
+import { USERS, newId } from "./data/store";
+
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const ADMIN_PASS  = process.env.ADMIN_PASS;
+const ADMIN_NAME  = process.env.ADMIN_NAME ?? "Site Admin";
+
+// Seed admin (dev)
+(async () => {
+  if (ADMIN_EMAIL && ADMIN_PASS) {
+    const exists = USERS.find(u => u.email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
+    if (!exists) {
+      const hash = await bcrypt.hash(ADMIN_PASS, 10);
+      USERS.push({ id: newId(), email: ADMIN_EMAIL, fullName: ADMIN_NAME, passwordHash: hash, role: "admin" });
+      console.log(`> Seeded admin: ${ADMIN_EMAIL}`);
+    }
+  }
+})();
 
 const app = express();
 
