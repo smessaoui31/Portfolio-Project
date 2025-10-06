@@ -1,7 +1,8 @@
 import "dotenv/config";
 import express from "express";
 import swaggerUi from "swagger-ui-express";
-import openapi from "../openapi/openapi.json"; // ou ../openapi/openapi.json
+import openapi from "../openapi/openapi.json";
+
 
 import { authRouter } from "./routes/auth.routes";
 import { meRouter } from "./routes/me.routes";
