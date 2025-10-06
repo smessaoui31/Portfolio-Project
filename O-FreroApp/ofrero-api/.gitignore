@@ -1,35 +1,51 @@
-# Node
+# =========================
+# Node.js / TypeScript API
+# =========================
+
+# --- Node ---
 node_modules/
-npm-debug.log
+npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
+package-lock.json
 
-# Build
+# --- Build outputs ---
 dist/
 build/
 
-# TypeScript
-*.tsbuildinfo
-
-# Env
+# --- Environment variables ---
 .env
 .env.local
 .env.*.local
 
-# Prisma
-prisma/dev.db
-prisma/*.sqlite
-prisma/migrations/
-
-# Logs
+# --- Logs ---
 logs/
 *.log
-*.pid
-*.seed
+*.log.*
+log.txt
+debug.log
 
-# IDE / OS
+# --- Coverage & test results ---
+coverage/
+.nyc_output/
+
+# --- OS & Editor files ---
 .DS_Store
+Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# --- Cache & temporary files ---
+.tmp/
+temp/
+.cache/
+tsconfig.tsbuildinfo
+
+# --- Swagger generated files (if any) ---
+/openapi_generated.json
+
+# --- Docker (if you use Docker later) ---
+docker-compose.override.yml
+*.pid
+*.seed
