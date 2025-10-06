@@ -3,7 +3,7 @@
   "info": {
     "title": "O'Frero API",
     "version": "0.1.0",
-    "description": "MVP API for the pizzeria (products, health)."
+    "description": "MVP API for the pizzeria (auth, products, health)."
   },
   "servers": [
     { "url": "http://localhost:5050", "description": "Local Dev" }
@@ -35,6 +35,108 @@
         }
       }
     },
+
+    "/auth/register": {
+      "post": {
+        "summary": "Register a new user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterInput" },
+              "examples": {
+                "default": {
+                  "value": { "email": "alice@example.com", "password": "secret123", "fullName": "Alice" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PublicUser" }
+              }
+            }
+          },
+          "400": { "description": "Invalid body" },
+          "409": { "description": "Email already in use" }
+        }
+      }
+    },
+
+    "/auth/login": {
+      "post": {
+        "summary": "Login and get JWT",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginInput" },
+              "examples": {
+                "default": { "value": { "email": "alice@example.com", "password": "secret123" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Access token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthToken" }
+              }
+            }
+          },
+          "400": { "description": "Invalid body" },
+          "401": { "description": "Invalid credentials" }
+        }
+      }
+    },
+
+    "/me": {
+      "get": {
+        "summary": "Get current user",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Current user profile",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PublicUser" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+
+    "/admin/ping": {
+      "get": {
+        "summary": "Admin ping (dev test)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "OK (admin)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "ok": { "type": "boolean" }, "area": { "type": "string" } },
+                  "example": { "ok": true, "area": "admin" }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Admins only" }
+        }
+      }
+    },
+
     "/products": {
       "get": {
         "summary": "List products",
@@ -51,26 +153,19 @@
             "description": "Array of products",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/Product" }
-                }
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } }
               }
             }
           }
         }
       }
     },
+
     "/products/{id}": {
       "get": {
         "summary": "Get product by id",
         "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": { "type": "string" }
-          }
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
         ],
         "responses": {
           "200": {
@@ -85,10 +180,7 @@
             "description": "Not found",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": { "error": { "type": "string" } }
-                }
+                "schema": { "type": "object", "properties": { "error": { "type": "string" } } }
               }
             }
           }
@@ -96,15 +188,52 @@
       }
     }
   },
+
   "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" }
+    },
     "schemas": {
+      "RegisterInput": {
+        "type": "object",
+        "required": ["email", "password", "fullName"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "minLength": 6 },
+          "fullName": { "type": "string", "minLength": 2 }
+        }
+      },
+      "LoginInput": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "minLength": 6 }
+        }
+      },
+      "PublicUser": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "u_ab12cd34" },
+          "email": { "type": "string", "example": "alice@example.com" },
+          "fullName": { "type": "string", "example": "Alice" },
+          "role": { "type": "string", "enum": ["user", "admin"], "example": "user" }
+        }
+      },
+      "AuthToken": {
+        "type": "object",
+        "properties": {
+          "accessToken": { "type": "string", "description": "JWT" }
+        }
+      },
       "Product": {
         "type": "object",
         "required": ["id", "name", "priceCents"],
         "properties": {
           "id": { "type": "string", "example": "p2" },
           "name": { "type": "string", "example": "Pepperoni" },
-          "priceCents": { "type": "integer", "minimum": 0, "example": 1100 }
+          "priceCents": { "type": "integer", "minimum": 0, "example": 1100 },
+          "description": { "type": "string", "example": "Tomato, mozzarella, pepperoni", "nullable": true }
         }
       }
     }
