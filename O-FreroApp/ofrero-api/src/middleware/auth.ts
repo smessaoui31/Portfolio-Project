@@ -13,8 +13,9 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
   if (!header?.startsWith("Bearer ")) {
     return res.status(401).json({ error: "Missing or invalid Authorization header" });
   }
-  try {
+  
     const token = header.split(" ")[1];
+    try{
     const payload = jwt.verify(token, JWT_SECRET) as any;
     req.user = { id: payload.sub as string, email: payload.email as string };
     next();
