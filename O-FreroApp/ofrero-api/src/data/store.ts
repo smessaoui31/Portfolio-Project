@@ -29,4 +29,19 @@ export type CartItem = {
 export type Cart = {
   userId: string;
   items: CartItem[];
+};
+
+export const CARTS: Cart[] = [];
+
+export function getOrCreateCart(userId: string): Cart {
+  let c = CARTS.find(c => c.userId === userId);
+  if (!c) {
+    c = { userId, items: [] };
+    CARTS.push(c);
+  }
+  return c;
+}
+
+export function cartTotalCents(cart: Cart): number {
+  return cart.items.reduce((sum, it) => sum + it.unitPriceCents * it.quantity, 0);
 }
