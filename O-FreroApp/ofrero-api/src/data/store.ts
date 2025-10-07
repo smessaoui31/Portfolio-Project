@@ -33,6 +33,8 @@ export type Cart = {
 
 export const CARTS: Cart[] = [];
 
+export const newItemId = () => "ci_" + Math.random().toString(36).slice(2, 10); // on fix le helper ici pour l'import sur la route
+
 export function getOrCreateCart(userId: string): Cart {
   let c = CARTS.find(c => c.userId === userId);
   if (!c) {
