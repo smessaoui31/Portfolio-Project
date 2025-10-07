@@ -7,6 +7,7 @@ import openapi from "../openapi/openapi.json";
 import { authRouter } from "./routes/auth.routes";
 import { meRouter } from "./routes/me.routes";
 import { adminRouter } from "./routes/admin.routes";
+import { cartRouter } from "./routes/cart.routes";
 import bcrypt from "bcryptjs";
 import { USERS, newId } from "./data/store";
 
@@ -45,6 +46,7 @@ app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapi));
 app.use("/auth", authRouter);
 app.use("/me", meRouter);
 app.use("/admin", adminRouter);
+app.use("/cart", cartRouter);
 
 // 404
 app.use((_req, res) => res.status(404).send("Not Found"));
