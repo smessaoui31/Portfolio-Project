@@ -17,3 +17,16 @@ export const PRODUCTS = [
   { id: "p2", name: "Pepperoni",  priceCents: 1100 },
   { id: "p3", name: "4 Cheeses",  priceCents: 1200 }
 ];
+
+export type CartItem = {
+  id: string;
+  productId: string;
+  name: string; // snapshot du nom au moment de l'ajout
+  unitPriceCents: number; // meme snapshot pour le prix
+  quantity: number;
+};
+
+export type Cart = {
+  userId: string;
+  items: CartItem[];
+}
