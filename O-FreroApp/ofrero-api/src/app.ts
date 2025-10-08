@@ -9,6 +9,7 @@ import { meRouter } from "./routes/me.routes";
 import { adminRouter } from "./routes/admin.routes";
 import { cartRouter } from "./routes/cart.routes";
 import { checkoutRouter, checkoutWebhookHandler } from "./routes/checkout.routes";
+import { productsRouter } from "./routes/products.routes";
 
 import bcrypt from "bcryptjs";
 import { USERS, newId } from "./data/store";
@@ -73,6 +74,7 @@ app.use("/auth", authRouter);
 app.use("/me", meRouter);
 app.use("/admin", adminRouter);
 app.use("/cart", cartRouter);
+app.use("/products", productsRouter);
 app.use("/checkout", checkoutRouter);
 
 /** 404 */
