@@ -11,7 +11,7 @@ import {
   setOrderStatus
 } from "../data/store";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, { apiVersion: "2024-06-20" });
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, { apiVersion: "2025-09-30.clover" });
 export const checkoutRouter = Router();
 
 // -------------- 1) Start checkout: create Order + PaymentIntent --------------
