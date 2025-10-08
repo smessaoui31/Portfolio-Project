@@ -1,20 +1,20 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "O'Frero API",
+    "title": "API O'Frero",
     "version": "0.1.0",
-    "description": "MVP API for the pizzeria (auth, products, cart, health)."
+    "description": "API MVP pour la pizzeria O’Frero (authentification, produits, panier, santé du service)."
   },
   "servers": [
-    { "url": "http://localhost:5050", "description": "Local Dev" }
+    { "url": "http://localhost:5050", "description": "Environnement local" }
   ],
   "paths": {
     "/health": {
       "get": {
-        "summary": "Health check",
+        "summary": "Vérification de l’état du service",
         "responses": {
           "200": {
-            "description": "Service is healthy",
+            "description": "Le service est opérationnel",
             "content": {
               "application/json": {
                 "schema": {
@@ -36,15 +36,15 @@
 
     "/auth/register": {
       "post": {
-        "summary": "Register a new user",
+        "summary": "Inscription d’un nouvel utilisateur",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": { "$ref": "#/components/schemas/RegisterInput" },
               "examples": {
-                "default": {
-                  "value": { "email": "alice@example.com", "password": "secret123", "fullName": "Alice" }
+                "exemple": {
+                  "value": { "email": "alice@example.com", "password": "secret123", "fullName": "Alice Dupont" }
                 }
               }
             }
@@ -52,59 +52,59 @@
         },
         "responses": {
           "201": {
-            "description": "User created",
+            "description": "Utilisateur créé avec succès",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PublicUser" } } }
           },
-          "400": { "description": "Invalid body" },
-          "409": { "description": "Email already in use" }
+          "400": { "description": "Corps de requête invalide" },
+          "409": { "description": "Adresse e-mail déjà utilisée" }
         }
       }
     },
 
     "/auth/login": {
       "post": {
-        "summary": "Login and get JWT",
+        "summary": "Connexion et obtention d’un jeton JWT",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": { "$ref": "#/components/schemas/LoginInput" },
-              "examples": { "default": { "value": { "email": "alice@example.com", "password": "secret123" } } }
+              "examples": { "exemple": { "value": { "email": "alice@example.com", "password": "secret123" } } }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Access token",
+            "description": "Connexion réussie – jeton JWT renvoyé",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthToken" } } }
           },
-          "400": { "description": "Invalid body" },
-          "401": { "description": "Invalid credentials" }
+          "400": { "description": "Corps de requête invalide" },
+          "401": { "description": "Identifiants incorrects" }
         }
       }
     },
 
     "/me": {
       "get": {
-        "summary": "Get current user",
+        "summary": "Obtenir le profil de l’utilisateur connecté",
         "security": [{ "bearerAuth": [] }],
         "responses": {
           "200": {
-            "description": "Current user profile",
+            "description": "Profil utilisateur",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PublicUser" } } }
           },
-          "401": { "description": "Unauthorized" }
+          "401": { "description": "Non autorisé (JWT manquant ou invalide)" }
         }
       }
     },
 
     "/admin/ping": {
       "get": {
-        "summary": "Admin ping (dev test)",
+        "summary": "Test de la zone administrateur (réservé aux admins)",
         "security": [{ "bearerAuth": [] }],
         "responses": {
           "200": {
-            "description": "OK (admin)",
+            "description": "Réponse OK de la zone admin",
             "content": {
               "application/json": {
                 "schema": {
@@ -118,26 +118,26 @@
               }
             }
           },
-          "401": { "description": "Unauthorized" },
-          "403": { "description": "Admins only" }
+          "401": { "description": "Non autorisé" },
+          "403": { "description": "Accès réservé aux administrateurs" }
         }
       }
     },
 
     "/products": {
       "get": {
-        "summary": "List products",
+        "summary": "Lister les produits disponibles",
         "parameters": [
           {
             "in": "query",
             "name": "q",
             "schema": { "type": "string" },
-            "description": "Filter by name (contains, case-insensitive)"
+            "description": "Filtrer par nom (recherche partielle, insensible à la casse)"
           }
         ],
         "responses": {
           "200": {
-            "description": "Array of products",
+            "description": "Liste de produits",
             "content": {
               "application/json": {
                 "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } }
@@ -145,20 +145,57 @@
             }
           }
         }
+      },
+      "post": {
+        "summary": "Créer un nouveau produit (réservé aux admins)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/NewProductInput" },
+              "examples": {
+                "exemple": {
+                  "value": {
+                    "name": "Pizza 4 Fromages",
+                    "priceCents": 1250,
+                    "description": "Mozzarella, chèvre, bleu, parmesan"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Produit créé avec succès",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } }
+          },
+          "400": { "description": "Corps de requête invalide" },
+          "401": { "description": "Non autorisé" },
+          "403": { "description": "Accès réservé aux administrateurs" }
+        }
       }
     },
 
     "/products/{id}": {
       "get": {
-        "summary": "Get product by id",
+        "summary": "Obtenir les détails d’un produit par ID",
         "parameters": [
           { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
         ],
         "responses": {
-          "200": { "description": "Product", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } } },
+          "200": {
+            "description": "Produit trouvé",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } }
+          },
           "404": {
-            "description": "Not found",
-            "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } }
+            "description": "Produit introuvable",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "error": { "type": "string" } } }
+              }
+            }
           }
         }
       }
@@ -166,48 +203,55 @@
 
     "/cart": {
       "get": {
-        "summary": "Get current user's cart",
+        "summary": "Obtenir le panier de l’utilisateur connecté",
         "security": [{ "bearerAuth": [] }],
         "responses": {
           "200": {
-            "description": "Cart for the authenticated user",
+            "description": "Panier actuel de l’utilisateur",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Cart" },
-                "examples": { "empty": { "value": { "id": "cart_u_ab12cd34", "items": [], "totalCents": 0 } } }
+                "examples": {
+                  "vide": { "value": { "id": "cart_u_abc123", "items": [], "totalCents": 0 } }
+                }
               }
             }
           },
-          "401": { "description": "Unauthorized" }
+          "401": { "description": "Non autorisé" }
         }
       }
     },
 
     "/cart/items": {
       "post": {
-        "summary": "Add an item to the cart (or increase quantity if already present)",
+        "summary": "Ajouter un article au panier (ou augmenter la quantité si déjà présent)",
         "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": { "$ref": "#/components/schemas/AddCartItemInput" },
-              "examples": { "default": { "value": { "productId": "p2", "quantity": 2 } } }
+              "examples": {
+                "exemple": { "value": { "productId": "p2", "quantity": 2 } }
+              }
             }
           }
         },
         "responses": {
-          "201": { "description": "Cart after add", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Cart" } } } },
-          "400": { "description": "Invalid body" },
-          "401": { "description": "Unauthorized" },
-          "404": { "description": "Product not found" }
+          "201": {
+            "description": "Article ajouté au panier",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Cart" } } }
+          },
+          "400": { "description": "Requête invalide" },
+          "401": { "description": "Non autorisé" },
+          "404": { "description": "Produit introuvable" }
         }
       }
     },
 
     "/cart/items/{itemId}": {
       "patch": {
-        "summary": "Update quantity of a cart item (0 removes it)",
+        "summary": "Modifier la quantité d’un article du panier (0 = suppression)",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "in": "path", "name": "itemId", "required": true, "schema": { "type": "string" } }
@@ -218,28 +262,31 @@
             "application/json": {
               "schema": { "$ref": "#/components/schemas/UpdateCartItemInput" },
               "examples": {
-                "setToThree": { "value": { "quantity": 3 } },
-                "removeItem": { "value": { "quantity": 0 } }
+                "modifier": { "value": { "quantity": 3 } },
+                "supprimer": { "value": { "quantity": 0 } }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Updated cart", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Cart" } } } },
-          "400": { "description": "Invalid body" },
-          "401": { "description": "Unauthorized" },
-          "404": { "description": "Item not found" }
+          "200": {
+            "description": "Panier mis à jour",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Cart" } } }
+          },
+          "400": { "description": "Requête invalide" },
+          "401": { "description": "Non autorisé" },
+          "404": { "description": "Article introuvable" }
         }
       },
       "delete": {
-        "summary": "Remove an item from the cart",
+        "summary": "Supprimer un article du panier",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "in": "path", "name": "itemId", "required": true, "schema": { "type": "string" } }
         ],
         "responses": {
           "200": {
-            "description": "Deleted item + current cart",
+            "description": "Article supprimé et panier renvoyé",
             "content": {
               "application/json": {
                 "schema": {
@@ -252,8 +299,8 @@
               }
             }
           },
-          "401": { "description": "Unauthorized" },
-          "404": { "description": "Item not found" }
+          "401": { "description": "Non autorisé" },
+          "404": { "description": "Article introuvable" }
         }
       }
     }
@@ -286,14 +333,14 @@
         "properties": {
           "id": { "type": "string", "example": "u_ab12cd34" },
           "email": { "type": "string", "example": "alice@example.com" },
-          "fullName": { "type": "string", "example": "Alice" },
+          "fullName": { "type": "string", "example": "Alice Dupont" },
           "role": { "type": "string", "enum": ["user", "admin"], "example": "user" }
         }
       },
       "AuthToken": {
         "type": "object",
         "properties": {
-          "accessToken": { "type": "string", "description": "JWT" }
+          "accessToken": { "type": "string", "description": "Jeton d’accès (JWT)" }
         }
       },
       "Product": {
@@ -301,9 +348,18 @@
         "required": ["id", "name", "priceCents"],
         "properties": {
           "id": { "type": "string", "example": "p2" },
-          "name": { "type": "string", "example": "Pepperoni" },
+          "name": { "type": "string", "example": "Pizza Pepperoni" },
           "priceCents": { "type": "integer", "minimum": 0, "example": 1100 },
-          "description": { "type": "string", "example": "Tomato, mozzarella, pepperoni", "nullable": true }
+          "description": { "type": "string", "example": "Tomate, mozzarella, pepperoni", "nullable": true }
+        }
+      },
+      "NewProductInput": {
+        "type": "object",
+        "required": ["name", "priceCents"],
+        "properties": {
+          "name": { "type": "string", "example": "Pizza 4 Fromages" },
+          "priceCents": { "type": "integer", "example": 1250 },
+          "description": { "type": "string", "example": "Mozzarella, chèvre, bleu, parmesan" }
         }
       },
       "CartItem": {
@@ -312,7 +368,7 @@
         "properties": {
           "id": { "type": "string", "example": "ci_x1y2z3a4" },
           "productId": { "type": "string", "example": "p2" },
-          "name": { "type": "string", "example": "Pepperoni" },
+          "name": { "type": "string", "example": "Pizza Pepperoni" },
           "unitPriceCents": { "type": "integer", "minimum": 0, "example": 1100 },
           "quantity": { "type": "integer", "minimum": 0, "maximum": 99, "example": 2 }
         }
