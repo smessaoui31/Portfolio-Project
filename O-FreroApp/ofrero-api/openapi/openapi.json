@@ -3,7 +3,7 @@
   "info": {
     "title": "API O'Frero",
     "version": "0.1.0",
-    "description": "API MVP pour la pizzeria O’Frero (authentification, produits, panier, santé du service)."
+    "description": "API MVP pour la pizzeria O’Frero (authentification, produits, panier, paiement, santé du service)."
   },
   "servers": [
     { "url": "http://localhost:5050", "description": "Environnement local" }
@@ -303,6 +303,112 @@
           "404": { "description": "Article introuvable" }
         }
       }
+    },
+
+    "/checkout/start": {
+      "post": {
+        "summary": "Démarrer le paiement (crée la commande + PaymentIntent Stripe)",
+        "description": "Calcule le total côté serveur à partir du panier de l’utilisateur, crée une commande en statut 'pending' puis un PaymentIntent Stripe. Renvoie le clientSecret à utiliser côté front.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CheckoutStartInput" },
+              "examples": {
+                "exemple": {
+                  "value": {
+                    "addressLine": "12 Rue de la Pizza",
+                    "city": "Paris",
+                    "postalCode": "75000",
+                    "phone": "0612345678"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Checkout initialisé",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CheckoutStartOutput" }
+              }
+            }
+          },
+          "400": { "description": "Panier vide ou corps de requête invalide" },
+          "401": { "description": "Non autorisé" }
+        }
+      }
+    },
+
+    "/checkout/webhook": {
+      "post": {
+        "summary": "Webhook Stripe (confirmation de paiement)",
+        "description": "Point d’entrée appelé par Stripe après tentative de paiement. Doit recevoir le corps RAW (non parsé). Si la signature est configurée, elle est vérifiée.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/StripeWebhookEvent" },
+              "examples": {
+                "paiement_reussi": {
+                  "value": {
+                    "type": "payment_intent.succeeded",
+                    "data": { "object": { "id": "pi_3QxQnH2...", "object": "payment_intent" } }
+                  }
+                },
+                "paiement_echoue": {
+                  "value": {
+                    "type": "payment_intent.payment_failed",
+                    "data": { "object": { "id": "pi_3QxQnH2...", "object": "payment_intent" } }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook traité",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean", "example": true },
+                    "event": { "type": "string", "example": "payment_intent.succeeded" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Signature invalide ou corps illisible" }
+        }
+      }
+    },
+
+    "/checkout/orders/{id}": {
+      "get": {
+        "summary": "Obtenir le statut d’une commande",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Commande trouvée",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Order" }
+              }
+            }
+          },
+          "401": { "description": "Non autorisé" },
+          "404": { "description": "Commande introuvable" }
+        }
+      }
     }
   },
 
@@ -395,6 +501,71 @@
         "required": ["quantity"],
         "properties": {
           "quantity": { "type": "integer", "minimum": 0, "maximum": 99, "example": 3 }
+        }
+      },
+      "CheckoutStartInput": {
+        "type": "object",
+        "required": ["addressLine", "city", "postalCode", "phone"],
+        "properties": {
+          "addressLine": { "type": "string", "example": "12 Rue de la Pizza" },
+          "city":       { "type": "string", "example": "Paris" },
+          "postalCode": { "type": "string", "example": "75000" },
+          "phone":      { "type": "string", "example": "0612345678" }
+        }
+      },
+      "CheckoutStartOutput": {
+        "type": "object",
+        "required": ["orderId", "clientSecret", "paymentIntentId"],
+        "properties": {
+          "orderId":         { "type": "string", "example": "o_ab12cd34" },
+          "clientSecret":    { "type": "string", "example": "pi_3QxQnH2..._secret_ABC123" },
+          "paymentIntentId": { "type": "string", "example": "pi_3QxQnH2..." }
+        }
+      },
+      "StripeWebhookEvent": {
+        "type": "object",
+        "description": "Payload envoyé par Stripe. Le champ 'type' indique l’événement, et 'data.object' contient l’objet Stripe.",
+        "properties": {
+          "id": { "type": "string", "nullable": true, "description": "Identifiant d’événement Stripe (si fourni par Stripe CLI/Live)" },
+          "type": { "type": "string", "example": "payment_intent.succeeded" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "object": {
+                "type": "object",
+                "description": "Objet Stripe associé à l’événement",
+                "properties": {
+                  "id": { "type": "string", "example": "pi_3QxQnH2..." },
+                  "object": { "type": "string", "example": "payment_intent" }
+                },
+                "required": ["id", "object"]
+              }
+            },
+            "required": ["object"]
+          }
+        },
+        "required": ["type", "data"]
+      },
+      "OrderItem": {
+        "type": "object",
+        "required": ["productId", "name", "unitPriceCents", "quantity"],
+        "properties": {
+          "productId":      { "type": "string",  "example": "p2" },
+          "name":           { "type": "string",  "example": "Pizza Reine" },
+          "unitPriceCents": { "type": "integer", "example": 1150 },
+          "quantity":       { "type": "integer", "example": 2 }
+        }
+      },
+      "Order": {
+        "type": "object",
+        "required": ["id", "userId", "items", "totalCents", "status"],
+        "properties": {
+          "id":                   { "type": "string",  "example": "o_ab12cd34" },
+          "userId":               { "type": "string",  "example": "u_9x8y7z6w" },
+          "items":                { "type": "array",   "items": { "$ref": "#/components/schemas/OrderItem" } },
+          "totalCents":           { "type": "integer", "example": 2300 },
+          "status":               { "type": "string",  "enum": ["pending", "paid", "failed", "cancelled"], "example": "paid" },
+          "stripePaymentIntentId":{ "type": "string",  "nullable": true, "example": "pi_3QxQnH2..." }
         }
       }
     }
