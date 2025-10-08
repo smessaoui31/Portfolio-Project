@@ -1,0 +1,9 @@
+[
+  {
+    "id": "u_admin",
+    "email": "admin@ofrero.fr",
+    "fullName": "Admin OFrero",
+    "passwordHash": "$2b$10$1JGsD3nm/j2kdpb1nAa3/exz6iClc8.xu.QXI7kP9F5ootiZBoJ6m",
+    "role": "admin"
+  }
+]
