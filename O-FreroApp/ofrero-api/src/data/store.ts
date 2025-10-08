@@ -47,3 +47,53 @@ export function getOrCreateCart(userId: string): Cart {
 export function cartTotalCents(cart: Cart): number {
   return cart.items.reduce((sum, it) => sum + it.unitPriceCents * it.quantity, 0);
 }
+
+// ---- ORDERS (in-memory) ----
+export type OrderStatus = "pending" | "paid" | "failed" | "cancelled";
+
+export type OrderItem = {
+  productId: string;
+  name: string;
+  unitPriceCents: number;
+  quantity: number;
+};
+
+export type Order = {
+  id: string;
+  userId: string;
+  items: OrderItem[];
+  totalCents: number;
+  status: OrderStatus;
+  stripePaymentIntentId?: string;
+};
+
+export const ORDERS: Order[] = [];
+
+export const newOrderId = () => "o_" + Math.random().toString(36).slice(2, 10);
+
+export function createOrderFromCart(userId: string, items: { name: string; unitPriceCents: number; productId: string; quantity: number }[], totalCents: number): Order {
+  const order: Order = {
+    id: newOrderId(),
+    userId,
+    items: items.map(i => ({
+      productId: i.productId,
+      name: i.name,
+      unitPriceCents: i.unitPriceCents,
+      quantity: i.quantity
+    })),
+    totalCents,
+    status: "pending"
+  };
+  ORDERS.push(order);
+  return order;
+}
+
+export function setOrderStatus(orderId: string, status: OrderStatus) {
+  const o = ORDERS.find(o => o.id === orderId);
+  if (o) o.status = status;
+  return o;
+}
+
+export function findOrderByPaymentIntent(piId: string) {
+  return ORDERS.find(o => o.stripePaymentIntentId === piId);
+}
