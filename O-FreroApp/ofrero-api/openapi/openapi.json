@@ -1,0 +1,573 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "API O'Frero",
+    "version": "0.1.0",
+    "description": "API MVP pour la pizzeria O’Frero (authentification, produits, panier, paiement, santé du service)."
+  },
+  "servers": [
+    { "url": "http://localhost:5050", "description": "Environnement local" }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Vérification de l’état du service",
+        "responses": {
+          "200": {
+            "description": "Le service est opérationnel",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean" },
+                    "service": { "type": "string" }
+                  }
+                },
+                "examples": {
+                  "ok": { "value": { "ok": true, "service": "ofrero-api" } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/auth/register": {
+      "post": {
+        "summary": "Inscription d’un nouvel utilisateur",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterInput" },
+              "examples": {
+                "exemple": {
+                  "value": { "email": "alice@example.com", "password": "secret123", "fullName": "Alice Dupont" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Utilisateur créé avec succès",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PublicUser" } } }
+          },
+          "400": { "description": "Corps de requête invalide" },
+          "409": { "description": "Adresse e-mail déjà utilisée" }
+        }
+      }
+    },
+
+    "/auth/login": {
+      "post": {
+        "summary": "Connexion et obtention d’un jeton JWT",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginInput" },
+              "examples": { "exemple": { "value": { "email": "alice@example.com", "password": "secret123" } } }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Connexion réussie – jeton JWT renvoyé",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthToken" } } }
+          },
+          "400": { "description": "Corps de requête invalide" },
+          "401": { "description": "Identifiants incorrects" }
+        }
+      }
+    },
+
+    "/me": {
+      "get": {
+        "summary": "Obtenir le profil de l’utilisateur connecté",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Profil utilisateur",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PublicUser" } } }
+          },
+          "401": { "description": "Non autorisé (JWT manquant ou invalide)" }
+        }
+      }
+    },
+
+    "/admin/ping": {
+      "get": {
+        "summary": "Test de la zone administrateur (réservé aux admins)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Réponse OK de la zone admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean" },
+                    "area": { "type": "string" }
+                  },
+                  "example": { "ok": true, "area": "admin" }
+                }
+              }
+            }
+          },
+          "401": { "description": "Non autorisé" },
+          "403": { "description": "Accès réservé aux administrateurs" }
+        }
+      }
+    },
+
+    "/products": {
+      "get": {
+        "summary": "Lister les produits disponibles",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "schema": { "type": "string" },
+            "description": "Filtrer par nom (recherche partielle, insensible à la casse)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste de produits",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Créer un nouveau produit (réservé aux admins)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/NewProductInput" },
+              "examples": {
+                "exemple": {
+                  "value": {
+                    "name": "Pizza 4 Fromages",
+                    "priceCents": 1250,
+                    "description": "Mozzarella, chèvre, bleu, parmesan"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Produit créé avec succès",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } }
+          },
+          "400": { "description": "Corps de requête invalide" },
+          "401": { "description": "Non autorisé" },
+          "403": { "description": "Accès réservé aux administrateurs" }
+        }
+      }
+    },
+
+    "/products/{id}": {
+      "get": {
+        "summary": "Obtenir les détails d’un produit par ID",
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Produit trouvé",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } }
+          },
+          "404": {
+            "description": "Produit introuvable",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "error": { "type": "string" } } }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/cart": {
+      "get": {
+        "summary": "Obtenir le panier de l’utilisateur connecté",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Panier actuel de l’utilisateur",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Cart" },
+                "examples": {
+                  "vide": { "value": { "id": "cart_u_abc123", "items": [], "totalCents": 0 } }
+                }
+              }
+            }
+          },
+          "401": { "description": "Non autorisé" }
+        }
+      }
+    },
+
+    "/cart/items": {
+      "post": {
+        "summary": "Ajouter un article au panier (ou augmenter la quantité si déjà présent)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AddCartItemInput" },
+              "examples": {
+                "exemple": { "value": { "productId": "p2", "quantity": 2 } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Article ajouté au panier",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Cart" } } }
+          },
+          "400": { "description": "Requête invalide" },
+          "401": { "description": "Non autorisé" },
+          "404": { "description": "Produit introuvable" }
+        }
+      }
+    },
+
+    "/cart/items/{itemId}": {
+      "patch": {
+        "summary": "Modifier la quantité d’un article du panier (0 = suppression)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "in": "path", "name": "itemId", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateCartItemInput" },
+              "examples": {
+                "modifier": { "value": { "quantity": 3 } },
+                "supprimer": { "value": { "quantity": 0 } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Panier mis à jour",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Cart" } } }
+          },
+          "400": { "description": "Requête invalide" },
+          "401": { "description": "Non autorisé" },
+          "404": { "description": "Article introuvable" }
+        }
+      },
+      "delete": {
+        "summary": "Supprimer un article du panier",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "in": "path", "name": "itemId", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Article supprimé et panier renvoyé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deleted": { "$ref": "#/components/schemas/CartItem" },
+                    "cart": { "$ref": "#/components/schemas/Cart" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Non autorisé" },
+          "404": { "description": "Article introuvable" }
+        }
+      }
+    },
+
+    "/checkout/start": {
+      "post": {
+        "summary": "Démarrer le paiement (crée la commande + PaymentIntent Stripe)",
+        "description": "Calcule le total côté serveur à partir du panier de l’utilisateur, crée une commande en statut 'pending' puis un PaymentIntent Stripe. Renvoie le clientSecret à utiliser côté front.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CheckoutStartInput" },
+              "examples": {
+                "exemple": {
+                  "value": {
+                    "addressLine": "12 Rue de la Pizza",
+                    "city": "Paris",
+                    "postalCode": "75000",
+                    "phone": "0612345678"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Checkout initialisé",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CheckoutStartOutput" }
+              }
+            }
+          },
+          "400": { "description": "Panier vide ou corps de requête invalide" },
+          "401": { "description": "Non autorisé" }
+        }
+      }
+    },
+
+    "/checkout/webhook": {
+      "post": {
+        "summary": "Webhook Stripe (confirmation de paiement)",
+        "description": "Point d’entrée appelé par Stripe après tentative de paiement. Doit recevoir le corps RAW (non parsé). Si la signature est configurée, elle est vérifiée.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/StripeWebhookEvent" },
+              "examples": {
+                "paiement_reussi": {
+                  "value": {
+                    "type": "payment_intent.succeeded",
+                    "data": { "object": { "id": "pi_3QxQnH2...", "object": "payment_intent" } }
+                  }
+                },
+                "paiement_echoue": {
+                  "value": {
+                    "type": "payment_intent.payment_failed",
+                    "data": { "object": { "id": "pi_3QxQnH2...", "object": "payment_intent" } }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook traité",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean", "example": true },
+                    "event": { "type": "string", "example": "payment_intent.succeeded" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Signature invalide ou corps illisible" }
+        }
+      }
+    },
+
+    "/checkout/orders/{id}": {
+      "get": {
+        "summary": "Obtenir le statut d’une commande",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Commande trouvée",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Order" }
+              }
+            }
+          },
+          "401": { "description": "Non autorisé" },
+          "404": { "description": "Commande introuvable" }
+        }
+      }
+    }
+  },
+
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" }
+    },
+    "schemas": {
+      "RegisterInput": {
+        "type": "object",
+        "required": ["email", "password", "fullName"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "minLength": 6 },
+          "fullName": { "type": "string", "minLength": 2 }
+        }
+      },
+      "LoginInput": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "minLength": 6 }
+        }
+      },
+      "PublicUser": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "u_ab12cd34" },
+          "email": { "type": "string", "example": "alice@example.com" },
+          "fullName": { "type": "string", "example": "Alice Dupont" },
+          "role": { "type": "string", "enum": ["user", "admin"], "example": "user" }
+        }
+      },
+      "AuthToken": {
+        "type": "object",
+        "properties": {
+          "accessToken": { "type": "string", "description": "Jeton d’accès (JWT)" }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "required": ["id", "name", "priceCents"],
+        "properties": {
+          "id": { "type": "string", "example": "p2" },
+          "name": { "type": "string", "example": "Pizza Pepperoni" },
+          "priceCents": { "type": "integer", "minimum": 0, "example": 1100 },
+          "description": { "type": "string", "example": "Tomate, mozzarella, pepperoni", "nullable": true }
+        }
+      },
+      "NewProductInput": {
+        "type": "object",
+        "required": ["name", "priceCents"],
+        "properties": {
+          "name": { "type": "string", "example": "Pizza 4 Fromages" },
+          "priceCents": { "type": "integer", "example": 1250 },
+          "description": { "type": "string", "example": "Mozzarella, chèvre, bleu, parmesan" }
+        }
+      },
+      "CartItem": {
+        "type": "object",
+        "required": ["id", "productId", "name", "unitPriceCents", "quantity"],
+        "properties": {
+          "id": { "type": "string", "example": "ci_x1y2z3a4" },
+          "productId": { "type": "string", "example": "p2" },
+          "name": { "type": "string", "example": "Pizza Pepperoni" },
+          "unitPriceCents": { "type": "integer", "minimum": 0, "example": 1100 },
+          "quantity": { "type": "integer", "minimum": 0, "maximum": 99, "example": 2 }
+        }
+      },
+      "Cart": {
+        "type": "object",
+        "required": ["id", "items", "totalCents"],
+        "properties": {
+          "id": { "type": "string", "example": "cart_u_ab12cd34" },
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/CartItem" } },
+          "totalCents": { "type": "integer", "minimum": 0, "example": 2200 }
+        }
+      },
+      "AddCartItemInput": {
+        "type": "object",
+        "required": ["productId", "quantity"],
+        "properties": {
+          "productId": { "type": "string", "example": "p2" },
+          "quantity": { "type": "integer", "minimum": 1, "maximum": 99, "example": 2 }
+        }
+      },
+      "UpdateCartItemInput": {
+        "type": "object",
+        "required": ["quantity"],
+        "properties": {
+          "quantity": { "type": "integer", "minimum": 0, "maximum": 99, "example": 3 }
+        }
+      },
+      "CheckoutStartInput": {
+        "type": "object",
+        "required": ["addressLine", "city", "postalCode", "phone"],
+        "properties": {
+          "addressLine": { "type": "string", "example": "12 Rue de la Pizza" },
+          "city":       { "type": "string", "example": "Paris" },
+          "postalCode": { "type": "string", "example": "75000" },
+          "phone":      { "type": "string", "example": "0612345678" }
+        }
+      },
+      "CheckoutStartOutput": {
+        "type": "object",
+        "required": ["orderId", "clientSecret", "paymentIntentId"],
+        "properties": {
+          "orderId":         { "type": "string", "example": "o_ab12cd34" },
+          "clientSecret":    { "type": "string", "example": "pi_3QxQnH2..._secret_ABC123" },
+          "paymentIntentId": { "type": "string", "example": "pi_3QxQnH2..." }
+        }
+      },
+      "StripeWebhookEvent": {
+        "type": "object",
+        "description": "Payload envoyé par Stripe. Le champ 'type' indique l’événement, et 'data.object' contient l’objet Stripe.",
+        "properties": {
+          "id": { "type": "string", "nullable": true, "description": "Identifiant d’événement Stripe (si fourni par Stripe CLI/Live)" },
+          "type": { "type": "string", "example": "payment_intent.succeeded" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "object": {
+                "type": "object",
+                "description": "Objet Stripe associé à l’événement",
+                "properties": {
+                  "id": { "type": "string", "example": "pi_3QxQnH2..." },
+                  "object": { "type": "string", "example": "payment_intent" }
+                },
+                "required": ["id", "object"]
+              }
+            },
+            "required": ["object"]
+          }
+        },
+        "required": ["type", "data"]
+      },
+      "OrderItem": {
+        "type": "object",
+        "required": ["productId", "name", "unitPriceCents", "quantity"],
+        "properties": {
+          "productId":      { "type": "string",  "example": "p2" },
+          "name":           { "type": "string",  "example": "Pizza Reine" },
+          "unitPriceCents": { "type": "integer", "example": 1150 },
+          "quantity":       { "type": "integer", "example": 2 }
+        }
+      },
+      "Order": {
+        "type": "object",
+        "required": ["id", "userId", "items", "totalCents", "status"],
+        "properties": {
+          "id":                   { "type": "string",  "example": "o_ab12cd34" },
+          "userId":               { "type": "string",  "example": "u_9x8y7z6w" },
+          "items":                { "type": "array",   "items": { "$ref": "#/components/schemas/OrderItem" } },
+          "totalCents":           { "type": "integer", "example": 2300 },
+          "status":               { "type": "string",  "enum": ["pending", "paid", "failed", "cancelled"], "example": "paid" },
+          "stripePaymentIntentId":{ "type": "string",  "nullable": true, "example": "pi_3QxQnH2..." }
+        }
+      }
+    }
+  }
+}

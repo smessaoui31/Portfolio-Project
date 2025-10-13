@@ -1,0 +1,52 @@
+# =========================
+# Node.js / TypeScript API
+# =========================
+
+# --- Node ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# --- Build outputs ---
+dist/
+build/
+
+# --- Environment variables ---
+.env
+.env.local
+.env.*.local
+
+# --- Logs ---
+logs/
+*.log
+*.log.*
+log.txt
+debug.log
+
+# --- Coverage & test results ---
+coverage/
+.nyc_output/
+
+# --- OS & Editor files ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# --- Cache & temporary files ---
+.tmp/
+temp/
+.cache/
+tsconfig.tsbuildinfo
+
+# --- Swagger generated files (if any) ---
+/openapi_generated.json
+
+# --- Docker (if you use Docker later) ---
+docker-compose.override.yml
+*.pid
+*.seed
+.package-lock.json

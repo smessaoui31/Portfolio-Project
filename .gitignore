@@ -1,0 +1,58 @@
+# ============================
+# Node / TypeScript project
+# ============================
+
+# Node modules
+node_modules/
+
+# TypeScript build output
+dist/
+build/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local environment variables
+.env
+.env.local
+.env.*.local
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE / Editor folders
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Coverage / testing
+coverage/
+.nyc_output/
+
+# Temporary / cache files
+.tmp/
+.cache/
+*.tmp
+*.bak
+*.old
+
+# Swagger generated files
+openapi/*.yaml
+openapi/*.yml
+
+# Optional lockfiles (if not committed)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Docker artifacts (if used later)
+Dockerfile
+docker-compose.yml
+*.tar
