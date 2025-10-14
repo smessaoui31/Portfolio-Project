@@ -1,35 +1,52 @@
 import { Router } from "express";
 import { z } from "zod";
-import { PRODUCTS, newId } from "../data/store";
+import { prisma } from "../lib/prisma"; // nouveau : connexion à la DB Prisma
 import { requireAuth, requireAdmin } from "../middleware/auth";
 
-const router = Router();
+export const productsRouter = Router();
 
-//  Lister tous les produits
-router.get("/", (_req, res) => res.json(PRODUCTS));
+//  Remplace PRODUCTS par requêtes Prisma
+productsRouter.get("/", async (req, res) => {
+  const q = (req.query.q as string | undefined)?.trim();
+  const where = q ? { name: { contains: q, mode: "insensitive" } } : {};
 
-// Obtenir un produit par id
-router.get("/:id", (req, res) => {
-  const p = PRODUCTS.find(p => p.id === req.params.id);
-  if (!p) return res.status(404).json({ error: "Not found" });
-  res.json(p);
-});
-
-// Ajouter un produit comme pizza boisson etc (admin uniquement)
-router.post("/", requireAuth, requireAdmin, (req, res) => {
-  const schema = z.object({
-    name: z.string().min(2),
-    priceCents: z.number().int().min(0),
-    description: z.string().optional()
+  const products = await prisma.product.findMany({
+    where,
+    orderBy: { name: "asc" },
+    include: { category: { select: { id: true, name: true } } }, //  ajout
   });
 
-  const parsed = schema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "Invalid body", details: parsed.error.flatten() });
-
-  const newProduct = { id: newId(), ...parsed.data };
-  PRODUCTS.push(newProduct);
-
-  res.status(201).json(newProduct);
+  res.json(products);
 });
 
-export const productsRouter = router;
+// Même logique, mais findUnique via Prisma
+productsRouter.get("/:id", async (req, res) => {
+  const product = await prisma.product.findUnique({
+    where: { id: req.params.id },
+    include: { category: { select: { id: true, name: true } } },
+  });
+  if (!product) return res.status(404).json({ error: "Not found" });
+  res.json(product);
+});
+
+// Création produit → via Prisma au lieu de PRODUCTS.push
+const NewProductSchema = z.object({
+  name: z.string().min(2),
+  priceCents: z.number().int().min(0),
+  description: z.string().optional(),
+  categoryId: z.string().optional().nullable(),
+});
+
+productsRouter.post("/", requireAuth, requireAdmin, async (req, res) => {
+  const parsed = NewProductSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Invalid body", details: parsed.error.flatten() });
+
+  // validation catégorie (si fournie)
+  if (parsed.data.categoryId) {
+    const cat = await prisma.category.findUnique({ where: { id: parsed.data.categoryId } });
+    if (!cat) return res.status(404).json({ error: "Category not found" });
+  }
+
+  const product = await prisma.product.create({ data: parsed.data }); // création via Prisma
+  res.status(201).json(product);
+});
