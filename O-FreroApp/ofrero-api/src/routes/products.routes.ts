@@ -5,17 +5,17 @@ import { requireAuth, requireAdmin } from "../middleware/auth";
 
 const router = Router();
 
-// ✅ Lister tous les produits
+//  Lister tous les produits
 router.get("/", (_req, res) => res.json(PRODUCTS));
 
-// ✅ Obtenir un produit par id
+// Obtenir un produit par id
 router.get("/:id", (req, res) => {
   const p = PRODUCTS.find(p => p.id === req.params.id);
   if (!p) return res.status(404).json({ error: "Not found" });
   res.json(p);
 });
 
-// ✅ Ajouter un produit comme pizza boisson etc (admin uniquement)
+// Ajouter un produit comme pizza boisson etc (admin uniquement)
 router.post("/", requireAuth, requireAdmin, (req, res) => {
   const schema = z.object({
     name: z.string().min(2),
