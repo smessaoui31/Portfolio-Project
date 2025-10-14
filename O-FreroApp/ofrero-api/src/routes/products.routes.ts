@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma"; // nouveau : connexion à la DB Prisma
 import { requireAuth, requireAdmin } from "../middleware/auth";
 
@@ -8,7 +9,7 @@ export const productsRouter = Router();
 //  Remplace PRODUCTS par requêtes Prisma
 productsRouter.get("/", async (req, res) => {
   const q = (req.query.q as string | undefined)?.trim();
-  const where = q ? { name: { contains: q, mode: "insensitive" } } : {};
+  const where: Prisma.ProductWhereInput | undefined = q ? { name: { contains: q, mode: "insensitive" } } : undefined;
 
   const products = await prisma.product.findMany({
     where,
