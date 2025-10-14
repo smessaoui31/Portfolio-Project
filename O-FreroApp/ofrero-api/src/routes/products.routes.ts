@@ -19,7 +19,7 @@ router.get("/:id", (req, res) => {
 router.post("/", requireAuth, requireAdmin, (req, res) => {
   const schema = z.object({
     name: z.string().min(2),
-    priceCents: z.number().int().min(100),
+    priceCents: z.number().int().min(0),
     description: z.string().optional()
   });
 
