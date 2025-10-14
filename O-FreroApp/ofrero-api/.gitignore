@@ -50,3 +50,4 @@ docker-compose.override.yml
 *.pid
 *.seed
 .package-lock.json
+/src/generated/prisma

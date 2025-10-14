@@ -13,11 +13,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@prisma/client": "^6.17.1",
     "bcryptjs": "^3.0.2",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "jq": "^1.7.2",
     "jsonwebtoken": "^9.0.2",
+    "prisma": "^6.17.1",
     "stripe": "^19.1.0",
     "swagger-ui-express": "^5.0.1",
     "zod": "^4.1.11"
