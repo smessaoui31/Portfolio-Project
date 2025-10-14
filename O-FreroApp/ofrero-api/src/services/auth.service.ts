@@ -53,10 +53,10 @@ export async function loginUser(data: unknown) {
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) return { status: 401, body: { error: "Invalid credentials" } };
 
-  const accessToken = jwt.sign({ email: user.email }, JWT_SECRET, {
+  const accessToken = jwt.sign({ email: user.email, role: user.role }, JWT_SECRET, {
     subject: user.id,
     expiresIn: "7d",
   });
 
-  return { status: 200, body: { accessToken } };
+  return { status: 200, body: { accessToken, role: user.role } };
 }
