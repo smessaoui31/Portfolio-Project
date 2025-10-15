@@ -56,7 +56,7 @@ checkoutRouter.post("/start", requireAuth, async (req: AuthRequest, res) => {
   return res.status(200).json({
     orderId: order.id,
     clientSecret: paymentIntent.client_secret,
-    paymentIntentId: paymentIntent.id, // ✅ utile pour tests Postman
+    paymentIntentId: paymentIntent.id, // utile pour tests Postman
   });
 });
 
