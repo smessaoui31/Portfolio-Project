@@ -27,8 +27,7 @@ app.use((req, _res, next) => {
 });
 
 /**
- *  Stripe webhook : RAW body UNIQUEMENT et AVANT express.json()
- * On monte un HANDLER dédié, pas le router JSON.
+ *  Stripe webhook : RAW body UNIQUEMENT 
  */
 app.post("/checkout/webhook", bodyParser.raw({ type: "application/json" }), checkoutWebhookHandler);
 
