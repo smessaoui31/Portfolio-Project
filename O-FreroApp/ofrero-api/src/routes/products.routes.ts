@@ -1,26 +1,34 @@
 import { Router } from "express";
 import { z } from "zod";
 import type { Prisma } from "@prisma/client";
-import { prisma } from "../lib/prisma"; // nouveau : connexion à la DB Prisma
+import { prisma } from "../lib/prisma"; // Connexion à la DB Prisma
 import { requireAuth, requireAdmin } from "../middleware/auth";
 
 export const productsRouter = Router();
 
-//  Remplace PRODUCTS par requêtes Prisma
+/**
+ * GET /products
+ * Liste tous les produits (avec recherche optionnelle)
+ */
 productsRouter.get("/", async (req, res) => {
   const q = (req.query.q as string | undefined)?.trim();
-  const where: Prisma.ProductWhereInput | undefined = q ? { name: { contains: q, mode: "insensitive" } } : undefined;
+  const where: Prisma.ProductWhereInput | undefined = q
+    ? { name: { contains: q, mode: "insensitive" } }
+    : undefined;
 
   const products = await prisma.product.findMany({
     where,
     orderBy: { name: "asc" },
-    include: { category: { select: { id: true, name: true } } }, //  ajout
+    include: { category: { select: { id: true, name: true } } },      
   });
 
   res.json(products);
 });
 
-// Même logique, mais findUnique via Prisma
+/**
+ * GET /products/:id
+ * Obtenir un produit par ID
+ */
 productsRouter.get("/:id", async (req, res) => {
   const product = await prisma.product.findUnique({
     where: { id: req.params.id },
@@ -30,7 +38,10 @@ productsRouter.get("/:id", async (req, res) => {
   res.json(product);
 });
 
-// Création produit → via Prisma au lieu de PRODUCTS.push
+/**
+ * POST /products
+ * Création d’un nouveau produit (admin uniquement)
+ */
 const NewProductSchema = z.object({
   name: z.string().min(2),
   priceCents: z.number().int().min(0),
@@ -40,26 +51,29 @@ const NewProductSchema = z.object({
 
 productsRouter.post("/", requireAuth, requireAdmin, async (req, res) => {
   const parsed = NewProductSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "Invalid body", details: parsed.error.flatten() });
+  if (!parsed.success)
+    return res.status(400).json({ error: "Invalid body", details: parsed.error.flatten() });
 
-  // validation catégorie (si fournie)
+  // Validation catégorie (si fournie)
   if (parsed.data.categoryId) {
     const cat = await prisma.category.findUnique({ where: { id: parsed.data.categoryId } });
     if (!cat) return res.status(404).json({ error: "Category not found" });
   }
 
-  const product = await prisma.product.create({ data: parsed.data }); // création via Prisma
+  const product = await prisma.product.create({ data: parsed.data });
   res.status(201).json(product);
 });
 
 /**
  * POST /products/seed
- * Crée 5 pizzas de démo (réservé aux admins)
+ * Crée 5 pizzas de démonstration (admin uniquement)
  */
 productsRouter.post("/seed", requireAuth, requireAdmin, async (_req, res) => {
-  // (optionnel) rattacher à la catégorie "Pizzas" si elle existe
-  const pizzaCategory = await prisma.category.findFirst({
-    where: { name: { equals: "Pizzas", mode: "insensitive" } },
+  // Upsert catégorie "Pizza" (créée si elle n'existe pas)
+  const pizzaCategory = await prisma.category.upsert({
+    where: { name: "Pizza" },
+    update: {},
+    create: { name: "Pizza" },
     select: { id: true },
   });
 
@@ -68,42 +82,68 @@ productsRouter.post("/seed", requireAuth, requireAdmin, async (_req, res) => {
       name: "Pizza Margherita",
       description: "Tomate, mozzarella, basilic",
       priceCents: 950,
-      categoryId: pizzaCategory?.id ?? null,
+      categoryId: pizzaCategory.id,
     },
     {
       name: "Pizza Reine",
       description: "Jambon, champignons, mozzarella",
       priceCents: 1150,
-      categoryId: pizzaCategory?.id ?? null,
+      categoryId: pizzaCategory.id,
     },
     {
       name: "Pizza 4 Fromages",
       description: "Mozzarella, gorgonzola, parmesan, emmental",
       priceCents: 1250,
-      categoryId: pizzaCategory?.id ?? null,
+      categoryId: pizzaCategory.id,
     },
     {
       name: "Pizza Diavola",
       description: "Pepperoni piquant, olives noires",
       priceCents: 1300,
-      categoryId: pizzaCategory?.id ?? null,
+      categoryId: pizzaCategory.id,
     },
     {
       name: "Pizza O’Frero Spéciale",
       description: "Chèvre, viande hachée, oignons caramélisés, sauce BBQ",
       priceCents: 1450,
-      categoryId: pizzaCategory?.id ?? null,
+      categoryId: pizzaCategory.id,
     },
   ];
 
   try {
     const created = await prisma.product.createMany({ data });
     res.status(201).json({
-      message: `🍕 ${created.count} pizzas ajoutées`,
+      message: `🍕 ${created.count} pizzas ajoutées à la catégorie "Pizza"`,
       count: created.count,
     });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Erreur lors de la création des pizzas" });
   }
+});
+
+/**
+ * PATCH /products/fix-attach-pizzas
+ * Attache tous les produits contenant "pizza" à la catégorie "Pizza"
+ */
+productsRouter.patch("/fix-attach-pizzas", requireAuth, requireAdmin, async (_req, res) => {
+  const cat = await prisma.category.upsert({
+    where: { name: "Pizza" },
+    update: {},
+    create: { name: "Pizza" },
+    select: { id: true },
+  });
+
+  const updated = await prisma.product.updateMany({
+    where: {
+      categoryId: null,
+      name: { contains: "pizza", mode: "insensitive" },
+    },
+    data: { categoryId: cat.id },
+  });
+
+  res.json({
+    message: `🔗 ${updated.count} produits attachés à la catégorie "Pizza"`,
+    updated: updated.count,
+  });
 });
