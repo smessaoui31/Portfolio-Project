@@ -1,4 +1,3 @@
-// src/routes/cart.routes.ts
 import { Router } from "express";
 import { z } from "zod";
 import { requireAuth, AuthRequest } from "../middleware/auth";
