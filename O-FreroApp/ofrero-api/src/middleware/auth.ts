@@ -1,33 +1,37 @@
-import type { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { USERS } from "../data/store";
+import { prisma } from "../lib/prisma";
 
-const JWT_SECRET = process.env.JWT_SECRET!;
+const JWT_SECRET = process.env.JWT_SECRET as string;
 
+export type AuthUser = { id: string; email: string; role: "USER" | "ADMIN" };
 export interface AuthRequest extends Request {
-  user?: { id: string; email: string };
+  user?: AuthUser;
 }
 
 export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
-  const header = req.headers.authorization;
-  if (!header?.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Missing or invalid Authorization header" });
-  }
-  
-    const token = header.split(" ")[1];
-    try{
-    const payload = jwt.verify(token, JWT_SECRET) as any;
-    req.user = { id: payload.sub as string, email: payload.email as string };
+  const h = req.headers.authorization;
+  if (!h?.startsWith("Bearer ")) return res.status(401).json({ error: "Unauthorized" });
+
+  try {
+    const token = h.slice("Bearer ".length);
+    const payload = jwt.verify(token, JWT_SECRET) as { sub: string; email: string; role?: string };
+    req.user = { id: payload.sub, email: payload.email, role: (payload.role as any) ?? "USER" };
     next();
   } catch {
-    return res.status(401).json({ error: "Invalid token" });
+    return res.status(401).json({ error: "Unauthorized" });
   }
 }
 
-export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction) {
+export async function requireAdmin(req: AuthRequest, res: Response, next: NextFunction) {
   if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-  const me = USERS.find(u => u.id === req.user!.id);
-  if (!me) return res.status(401).json({ error: "Unauthorized" });
-  if (me.role !== "admin") return res.status(403).json({ error: "Forbidden: admins only" });
+
+
+
+  // option 2 (plus sûr): recharger depuis la DB pour eviter les pertes de données ! 
+  const u = await prisma.user.findUnique({ where: { id: req.user.id }, select: { role: true } });
+  if (!u) return res.status(401).json({ error: "Unauthorized" });
+  if (u.role !== "ADMIN") return res.status(403).json({ error: "Admins only" });
+
   next();
 }
