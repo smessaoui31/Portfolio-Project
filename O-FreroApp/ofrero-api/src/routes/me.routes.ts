@@ -1,11 +1,25 @@
 import { Router } from "express";
 import { requireAuth, AuthRequest } from "../middleware/auth";
-import { USERS } from "../data/store";
+import { prisma } from "../lib/prisma";
 
 export const meRouter = Router();
 
-meRouter.get("/", requireAuth, (req: AuthRequest, res) => {
-  const user = USERS.find(u => u.id === req.user!.id);
-  if (!user) return res.status(404).json({ error: "User not found" });
-  res.json({ id: user.id, email: user.email, fullName: user.fullName, role: user.role });
+/**
+ * GET /me
+ * Retourne le profil de l'utilisateur connecté (depuis la DB)
+ */
+meRouter.get("/", requireAuth, async (req: AuthRequest, res) => {
+  const me = await prisma.user.findUnique({
+    where: { id: req.user!.id },
+    select: {
+      id: true,
+      email: true,
+      fullName: true,
+      role: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+  if (!me) return res.status(401).json({ error: "Unauthorized" });
+  res.json(me);
 });
