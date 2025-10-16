@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { registerUser } from "../services/auth.service";
-import { loginUser } from "../services/auth.service";
+import { registerUser } from "../services/auth.prisma.service";
+import { loginUser } from "../services/auth.prisma.service";
 
 export const authRouter = Router();
 
