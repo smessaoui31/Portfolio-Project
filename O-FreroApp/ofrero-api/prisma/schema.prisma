@@ -56,6 +56,12 @@ model Order {
   status                OrderStatus @default(PENDING)
   totalCents            Int         @default(0)
   stripePaymentIntentId String?     @unique
+// Snapshot de l'adresse à ce niveau la 
+  shippingLine1       String
+  shippingLine2       String?
+  shippingCity        String
+  shippingPostalCode  String
+  shippingPhone       String
 
   items     OrderItem[]
   payment   Payment?
