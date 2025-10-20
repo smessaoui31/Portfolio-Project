@@ -1,9 +1,9 @@
 {
-  "openapi": "3.0.3",
+  "openapi": "3.0.4",
   "info": {
     "title": "API O'Frero",
     "version": "0.1.0",
-    "description": "API MVP pour la pizzeria O’Frero (authentification, produits, panier, commandes, checkout Stripe, santé du service)."
+    "description": "API MVP pour la pizzeria O’Frero (authentification, produits, catégories, panier, commandes, checkout Stripe, santé du service)."
   },
   "servers": [
     { "url": "http://localhost:5050", "description": "Environnement local" }
@@ -125,23 +125,179 @@
       }
     },
 
+    "/categories": {
+      "get": {
+        "summary": "Lister toutes les catégories (tri alphabétique)",
+        "responses": {
+          "200": {
+            "description": "Liste des catégories",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Category" } }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Créer une catégorie (admin)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/NewCategoryInput" },
+              "examples": { "ex": { "value": { "name": "Boissons" } } }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Catégorie créée",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Category" } } }
+          },
+          "400": { "description": "Corps invalide" },
+          "401": { "description": "Non autorisé" },
+          "403": { "description": "Réservé aux administrateurs" },
+          "409": { "description": "Nom déjà existant" }
+        }
+      }
+    },
+
+    "/categories/{id}": {
+      "get": {
+        "summary": "Obtenir une catégorie (option produits inclus)",
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } },
+          {
+            "in": "query",
+            "name": "withProducts",
+            "schema": { "type": "boolean", "default": false },
+            "description": "Inclure les produits de la catégorie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Catégorie (avec ou sans produits)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CategoryWithOptionalProducts" }
+              }
+            }
+          },
+          "404": { "description": "Catégorie introuvable" }
+        }
+      },
+      "patch": {
+        "summary": "Renommer une catégorie (admin)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateCategoryInput" },
+              "examples": { "ex": { "value": { "name": "Desserts maison" } } }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Catégorie mise à jour",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Category" } } }
+          },
+          "400": { "description": "Corps invalide" },
+          "401": { "description": "Non autorisé" },
+          "403": { "description": "Réservé aux administrateurs" },
+          "404": { "description": "Catégorie introuvable" }
+        }
+      },
+      "delete": {
+        "summary": "Supprimer une catégorie (admin)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Catégorie supprimée",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "deleted": { "$ref": "#/components/schemas/Category" } } }
+              }
+            }
+          },
+          "401": { "description": "Non autorisé" },
+          "403": { "description": "Réservé aux administrateurs" },
+          "404": { "description": "Catégorie introuvable" }
+        }
+      }
+    },
+
+    "/categories/seed": {
+      "post": {
+        "summary": "Créer rapidement plusieurs catégories utiles (admin)",
+        "description": "Ajoute : Pizza, Tex-Mex, Desserts, Calzones, Pizzanini (idempotent).",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "201": {
+            "description": "Catégories créées/garanties",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "count": { "type": "integer" },
+                    "names": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Non autorisé" },
+          "403": { "description": "Réservé aux administrateurs" }
+        }
+      }
+    },
+
     "/products": {
       "get": {
-        "summary": "Lister les produits disponibles",
+        "summary": "Lister les produits (recherche, filtre catégorie, pagination)",
         "parameters": [
           {
             "in": "query",
             "name": "q",
             "schema": { "type": "string" },
             "description": "Filtrer par nom (recherche partielle, insensible à la casse)"
+          },
+          {
+            "in": "query",
+            "name": "categoryId",
+            "schema": { "type": "string" },
+            "description": "Filtrer par identifiant de catégorie"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": { "type": "integer", "minimum": 1, "default": 1 },
+            "description": "Numéro de page (>= 1)"
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 },
+            "description": "Taille de page (1–100)"
           }
         ],
         "responses": {
           "200": {
-            "description": "Liste de produits",
+            "description": "Liste paginée de produits",
             "content": {
               "application/json": {
-                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } }
+                "schema": { "$ref": "#/components/schemas/ProductPage" }
               }
             }
           }
@@ -481,6 +637,52 @@
           "accessToken": { "type": "string", "description": "Jeton d’accès (JWT)" }
         }
       },
+      "Category": {
+        "type": "object",
+        "required": ["id", "name"],
+        "properties": {
+          "id": { "type": "string", "example": "cat_abc123" },
+          "name": { "type": "string", "example": "Pizza" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "NewCategoryInput": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "minLength": 2, "example": "Boissons" }
+        }
+      },
+      "UpdateCategoryInput": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "minLength": 2, "example": "Desserts maison" }
+        }
+      },
+      "CategoryWithOptionalProducts": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Category" },
+          {
+            "type": "object",
+            "properties": {
+              "products": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "priceCents": { "type": "integer" },
+                    "description": { "type": "string", "nullable": true }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
       "Product": {
         "type": "object",
         "required": ["id", "name", "priceCents"],
@@ -497,6 +699,17 @@
               "name": { "type": "string", "example": "Pizza" }
             }
           }
+        }
+      },
+      "ProductPage": {
+        "type": "object",
+        "required": ["items", "page", "pageSize", "total", "totalPages"],
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } },
+          "page": { "type": "integer", "example": 1 },
+          "pageSize": { "type": "integer", "example": 20 },
+          "total": { "type": "integer", "example": 57 },
+          "totalPages": { "type": "integer", "example": 3 }
         }
       },
       "NewProductInput": {
