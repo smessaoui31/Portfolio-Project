@@ -4,6 +4,7 @@ import bodyParser from "body-parser";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
 import path from "path";
+import cors from "cors";
 
 import { authRouter } from "./routes/auth.routes";
 import { meRouter } from "./routes/me.routes";
@@ -85,6 +86,11 @@ app.use("/addresses", addressRouter);
 app.use("/products", productsRouter);
 app.use("/checkout", checkoutRouter);
 app.use("/categories", categoriesRouter);
+
+app.use(cors({
+  origin: ["http://localhost:3000"], // ton front dev
+  methods: ["GET","POST","PATCH","DELETE","OPTIONS"],
+}));
 
 /** 404 */
 app.use((_req, res) => res.status(404).send("Not Found"));
