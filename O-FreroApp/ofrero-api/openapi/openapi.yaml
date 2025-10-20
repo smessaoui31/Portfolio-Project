@@ -1,0 +1,787 @@
+openapi: 3.0.3
+info:
+  title: API O'Frero
+  version: "0.1.0"
+  description: >
+    API MVP pour la pizzeria O’Frero :
+    - Authentification (JWT), Profil, Zone Admin
+    - Catégories & Produits (pagination, tri, seed)
+    - Panier (CRUD, Prisma)
+    - Adresses utilisateur (CRUD, adresse par défaut)
+    - Checkout Stripe (addressId ou adresse inline)
+    - Commandes (côté utilisateur & admin)
+    - Health check
+
+servers:
+  - url: http://localhost:5050
+    description: Environnement local
+
+tags:
+  - name: Health
+  - name: Auth
+  - name: Profil
+  - name: Admin
+  - name: Catégories
+  - name: Produits
+  - name: Panier
+  - name: Adresses
+  - name: Checkout
+  - name: Commandes
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Vérification de l’état du service
+      responses:
+        "200":
+          description: Le service est opérationnel
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  service: { type: string }
+              examples:
+                ok:
+                  value: { ok: true, service: "ofrero-api" }
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Inscription d’un nouvel utilisateur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterInput" }
+            examples:
+              exemple:
+                value: { email: "alice@example.com", password: "secret123", fullName: "Alice Dupont" }
+      responses:
+        "201":
+          description: Utilisateur créé
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicUser" }
+        "400": { description: Corps de requête invalide }
+        "409": { description: Adresse e-mail déjà utilisée }
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Connexion et obtention d’un jeton JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginInput" }
+            examples:
+              exemple:
+                value: { email: "alice@example.com", password: "secret123" }
+      responses:
+        "200":
+          description: Connexion réussie — jeton JWT renvoyé
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthToken" }
+        "400": { description: Corps de requête invalide }
+        "401": { description: Identifiants incorrects }
+
+  /me:
+    get:
+      tags: [Profil]
+      summary: Obtenir le profil de l’utilisateur connecté
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Profil utilisateur
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicUserExtended" }
+        "401": { description: Non autorisé (JWT manquant ou invalide) }
+
+  /admin/ping:
+    get:
+      tags: [Admin]
+      summary: Test de la zone administrateur (réservé aux admins)
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Réponse OK de la zone admin
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  area: { type: string }
+              example: { ok: true, area: "admin" }
+        "401": { description: Non autorisé }
+        "403": { description: Accès réservé aux administrateurs }
+
+  /categories:
+    get:
+      tags: [Catégories]
+      summary: Lister les catégories
+      responses:
+        "200":
+          description: Liste des catégories
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Category" }
+
+    post:
+      tags: [Catégories]
+      summary: Créer une catégorie (admin)
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NewCategoryInput" }
+            examples:
+              exemple:
+                value: { name: "Pizza" }
+      responses:
+        "201":
+          description: Catégorie créée
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Category" }
+        "400": { description: Corps de requête invalide }
+        "401": { description: Non autorisé }
+        "403": { description: Admin requis }
+
+  /categories/seed:
+    post:
+      tags: [Catégories]
+      summary: Créer des catégories par défaut (admin)
+      description: Crée *Tex-Mex*, *Desserts*, *Calzones*, *Pizzanini*, *Pizza* si non existantes (idempotent).
+      security: [{ bearerAuth: [] }]
+      responses:
+        "201":
+          description: Catégories insérées/assurées
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  inserted: { type: integer }
+                  ensured: { type: array, items: { $ref: "#/components/schemas/Category" } }
+        "401": { description: Non autorisé }
+        "403": { description: Admin requis }
+
+  /products:
+    get:
+      tags: [Produits]
+      summary: Lister les produits disponibles (pagination/tri)
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+          description: Filtrer par nom (recherche partielle, insensible à la casse)
+        - in: query
+          name: categoryId
+          schema: { type: string }
+          description: Filtrer par catégorie
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: pageSize
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [name, priceCents, createdAt]
+          description: Champ de tri
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+          description: Ordre de tri
+      responses:
+        "200":
+          description: Liste paginée de produits
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedProducts"
+
+    post:
+      tags: [Produits]
+      summary: Créer un nouveau produit (admin)
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NewProductInput" }
+            examples:
+              exemple:
+                value:
+                  name: "Pizza 4 Fromages"
+                  priceCents: 1250
+                  description: "Mozzarella, chèvre, bleu, parmesan"
+                  categoryId: "c_pizza"
+      responses:
+        "201":
+          description: Produit créé
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Product" }
+        "400": { description: Corps invalide / catégorie inexistante }
+        "401": { description: Non autorisé }
+        "403": { description: Admin requis }
+
+  /products/{id}:
+    get:
+      tags: [Produits]
+      summary: Obtenir les détails d’un produit par ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Produit trouvé
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Product" }
+        "404":
+          description: Produit introuvable
+
+  /products/seed:
+    post:
+      tags: [Produits]
+      summary: Créer 5 pizzas de démonstration (admin)
+      description: Upsert la catégorie **Pizza**, puis insère 5 pizzas si non présentes.
+      security: [{ bearerAuth: [] }]
+      responses:
+        "201":
+          description: Pizzas créées
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  count: { type: integer }
+        "401": { description: Non autorisé }
+        "403": { description: Admin requis }
+
+  /cart:
+    get:
+      tags: [Panier]
+      summary: Obtenir le panier de l’utilisateur connecté
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Panier actuel de l’utilisateur
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Cart" }
+              examples:
+                vide:
+                  value: { id: "cart_u_abc123", items: [], totalCents: 0 }
+        "401": { description: Non autorisé }
+
+  /cart/items:
+    post:
+      tags: [Panier]
+      summary: Ajouter un article (ou augmenter quantité si déjà présent)
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AddCartItemInput" }
+            examples:
+              exemple:
+                value: { productId: "p2", quantity: 2 }
+      responses:
+        "201":
+          description: Panier après ajout
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Cart" }
+        "400": { description: Requête invalide }
+        "401": { description: Non autorisé }
+        "404": { description: Produit introuvable }
+
+  /cart/items/{itemId}:
+    patch:
+      tags: [Panier]
+      summary: Modifier la quantité d’un article (0 = suppression)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: itemId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateCartItemInput" }
+            examples:
+              modifier: { value: { quantity: 3 } }
+              supprimer: { value: { quantity: 0 } }
+      responses:
+        "200":
+          description: Panier mis à jour
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Cart" }
+        "400": { description: Requête invalide }
+        "401": { description: Non autorisé }
+        "404": { description: Article introuvable }
+
+    delete:
+      tags: [Panier]
+      summary: Supprimer un article du panier
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: itemId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Article supprimé et panier renvoyé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted: { $ref: "#/components/schemas/CartItem" }
+                  cart: { $ref: "#/components/schemas/Cart" }
+        "401": { description: Non autorisé }
+        "404": { description: Article introuvable }
+
+  /addresses:
+    get:
+      tags: [Adresses]
+      summary: Lister les adresses de l’utilisateur
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Liste d’adresses
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Address" }
+        "401": { description: Non autorisé }
+
+    post:
+      tags: [Adresses]
+      summary: Créer une adresse
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NewAddressInput" }
+            examples:
+              exemple:
+                value:
+                  addressLine: "12 rue de la République"
+                  city: "Paris"
+                  postalCode: "75001"
+                  phone: "+33601020304"
+                  isDefault: true
+      responses:
+        "201":
+          description: Adresse créée
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Address" }
+        "400": { description: Corps invalide }
+        "401": { description: Non autorisé }
+
+  /addresses/{id}:
+    patch:
+      tags: [Adresses]
+      summary: Mettre à jour une adresse (peut définir par défaut)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateAddressInput" }
+      responses:
+        "200":
+          description: Adresse mise à jour
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Address" }
+        "400": { description: Corps invalide }
+        "401": { description: Non autorisé }
+        "404": { description: Adresse introuvable }
+
+    delete:
+      tags: [Adresses]
+      summary: Supprimer une adresse
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "204": { description: Supprimée }
+        "401": { description: Non autorisé }
+        "404": { description: Adresse introuvable }
+
+  /checkout/start:
+    post:
+      tags: [Checkout]
+      summary: Démarrer le checkout (crée la commande + PaymentIntent Stripe)
+      description: >
+        Deux modes :
+        - **Avec addressId** (adresse déjà enregistrée)
+        - **Ou** avec un bloc `address` inline.
+        Retourne `clientSecret` pour Stripe.
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CheckoutStartInput" }
+            examples:
+              avecAddressId:
+                value: { addressId: "addr_abc123" }
+              avecAddressInline:
+                value:
+                  address:
+                    addressLine: "12 rue de la République"
+                    city: "Paris"
+                    postalCode: "75001"
+                    phone: "+33601020304"
+      responses:
+        "200":
+          description: Checkout démarré
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CheckoutStartResponse" }
+        "400": { description: Panier vide ou corps invalide }
+        "401": { description: Non autorisé }
+
+  /checkout/webhook:
+    post:
+      tags: [Checkout]
+      summary: Webhook Stripe (émis par Stripe après tentative de paiement)
+      description: >
+        ⚠️ Corps RAW requis (non parsé). En dev, on peut envoyer un JSON brut via Postman.
+        En prod/Stripe CLI, la signature est vérifiée.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+            examples:
+              payment_intent.succeeded:
+                value: { type: "payment_intent.succeeded", data: { object: { id: "pi_123", object: "payment_intent" } } }
+              payment_intent.payment_failed:
+                value: { type: "payment_intent.payment_failed", data: { object: { id: "pi_123", object: "payment_intent" } } }
+      responses:
+        "200": { description: Événement reçu }
+        "400": { description: Signature invalide ou payload invalide }
+
+  /orders:
+    get:
+      tags: [Commandes]
+      summary: Lister les commandes de l’utilisateur connecté
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Liste des commandes
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Order" }
+        "401": { description: Non autorisé }
+
+  /orders/{id}:
+    get:
+      tags: [Commandes]
+      summary: Obtenir le détail d’une commande (utilisateur)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Commande trouvée
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Order" }
+        "401": { description: Non autorisé }
+        "404": { description: Commande introuvable }
+
+  /orders/admin:
+    get:
+      tags: [Commandes]
+      summary: Lister toutes les commandes (admin)
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Liste de toutes les commandes
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AdminOrder" }
+        "401": { description: Non autorisé }
+        "403": { description: Accès réservé aux administrateurs }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RegisterInput:
+      type: object
+      required: [email, password, fullName]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 6 }
+        fullName: { type: string, minLength: 2 }
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 6 }
+
+    PublicUser:
+      type: object
+      properties:
+        id: { type: string, example: "u_ab12cd34" }
+        email: { type: string, example: "alice@example.com" }
+        fullName: { type: string, example: "Alice Dupont" }
+        role:
+          type: string
+          enum: [USER, ADMIN]
+          example: USER
+
+    PublicUserExtended:
+      allOf:
+        - $ref: "#/components/schemas/PublicUser"
+        - type: object
+          properties:
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+
+    AuthToken:
+      type: object
+      properties:
+        accessToken: { type: string, description: "Jeton d’accès (JWT)" }
+
+    Category:
+      type: object
+      properties:
+        id: { type: string, example: "c_pizza" }
+        name: { type: string, example: "Pizza" }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    NewCategoryInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, example: "Tex-Mex" }
+
+    Product:
+      type: object
+      required: [id, name, priceCents]
+      properties:
+        id: { type: string, example: "p2" }
+        name: { type: string, example: "Pizza Pepperoni" }
+        priceCents: { type: integer, minimum: 0, example: 1100 }
+        description: { type: string, example: "Tomate, mozzarella, pepperoni", nullable: true }
+        category:
+          type: object
+          nullable: true
+          properties:
+            id: { type: string, example: "c_pizza" }
+            name: { type: string, example: "Pizza" }
+
+    NewProductInput:
+      type: object
+      required: [name, priceCents]
+      properties:
+        name: { type: string, example: "Pizza 4 Fromages" }
+        priceCents: { type: integer, example: 1250 }
+        description: { type: string, example: "Mozzarella, chèvre, bleu, parmesan" }
+        categoryId: { type: string, nullable: true, example: "c_pizza" }
+
+    PaginatedProducts:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Product" }
+        page: { type: integer, example: 1 }
+        pageSize: { type: integer, example: 20 }
+        total: { type: integer, example: 57 }
+
+    CartItem:
+      type: object
+      required: [id, productId, name, unitPriceCents, quantity]
+      properties:
+        id: { type: string, example: "ci_x1y2z3a4" }
+        productId: { type: string, example: "p2" }
+        name: { type: string, example: "Pizza Pepperoni" }
+        unitPriceCents: { type: integer, minimum: 0, example: 1100 }
+        quantity: { type: integer, minimum: 0, maximum: 99, example: 2 }
+
+    Cart:
+      type: object
+      required: [id, items, totalCents]
+      properties:
+        id: { type: string, example: "cart_u_ab12cd34" }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/CartItem" }
+        totalCents: { type: integer, minimum: 0, example: 2200 }
+
+    AddCartItemInput:
+      type: object
+      required: [productId, quantity]
+      properties:
+        productId: { type: string, example: "p2" }
+        quantity: { type: integer, minimum: 1, maximum: 99, example: 2 }
+
+    UpdateCartItemInput:
+      type: object
+      required: [quantity]
+      properties:
+        quantity: { type: integer, minimum: 0, maximum: 99, example: 3 }
+
+    Address:
+      type: object
+      properties:
+        id: { type: string, example: "addr_abc123" }
+        userId: { type: string, example: "u_ab12cd34" }
+        addressLine: { type: string, example: "12 rue de la République" }
+        city: { type: string, example: "Paris" }
+        postalCode: { type: string, example: "75001" }
+        phone: { type: string, example: "+33601020304" }
+        isDefault: { type: boolean, example: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    NewAddressInput:
+      type: object
+      required: [addressLine, city, postalCode, phone]
+      properties:
+        addressLine: { type: string }
+        city: { type: string }
+        postalCode: { type: string }
+        phone: { type: string }
+        isDefault: { type: boolean, description: "Si true, définit cette adresse comme par défaut" }
+
+    UpdateAddressInput:
+      type: object
+      properties:
+        addressLine: { type: string }
+        city: { type: string }
+        postalCode: { type: string }
+        phone: { type: string }
+        isDefault: { type: boolean }
+
+    CheckoutStartInput:
+      type: object
+      properties:
+        addressId:
+          type: string
+          description: "ID d’une adresse existante"
+        address:
+          $ref: "#/components/schemas/NewAddressInput"
+      oneOf:
+        - required: [addressId]
+        - required: [address]
+      description: "Fournir **soit** addressId **soit** address"
+
+    CheckoutStartResponse:
+      type: object
+      required: [orderId, clientSecret, paymentIntentId]
+      properties:
+        orderId: { type: string, example: "o_89vkuh63" }
+        clientSecret: { type: string, example: "pi_3SIV6f..._secret_..." }
+        paymentIntentId: { type: string, example: "pi_3SIV6fPDmY57KJ5r0uGb1jdZ" }
+
+    OrderItem:
+      type: object
+      required: [id, productId, name, unitPriceCents, quantity]
+      properties:
+        id: { type: string, example: "oi_123" }
+        productId: { type: string, example: "p2" }
+        name: { type: string, example: "Pizza Margherita" }
+        unitPriceCents: { type: integer, example: 950 }
+        quantity: { type: integer, example: 2 }
+
+    Payment:
+      type: object
+      nullable: true
+      required: [id, orderId, provider, status, intentId, createdAt]
+      properties:
+        id: { type: string, example: "pay_abc123" }
+        orderId: { type: string, example: "o_abc123" }
+        provider: { type: string, example: "stripe" }
+        status: { type: string, example: "succeeded" }
+        intentId: { type: string, example: "pi_3SIV6f..." }
+        createdAt: { type: string, format: date-time }
+
+    Order:
+      type: object
+      required: [id, userId, status, totalCents, items, createdAt, updatedAt]
+      properties:
+        id: { type: string, example: "o_abc123" }
+        userId: { type: string, example: "u_ab12cd34" }
+        status:
+          type: string
+          enum: [PENDING, PAID, FAILED, CANCELLED]
+          example: PAID
+        totalCents: { type: integer, example: 2450 }
+        stripePaymentIntentId: { type: string, nullable: true, example: "pi_3SIV6f..." }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/OrderItem" }
+        payment: { $ref: "#/components/schemas/Payment" }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    AdminOrder:
+      allOf:
+        - $ref: "#/components/schemas/Order"
+        - type: object
+          properties:
+            user:
+              type: object
+              properties:
+                id: { type: string, example: "u_ab12cd34" }
+                email: { type: string, example: "alice@example.com" }
+                fullName: { type: string, example: "Alice Dupont" }

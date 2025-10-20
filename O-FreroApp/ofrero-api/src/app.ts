@@ -2,7 +2,8 @@ import "dotenv/config";
 import express from "express";
 import bodyParser from "body-parser";
 import swaggerUi from "swagger-ui-express";
-import openapi from "../openapi/openapi.json";
+import YAML from "yamljs";
+import path from "path";
 
 import { authRouter } from "./routes/auth.routes";
 import { meRouter } from "./routes/me.routes";
@@ -21,6 +22,9 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const ADMIN_FULLNAME = process.env.ADMIN_FULLNAME ?? "Site Admin";
 
+// Charge le YAML de façon robuste (OK en dev et après build)
+const openapiDocument = YAML.load(path.resolve(process.cwd(), "openapi/openapi.yaml"));
+
 const app = express();
 
 /** Logger minimal */
@@ -30,7 +34,7 @@ app.use((req, _res, next) => {
 });
 
 /**
- *  Stripe webhook : RAW body UNIQUEMENT 
+ * Stripe webhook : RAW body UNIQUEMENT et AVANT express.json()
  */
 app.post("/checkout/webhook", bodyParser.raw({ type: "application/json" }), checkoutWebhookHandler);
 
@@ -38,7 +42,7 @@ app.post("/checkout/webhook", bodyParser.raw({ type: "application/json" }), chec
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/** Seed admin au boot */
+/** Seed admin au boot (in-memory pour dev) */
 (async () => {
   if (ADMIN_EMAIL && ADMIN_PASSWORD) {
     const exists = USERS.find(u => u.email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
@@ -68,8 +72,8 @@ app.get("/", (_req, res) => {
 });
 app.get("/health", (_req, res) => res.json({ ok: true, service: "ofrero-api" }));
 
-/** Docs */
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapi));
+/** Docs (Swagger UI) */
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapiDocument));
 
 /** Routes API */
 app.use("/auth", authRouter);
