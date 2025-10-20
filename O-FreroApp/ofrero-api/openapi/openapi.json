@@ -3,7 +3,7 @@
   "info": {
     "title": "API O'Frero",
     "version": "0.1.0",
-    "description": "API MVP pour la pizzeria O’Frero (authentification, produits, panier, paiement, santé du service)."
+    "description": "API MVP pour la pizzeria O’Frero (authentification, produits, panier, commandes, checkout Stripe, santé du service)."
   },
   "servers": [
     { "url": "http://localhost:5050", "description": "Environnement local" }
@@ -91,7 +91,11 @@
         "responses": {
           "200": {
             "description": "Profil utilisateur",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PublicUser" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PublicUserExtended" }
+              }
+            }
           },
           "401": { "description": "Non autorisé (JWT manquant ou invalide)" }
         }
@@ -109,10 +113,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "ok": { "type": "boolean" },
-                    "area": { "type": "string" }
-                  },
+                  "properties": { "ok": { "type": "boolean" }, "area": { "type": "string" } },
                   "example": { "ok": true, "area": "admin" }
                 }
               }
@@ -159,7 +160,8 @@
                   "value": {
                     "name": "Pizza 4 Fromages",
                     "priceCents": 1250,
-                    "description": "Mozzarella, chèvre, bleu, parmesan"
+                    "description": "Mozzarella, chèvre, bleu, parmesan",
+                    "categoryId": "c_pizza"
                   }
                 }
               }
@@ -307,8 +309,7 @@
 
     "/checkout/start": {
       "post": {
-        "summary": "Démarrer le paiement (crée la commande + PaymentIntent Stripe)",
-        "description": "Calcule le total côté serveur à partir du panier de l’utilisateur, crée une commande en statut 'pending' puis un PaymentIntent Stripe. Renvoie le clientSecret à utiliser côté front.",
+        "summary": "Démarrer le checkout : crée la commande + PaymentIntent Stripe et renvoie le client_secret",
         "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
@@ -318,10 +319,10 @@
               "examples": {
                 "exemple": {
                   "value": {
-                    "addressLine": "12 Rue de la Pizza",
+                    "addressLine": "12 rue de la République",
                     "city": "Paris",
-                    "postalCode": "75000",
-                    "phone": "0612345678"
+                    "postalCode": "75001",
+                    "phone": "+33601020304"
                   }
                 }
               }
@@ -330,14 +331,14 @@
         },
         "responses": {
           "200": {
-            "description": "Checkout initialisé",
+            "description": "Checkout démarré",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/CheckoutStartOutput" }
+                "schema": { "$ref": "#/components/schemas/CheckoutStartResponse" }
               }
             }
           },
-          "400": { "description": "Panier vide ou corps de requête invalide" },
+          "400": { "description": "Panier vide ou corps invalide" },
           "401": { "description": "Non autorisé" }
         }
       }
@@ -345,24 +346,24 @@
 
     "/checkout/webhook": {
       "post": {
-        "summary": "Webhook Stripe (confirmation de paiement)",
-        "description": "Point d’entrée appelé par Stripe après tentative de paiement. Doit recevoir le corps RAW (non parsé). Si la signature est configurée, elle est vérifiée.",
+        "summary": "Webhook Stripe (émis par Stripe après tentative de paiement)",
+        "description": "⚠️ Corps RAW requis (application/json non parsé). En dev, on peut envoyer un JSON brut via Postman pour simuler. En prod/Stripe CLI, la signature est vérifiée.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/StripeWebhookEvent" },
+              "schema": { "type": "object", "additionalProperties": true },
               "examples": {
-                "paiement_reussi": {
+                "payment_intent.succeeded": {
                   "value": {
                     "type": "payment_intent.succeeded",
-                    "data": { "object": { "id": "pi_3QxQnH2...", "object": "payment_intent" } }
+                    "data": { "object": { "id": "pi_123", "object": "payment_intent" } }
                   }
                 },
-                "paiement_echoue": {
+                "payment_intent.payment_failed": {
                   "value": {
                     "type": "payment_intent.payment_failed",
-                    "data": { "object": { "id": "pi_3QxQnH2...", "object": "payment_intent" } }
+                    "data": { "object": { "id": "pi_123", "object": "payment_intent" } }
                   }
                 }
               }
@@ -370,28 +371,33 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "Webhook traité",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "ok": { "type": "boolean", "example": true },
-                    "event": { "type": "string", "example": "payment_intent.succeeded" }
-                  }
-                }
-              }
-            }
-          },
-          "400": { "description": "Signature invalide ou corps illisible" }
+          "200": { "description": "Événement reçu" },
+          "400": { "description": "Signature invalide ou payload invalide" }
         }
       }
     },
 
-    "/checkout/orders/{id}": {
+    "/orders": {
       "get": {
-        "summary": "Obtenir le statut d’une commande",
+        "summary": "Lister les commandes de l’utilisateur connecté",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Liste des commandes de l’utilisateur",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Order" } }
+              }
+            }
+          },
+          "401": { "description": "Non autorisé" }
+        }
+      }
+    },
+
+    "/orders/{id}": {
+      "get": {
+        "summary": "Obtenir le détail d’une commande de l’utilisateur connecté",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
@@ -399,14 +405,29 @@
         "responses": {
           "200": {
             "description": "Commande trouvée",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } }
+          },
+          "401": { "description": "Non autorisé" },
+          "404": { "description": "Commande introuvable" }
+        }
+      }
+    },
+
+    "/orders/admin": {
+      "get": {
+        "summary": "Lister toutes les commandes (administrateur)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Liste de toutes les commandes",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Order" }
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/AdminOrder" } }
               }
             }
           },
           "401": { "description": "Non autorisé" },
-          "404": { "description": "Commande introuvable" }
+          "403": { "description": "Accès réservé aux administrateurs" }
         }
       }
     }
@@ -440,7 +461,18 @@
           "id": { "type": "string", "example": "u_ab12cd34" },
           "email": { "type": "string", "example": "alice@example.com" },
           "fullName": { "type": "string", "example": "Alice Dupont" },
-          "role": { "type": "string", "enum": ["user", "admin"], "example": "user" }
+          "role": { "type": "string", "enum": ["USER", "ADMIN"], "example": "USER" }
+        }
+      },
+      "PublicUserExtended": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "u_ab12cd34" },
+          "email": { "type": "string", "example": "alice@example.com" },
+          "fullName": { "type": "string", "example": "Alice Dupont" },
+          "role": { "type": "string", "enum": ["USER", "ADMIN"], "example": "USER" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
         }
       },
       "AuthToken": {
@@ -456,7 +488,15 @@
           "id": { "type": "string", "example": "p2" },
           "name": { "type": "string", "example": "Pizza Pepperoni" },
           "priceCents": { "type": "integer", "minimum": 0, "example": 1100 },
-          "description": { "type": "string", "example": "Tomate, mozzarella, pepperoni", "nullable": true }
+          "description": { "type": "string", "example": "Tomate, mozzarella, pepperoni", "nullable": true },
+          "category": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": { "type": "string", "example": "c_pizza" },
+              "name": { "type": "string", "example": "Pizza" }
+            }
+          }
         }
       },
       "NewProductInput": {
@@ -465,7 +505,8 @@
         "properties": {
           "name": { "type": "string", "example": "Pizza 4 Fromages" },
           "priceCents": { "type": "integer", "example": 1250 },
-          "description": { "type": "string", "example": "Mozzarella, chèvre, bleu, parmesan" }
+          "description": { "type": "string", "example": "Mozzarella, chèvre, bleu, parmesan" },
+          "categoryId": { "type": "string", "nullable": true, "example": "c_pizza" }
         }
       },
       "CartItem": {
@@ -507,66 +548,81 @@
         "type": "object",
         "required": ["addressLine", "city", "postalCode", "phone"],
         "properties": {
-          "addressLine": { "type": "string", "example": "12 Rue de la Pizza" },
-          "city":       { "type": "string", "example": "Paris" },
-          "postalCode": { "type": "string", "example": "75000" },
-          "phone":      { "type": "string", "example": "0612345678" }
+          "addressLine": { "type": "string", "example": "12 rue de la République" },
+          "city": { "type": "string", "example": "Paris" },
+          "postalCode": { "type": "string", "example": "75001" },
+          "phone": { "type": "string", "example": "+33601020304" }
         }
       },
-      "CheckoutStartOutput": {
+      "CheckoutStartResponse": {
         "type": "object",
         "required": ["orderId", "clientSecret", "paymentIntentId"],
         "properties": {
-          "orderId":         { "type": "string", "example": "o_ab12cd34" },
-          "clientSecret":    { "type": "string", "example": "pi_3QxQnH2..._secret_ABC123" },
-          "paymentIntentId": { "type": "string", "example": "pi_3QxQnH2..." }
+          "orderId": { "type": "string", "example": "o_89vkuh63" },
+          "clientSecret": { "type": "string", "example": "pi_3SIV6f..._secret_..." },
+          "paymentIntentId": { "type": "string", "example": "pi_3SIV6fPDmY57KJ5r0uGb1jdZ" }
         }
-      },
-      "StripeWebhookEvent": {
-        "type": "object",
-        "description": "Payload envoyé par Stripe. Le champ 'type' indique l’événement, et 'data.object' contient l’objet Stripe.",
-        "properties": {
-          "id": { "type": "string", "nullable": true, "description": "Identifiant d’événement Stripe (si fourni par Stripe CLI/Live)" },
-          "type": { "type": "string", "example": "payment_intent.succeeded" },
-          "data": {
-            "type": "object",
-            "properties": {
-              "object": {
-                "type": "object",
-                "description": "Objet Stripe associé à l’événement",
-                "properties": {
-                  "id": { "type": "string", "example": "pi_3QxQnH2..." },
-                  "object": { "type": "string", "example": "payment_intent" }
-                },
-                "required": ["id", "object"]
-              }
-            },
-            "required": ["object"]
-          }
-        },
-        "required": ["type", "data"]
       },
       "OrderItem": {
         "type": "object",
-        "required": ["productId", "name", "unitPriceCents", "quantity"],
+        "required": ["id", "productId", "name", "unitPriceCents", "quantity"],
         "properties": {
-          "productId":      { "type": "string",  "example": "p2" },
-          "name":           { "type": "string",  "example": "Pizza Reine" },
-          "unitPriceCents": { "type": "integer", "example": 1150 },
-          "quantity":       { "type": "integer", "example": 2 }
+          "id": { "type": "string", "example": "oi_123" },
+          "productId": { "type": "string", "example": "p2" },
+          "name": { "type": "string", "example": "Pizza Margherita" },
+          "unitPriceCents": { "type": "integer", "example": 950 },
+          "quantity": { "type": "integer", "example": 2 }
+        }
+      },
+      "Payment": {
+        "type": "object",
+        "nullable": true,
+        "required": ["id", "orderId", "provider", "status", "intentId", "createdAt"],
+        "properties": {
+          "id": { "type": "string", "example": "pay_abc123" },
+          "orderId": { "type": "string", "example": "o_abc123" },
+          "provider": { "type": "string", "example": "stripe" },
+          "status": { "type": "string", "example": "succeeded" },
+          "intentId": { "type": "string", "example": "pi_3SIV6f..." },
+          "createdAt": { "type": "string", "format": "date-time" }
         }
       },
       "Order": {
         "type": "object",
-        "required": ["id", "userId", "items", "totalCents", "status"],
+        "required": ["id", "userId", "status", "totalCents", "items", "createdAt", "updatedAt"],
         "properties": {
-          "id":                   { "type": "string",  "example": "o_ab12cd34" },
-          "userId":               { "type": "string",  "example": "u_9x8y7z6w" },
-          "items":                { "type": "array",   "items": { "$ref": "#/components/schemas/OrderItem" } },
-          "totalCents":           { "type": "integer", "example": 2300 },
-          "status":               { "type": "string",  "enum": ["pending", "paid", "failed", "cancelled"], "example": "paid" },
-          "stripePaymentIntentId":{ "type": "string",  "nullable": true, "example": "pi_3QxQnH2..." }
+          "id": { "type": "string", "example": "o_abc123" },
+          "userId": { "type": "string", "example": "u_ab12cd34" },
+          "status": {
+            "type": "string",
+            "enum": ["PENDING", "PAID", "FAILED", "CANCELLED"],
+            "example": "PAID"
+          },
+          "totalCents": { "type": "integer", "example": 2450 },
+          "stripePaymentIntentId": { "type": "string", "nullable": true, "example": "pi_3SIV6f..." },
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/OrderItem" } },
+          "payment": { "$ref": "#/components/schemas/Payment" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
         }
+      },
+      "AdminOrder": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Order" },
+          {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string", "example": "u_ab12cd34" },
+                  "email": { "type": "string", "example": "alice@example.com" },
+                  "fullName": { "type": "string", "example": "Alice Dupont" }
+                }
+              }
+            }
+          }
+        ]
       }
     }
   }
