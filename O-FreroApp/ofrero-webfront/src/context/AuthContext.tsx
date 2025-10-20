@@ -1,41 +1,65 @@
 "use client";
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
-type AuthState = {
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+
+type Role = "USER" | "ADMIN" | null;
+
+type AuthContextType = {
   token: string | null;
-  role: "ADMIN" | "USER" | null;
-  login: (token: string, role?: "ADMIN" | "USER" | null) => void;
+  role: Role;
+  login: (tok: string) => void;
   logout: () => void;
 };
 
-const AuthCtx = createContext<AuthState>({
-  token: null, role: null, login: () => {}, logout: () => {}
+const AuthContext = createContext<AuthContextType>({
+  token: null,
+  role: null,
+  login: () => {},
+  logout: () => {},
 });
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
-  const [role, setRole]   = useState<"ADMIN" | "USER" | null>(null);
+  const [role, setRole] = useState<Role>(null);
 
+  // charger depuis localStorage
   useEffect(() => {
-    const t = localStorage.getItem("ofrero_token");
-    const r = localStorage.getItem("ofrero_role") as "ADMIN" | "USER" | null;
+    const t = localStorage.getItem("ofrero:token");
+    const r = localStorage.getItem("ofrero:role") as Role | null;
     if (t) setToken(t);
     if (r) setRole(r);
   }, []);
 
-  const login = (t: string, r: "ADMIN" | "USER" | null = null) => {
-    setToken(t); setRole(r);
-    localStorage.setItem("ofrero_token", t);
-    if (r) localStorage.setItem("ofrero_role", r);
+  const login = (tok: string) => {
+    // décoder le payload (sans vérifier la signature côté client)
+    try {
+      const payload = JSON.parse(atob(tok.split(".")[1] || ""));
+      const r = (payload?.role as Role) || null;
+      setToken(tok);
+      setRole(r);
+      localStorage.setItem("ofrero:token", tok);
+      localStorage.setItem("ofrero:role", r || "");
+    } catch {
+      // fallback minimal si le décodage échoue
+      setToken(tok);
+      setRole(null);
+      localStorage.setItem("ofrero:token", tok);
+      localStorage.removeItem("ofrero:role");
+    }
   };
 
   const logout = () => {
-    setToken(null); setRole(null);
-    localStorage.removeItem("ofrero_token");
-    localStorage.removeItem("ofrero_role");
+    setToken(null);
+    setRole(null);
+    localStorage.removeItem("ofrero:token");
+    localStorage.removeItem("ofrero:role");
   };
 
-  return <AuthCtx.Provider value={{ token, role, login, logout }}>{children}</AuthCtx.Provider>;
+  const value = useMemo(() => ({ token, role, login, logout }), [token, role]);
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export const useAuth = () => useContext(AuthCtx);
+export function useAuth() {
+  return useContext(AuthContext);
+}

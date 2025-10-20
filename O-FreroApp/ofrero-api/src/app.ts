@@ -36,8 +36,32 @@ app.use((req, _res, next) => {
 
 /**
  * Stripe webhook : RAW body UNIQUEMENT et AVANT express.json()
+ * (Pas besoin de CORS pour ce endpoint côté navigateur)
  */
 app.post("/checkout/webhook", bodyParser.raw({ type: "application/json" }), checkoutWebhookHandler);
+
+/** CORS — doit arriver AVANT les routes JSON */
+const ALLOWED_ORIGINS = [
+  process.env.FRONT_URL || "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:3001",
+  "http://127.0.0.1:3001",
+];
+
+const corsOptions: cors.CorsOptions = {
+  origin(origin, cb) {
+    // Autorise Postman/curl (pas d'Origin) et les origines whitelistees
+    if (!origin) return cb(null, true);
+    if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+    return cb(new Error(`Origin not allowed by CORS: ${origin}`));
+  },
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+// (optionnel) répondre explicitement aux preflight
 
 /** Parsers standards pour le reste des routes */
 app.use(express.json());
@@ -86,11 +110,6 @@ app.use("/addresses", addressRouter);
 app.use("/products", productsRouter);
 app.use("/checkout", checkoutRouter);
 app.use("/categories", categoriesRouter);
-
-app.use(cors({
-  origin: ["http://localhost:3000"], // ton front dev
-  methods: ["GET","POST","PATCH","DELETE","OPTIONS"],
-}));
 
 /** 404 */
 app.use((_req, res) => res.status(404).send("Not Found"));
