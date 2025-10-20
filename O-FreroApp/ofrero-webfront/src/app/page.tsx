@@ -1,57 +1,34 @@
 // src/app/page.tsx
-import { api } from "@/lib/api";
+import { Suspense } from "react";
+import MenuContent from "./menu-content";
 
-type Category = { id: string; name: string } | null;
-type Product = {
-  id: string;
-  name: string;
-  priceCents: number;
-  description?: string | null;
-  category?: Category;
-};
-type Paginated<T> = { page: number; pageSize: number; total: number; items: T[] };
+export const revalidate = 0; // pas de cache (force un fetch à chaque fois)
 
-export default async function HomePage() {
-  const data: Paginated<Product> = await api("/products");
-  const products = data.items ?? [];
-
+export default function HomePage() {
   return (
-    <main className="min-h-screen bg-neutral-900 text-neutral-100">
-      <header className="py-10 text-center border-b border-neutral-800">
-        <h1 className="text-4xl font-semibold tracking-tight">
-          🍕 O’Frero Pizza
-        </h1>
-        <p className="mt-2 text-neutral-400">
-          Pizzas artisanales, ingrédients frais, saveur garantie.
-        </p>
+    <main className="mx-auto w-full max-w-7xl px-4 py-8 min-h-screen bg-neutral-950 text-neutral-100">
+      {/* --- Header --- */}
+      <header className="mb-8 flex flex-col gap-2 md:flex-row md:items-end md:justify-between border-b border-neutral-800 pb-6">
+        <div>
+          <h1 className="text-3xl font-semibold text-white tracking-tight">
+            🍕 O’Frero Pizza
+          </h1>
+          <p className="text-sm text-neutral-400 mt-2">
+            Des pizzas maison, boissons et desserts — en noir & blanc.
+          </p>
+        </div>
+        <div className="text-neutral-500 text-sm mt-4 md:mt-0">
+          Fraîcheur, qualité et passion depuis 2025.
+        </div>
       </header>
 
-      <section className="max-w-6xl mx-auto px-6 py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        {products.map((p) => (
-          <div
-            key={p.id}
-            className="bg-neutral-800 rounded-2xl shadow-lg hover:shadow-xl transition-transform hover:-translate-y-1 overflow-hidden"
-          >
-            <div className="aspect-square bg-neutral-700 flex items-center justify-center text-6xl">
-              🍕
-            </div>
-            <div className="p-5 space-y-2">
-              <h2 className="text-xl font-semibold text-white">{p.name}</h2>
-              <p className="text-neutral-400 text-sm">{p.description}</p>
-              {p.category && (
-                <span className="text-xs uppercase text-neutral-500">
-                  {p.category.name}
-                </span>
-              )}
-              <div className="pt-3 text-lg font-bold text-white">
-                {(p.priceCents / 100).toFixed(2)} €
-              </div>
-            </div>
-          </div>
-        ))}
-      </section>
+      {/* --- Contenu principal --- */}
+      <Suspense fallback={<div className="text-zinc-400">Chargement…</div>}>
+        <MenuContent />
+      </Suspense>
 
-      <footer className="py-8 text-center text-neutral-500 text-sm border-t border-neutral-800">
+      {/* --- Footer --- */}
+      <footer className="mt-16 py-8 text-center text-neutral-500 text-sm border-t border-neutral-800">
         © 2025 O’Frero Pizza — Fait avec ❤️ et Next.js
       </footer>
     </main>
