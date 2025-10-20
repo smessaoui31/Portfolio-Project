@@ -1,103 +1,77 @@
+// src/services/checkout.prisma.service.ts
 import { prisma } from "../lib/prisma";
+import { Prisma } from "@prisma/client";
 
-export async function createOrderFromCartPrisma(params: {
+type CreateOrderFromCartInput = {
   userId: string;
   cartItems: Array<{ productId: string; quantity: number }>;
-  addressLine: string;
-  city: string;
-  postalCode: string;
-  phone: string;
-}) {
-  const { userId, cartItems, addressLine, city, postalCode, phone } = params;
+  address: {
+    line1: string;
+    line2?: string | null;
+    city: string;
+    postalCode: string;
+    phone: string;
+  };
+};
 
-  if (!cartItems.length) {
-    throw new Error("Cart is empty");
-  }
+export async function createOrderFromCartPrisma(input: CreateOrderFromCartInput) {
+  const { userId, cartItems, address } = input;
 
-  // Normaliser par productId pour eviter les doublons d'affichage
-  const byProduct: Record<string, number> = {};
-  for (const it of cartItems) {
-    byProduct[it.productId] = (byProduct[it.productId] ?? 0) + it.quantity;
-  }
-  const productIds = Object.keys(byProduct);
-
+  // Recalcule total côté serveur depuis les produits
   const products = await prisma.product.findMany({
-    where: { id: { in: productIds } },
+    where: { id: { in: cartItems.map((c) => c.productId) } },
     select: { id: true, name: true, priceCents: true },
   });
 
-  if (products.length !== productIds.length) {
-    // un productId du panier n’existe pas/plus
-    throw new Error("Some products not found");
-  }
+  // map pour accès rapide
+  const byId = new Map(products.map((p) => [p.id, p]));
 
-  // Somme et mise en page des ligne pr la db
   let totalCents = 0;
-  const orderItemsData = products.map((p) => {
-    const qty = byProduct[p.id];
-    const lineTotal = p.priceCents * qty;
-    totalCents += lineTotal;
-    return {
+  const itemsData: Prisma.OrderItemCreateManyOrderInput[] = [];
+
+  for (const line of cartItems) {
+    const p = byId.get(line.productId);
+    if (!p) continue; // si un produit a été supprimé entre temps
+    totalCents += p.priceCents * line.quantity;
+    itemsData.push({
       productId: p.id,
       name: p.name,
       unitPriceCents: p.priceCents,
-      quantity: qty,
-    };
-  });
-
-  // Créer Order + OrderItems en transaction
-  const order = await prisma.$transaction(async (tx) => {
-    const created = await tx.order.create({
-      data: {
-        userId,
-        status: "PENDING",
-        totalCents,
-
-        items: {
-          create: orderItemsData.map((it) => ({
-            productId: it.productId,
-            name: it.name,
-            unitPriceCents: it.unitPriceCents,
-            quantity: it.quantity,
-          })),
-        },
-      },
-      include: { items: true },
+      quantity: line.quantity,
     });
-    return created;
+  }
+
+  const order = await prisma.order.create({
+    data: {
+      userId,
+      status: "PENDING",
+      totalCents,
+      shippingLine1: address.line1,
+      shippingLine2: address.line2 ?? null,
+      shippingCity: address.city,
+      shippingPostalCode: address.postalCode,
+      shippingPhone: address.phone,
+      items: { createMany: { data: itemsData } },
+    },
+    include: { items: true },
   });
 
   return { order, totalCents };
 }
 
-/** Retrouver une commande via un PaymentIntent Stripe */
-export async function findOrderByPaymentIntentPrisma(paymentIntentId: string) {
-  return prisma.order.findFirst({
-    where: { stripePaymentIntentId: paymentIntentId },
-  });
+export async function findOrderByPaymentIntentPrisma(piId: string) {
+  return prisma.order.findFirst({ where: { stripePaymentIntentId: piId } });
 }
 
-/** Mettre à jour le statut d’une commande */
 export async function setOrderStatusPrisma(orderId: string, status: "PENDING" | "PAID" | "FAILED" | "CANCELLED") {
-  await prisma.order.update({
-    where: { id: orderId },
-    data: { status },
-  });
+  return prisma.order.update({ where: { id: orderId }, data: { status } });
 }
 
-/** Load et m.a.j d'un Payment associé à l’Order */
-export async function upsertPaymentPrisma(params: {
-  orderId: string;
-  provider: "stripe";
-  status: "succeeded" | "failed";
-  intentId: string;
-}) {
-  const { orderId, provider, status, intentId } = params;
-
-  // comme Payment.orderId et Payment.intentId sont uniques, on fait un upsert par intentId
-  await prisma.payment.upsert({
-    where: { intentId },
-    update: { status },
+export async function upsertPaymentPrisma(input: { orderId: string; provider: string; status: string; intentId: string }) {
+  const { orderId, provider, status, intentId } = input;
+  return prisma.payment.upsert({
+    where: { orderId },
     create: { orderId, provider, status, intentId },
+    update: { status, intentId, provider },
   });
 }
