@@ -11,6 +11,7 @@ import { cartRouter } from "./routes/cart.routes";
 import { checkoutRouter, checkoutWebhookHandler } from "./routes/checkout.routes";
 import { productsRouter } from "./routes/products.routes";
 import { ordersRouter } from "./routes/orders.routes";
+import { addressRouter } from "./routes/address.routes";
 import { categoriesRouter } from "./routes/categories.routes";
 
 import bcrypt from "bcryptjs";
@@ -76,6 +77,7 @@ app.use("/me", meRouter);
 app.use("/admin", adminRouter);
 app.use("/cart", cartRouter);
 app.use("/orders", ordersRouter);
+app.use("/addresses", addressRouter);
 app.use("/products", productsRouter);
 app.use("/checkout", checkoutRouter);
 app.use("/categories", categoriesRouter);
