@@ -58,5 +58,6 @@ export async function loginUserPrisma(data: unknown) {
     expiresIn: "7d",
   });
 
-  return { status: 200, body: { accessToken, role: user.role } };
+  const publicUser = { id: user.id, email: user.email, fullName: user.fullName, role: user.role };
+return { status: 200, body: { accessToken, user: publicUser } };
 }
