@@ -11,6 +11,7 @@ import { cartRouter } from "./routes/cart.routes";
 import { checkoutRouter, checkoutWebhookHandler } from "./routes/checkout.routes";
 import { productsRouter } from "./routes/products.routes";
 import { ordersRouter } from "./routes/orders.routes";
+import { categoriesRouter } from "./routes/categories.routes";
 
 import bcrypt from "bcryptjs";
 import { USERS, newId } from "./data/store";
@@ -77,6 +78,7 @@ app.use("/cart", cartRouter);
 app.use("/orders", ordersRouter);
 app.use("/products", productsRouter);
 app.use("/checkout", checkoutRouter);
+app.use("/categories", categoriesRouter);
 
 /** 404 */
 app.use((_req, res) => res.status(404).send("Not Found"));
