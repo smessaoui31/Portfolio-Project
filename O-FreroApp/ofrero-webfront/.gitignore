@@ -1,61 +1,44 @@
-# ============================
-# Node / TypeScript project
-# ============================
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Node modules
-node_modules/
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
-# TypeScript build output
-dist/
-build/
+# testing
+/coverage
 
-# Logs
-logs/
-*.log
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
+.pnpm-debug.log*
 
-# Local environment variables
-.env
-.env.local
-.env.*.local
+# env files (can opt-in for committing if needed)
+.env*
 
-# OS generated files
-.DS_Store
-Thumbs.db
+# vercel
+.vercel
 
-# IDE / Editor folders
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Coverage / testing
-coverage/
-.nyc_output/
-
-# Temporary / cache files
-.tmp/
-.cache/
-*.tmp
-*.bak
-*.old
-
-# Swagger generated files
-openapi/*.yaml
-openapi/*.yml
-
-# Optional lockfiles (if not committed)
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
-
-# Docker artifacts (if used later)
-Dockerfile
-docker-compose.yml
-*.tar
+# typescript
+*.tsbuildinfo
+next-env.d.ts
 
 # Node
 node_modules/
