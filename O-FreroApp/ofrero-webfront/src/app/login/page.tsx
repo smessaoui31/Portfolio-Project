@@ -1,79 +1,62 @@
 "use client";
-
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
-  const router = useRouter();
   const { login } = useAuth();
-  const [email, setEmail] = useState("admin@ofrero.fr");
-  const [password, setPassword] = useState("admin123");
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setErr(null);
-    setLoading(true);
+    setError("");
+
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/auth/login`, {
+      const res = await fetch("http://127.0.0.1:5050/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const json = await res.json();
-      if (!res.ok) {
-        setErr(json?.error || "Identifiants invalides");
-      } else {
-        // backend renvoie { accessToken, role? }
-        const token = json?.accessToken as string;
-        if (!token) throw new Error("Token manquant");
-        login(token);
-        router.push("/");
-      }
-    } catch (e: any) {
-      setErr(e?.message || "Erreur réseau");
-    } finally {
-      setLoading(false);
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erreur de connexion");
+
+      // Exemple : ton backend renvoie { accessToken, user: { role, email } }
+      login(data.accessToken, data.user.role, data.user.email);
+      window.location.href = "/"; // redirection vers l’accueil
+    } catch (err: any) {
+      setError(err.message);
     }
-  };
+  }
 
   return (
-    <main className="mx-auto max-w-sm px-4 py-10">
-      <h1 className="text-2xl font-semibold text-zinc-50 mb-6">Se connecter</h1>
-      <form onSubmit={handleSubmit} className="space-y-4 bg-neutral-900 p-5 rounded-xl border border-neutral-800">
-        <div>
-          <label className="block text-sm text-neutral-300 mb-1">Email</label>
-          <input
-            className="w-full rounded-md bg-neutral-800 border border-neutral-700 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-white/20"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="username"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm text-neutral-300 mb-1">Mot de passe</label>
-          <input
-            className="w-full rounded-md bg-neutral-800 border border-neutral-700 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-white/20"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-            required
-          />
-        </div>
-
-        {err && <p className="text-sm text-red-400">{err}</p>}
-
+    <main className="flex min-h-screen items-center justify-center bg-neutral-950">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-neutral-900 p-8 rounded-2xl shadow-md w-full max-w-sm space-y-5 border border-neutral-800"
+      >
+        <h1 className="text-2xl font-semibold text-white text-center">Connexion</h1>
+        {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full rounded-md px-3 py-2 bg-neutral-800 text-white focus:outline-none"
+        />
+        <input
+          type="password"
+          placeholder="Mot de passe"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full rounded-md px-3 py-2 bg-neutral-800 text-white focus:outline-none"
+        />
         <button
           type="submit"
-          disabled={loading}
-          className="w-full rounded-lg bg-white text-black py-2 font-medium hover:opacity-90 disabled:opacity-60"
+          className="w-full bg-white text-black font-medium py-2 rounded-md hover:opacity-90 transition"
         >
-          {loading ? "Connexion..." : "Se connecter"}
+          Se connecter
         </button>
       </form>
     </main>

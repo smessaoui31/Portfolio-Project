@@ -11,7 +11,13 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "db:seed": "ts-node --transpile-only prisma/seed.ts"
+    "db:seed": "ts-node --transpile-only prisma/seed.ts",
+    "db:start": "sudo service postgresql start || sudo systemctl start postgresql",
+    "db:restart": "sudo service postgresql restart || sudo systemctl restart postgresql",
+    "db:status": "sudo service postgresql status || sudo systemctl status postgresql",
+    "dev:5050": "PORT=5050 ts-node-dev --respawn --transpile-only src/index.ts",
+    "dev:full": "fuser -k 5050/tcp || true && service postgresql start && ts-node-dev --respawn --transpile-only src/index.ts"
+
   },
   "keywords": [],
   "author": "",
