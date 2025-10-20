@@ -9,20 +9,44 @@ export const productsRouter = Router();
 /**
  * GET /products
  * Liste tous les produits (avec recherche optionnelle)
+ * + filtre catégorie (?categoryId=)
+ * + pagination (?page=&pageSize=)
  */
 productsRouter.get("/", async (req, res) => {
   const q = (req.query.q as string | undefined)?.trim();
-  const where: Prisma.ProductWhereInput | undefined = q
-    ? { name: { contains: q, mode: "insensitive" } }
-    : undefined;
+  const categoryId = (req.query.categoryId as string | undefined)?.trim();
 
-  const products = await prisma.product.findMany({
-    where,
-    orderBy: { name: "asc" },
-    include: { category: { select: { id: true, name: true } } },      
+  const page = Math.max(parseInt(String(req.query.page ?? "1"), 10) || 1, 1);
+  const pageSize = Math.min(
+    Math.max(parseInt(String(req.query.pageSize ?? "20"), 10) || 20, 1),
+    100
+  );
+  const skip = (page - 1) * pageSize;
+  const take = pageSize;
+
+  const where: Prisma.ProductWhereInput = {
+    ...(q ? { name: { contains: q, mode: "insensitive" } } : {}),
+    ...(categoryId ? { categoryId } : {}),
+  };
+
+  const [items, total] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      orderBy: { name: "asc" },
+      include: { category: { select: { id: true, name: true } } },
+      skip,
+      take,
+    }),
+    prisma.product.count({ where }),
+  ]);
+
+  res.json({
+    items,
+    page,
+    pageSize,
+    total,
+    totalPages: Math.ceil(total / pageSize),
   });
-
-  res.json(products);
 });
 
 /**
@@ -62,6 +86,52 @@ productsRouter.post("/", requireAuth, requireAdmin, async (req, res) => {
 
   const product = await prisma.product.create({ data: parsed.data });
   res.status(201).json(product);
+});
+
+/**
+ * PATCH /products/:id
+ * Mise à jour partielle d’un produit (admin uniquement)
+ */
+const UpdateProductSchema = z.object({
+  name: z.string().min(2).optional(),
+  priceCents: z.number().int().min(0).optional(),
+  description: z.string().nullable().optional(),
+  categoryId: z.string().nullable().optional(),
+});
+
+productsRouter.patch("/:id", requireAuth, requireAdmin, async (req, res) => {
+  const parsed = UpdateProductSchema.safeParse(req.body);
+  if (!parsed.success)
+    return res.status(400).json({ error: "Invalid body", details: parsed.error.flatten() });
+
+  if (parsed.data.categoryId !== undefined && parsed.data.categoryId !== null) {
+    const cat = await prisma.category.findUnique({ where: { id: parsed.data.categoryId } });
+    if (!cat) return res.status(404).json({ error: "Category not found" });
+  }
+
+  try {
+    const updated = await prisma.product.update({
+      where: { id: req.params.id },
+      data: parsed.data,
+      include: { category: { select: { id: true, name: true } } },
+    });
+    res.json(updated);
+  } catch {
+    res.status(404).json({ error: "Product not found" });
+  }
+});
+
+/**
+ * DELETE /products/:id
+ * Suppression d’un produit (admin uniquement)
+ */
+productsRouter.delete("/:id", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const deleted = await prisma.product.delete({ where: { id: req.params.id } });
+    res.json({ deleted });
+  } catch {
+    res.status(404).json({ error: "Product not found" });
+  }
 });
 
 /**
