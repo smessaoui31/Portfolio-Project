@@ -3,7 +3,7 @@
   "info": {
     "title": "API O'Frero",
     "version": "0.2.0",
-    "description": "API MVP pour la pizzeria O’Frero (authentification, produits, catégories, panier, commandes, checkout Stripe, santé du service) avec pagination/filtre/tri sur les produits."
+    "description": "API MVP pour la pizzeria O’Frero : authentification, catégories, produits (pagination/tri), panier, commandes, checkout Stripe, santé du service."
   },
   "servers": [
     { "url": "http://localhost:5050", "description": "Environnement local" }
@@ -34,12 +34,24 @@
         "summary": "Inscription d’un nouvel utilisateur",
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RegisterInput" } } }
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterInput" },
+              "examples": {
+                "exemple": {
+                  "value": { "email": "alice@example.com", "password": "secret123", "fullName": "Alice Dupont" }
+                }
+              }
+            }
+          }
         },
         "responses": {
-          "201": { "description": "Utilisateur créé", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PublicUser" } } } },
-          "400": { "description": "Corps invalide" },
-          "409": { "description": "E-mail déjà utilisée" }
+          "201": {
+            "description": "Utilisateur créé avec succès",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PublicUser" } } }
+          },
+          "400": { "description": "Corps de requête invalide" },
+          "409": { "description": "Adresse e-mail déjà utilisée" }
         }
       }
     },
@@ -49,11 +61,19 @@
         "summary": "Connexion et obtention d’un jeton JWT",
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginInput" } } }
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginInput" },
+              "examples": { "exemple": { "value": { "email": "alice@example.com", "password": "secret123" } } }
+            }
+          }
         },
         "responses": {
-          "200": { "description": "Connexion réussie", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthToken" } } } },
-          "400": { "description": "Corps invalide" },
+          "200": {
+            "description": "Connexion réussie – jeton JWT renvoyé",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthToken" } } }
+          },
+          "400": { "description": "Corps de requête invalide" },
           "401": { "description": "Identifiants incorrects" }
         }
       }
@@ -64,56 +84,118 @@
         "summary": "Obtenir le profil de l’utilisateur connecté",
         "security": [{ "bearerAuth": [] }],
         "responses": {
-          "200": { "description": "Profil utilisateur", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PublicUserExtended" } } } },
-          "401": { "description": "Non autorisé" }
+          "200": {
+            "description": "Profil utilisateur",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PublicUserExtended" } } }
+          },
+          "401": { "description": "Non autorisé (JWT manquant ou invalide)" }
         }
       }
     },
 
     "/admin/ping": {
       "get": {
-        "summary": "Test admin (réservé aux admins)",
+        "summary": "Test de la zone administrateur (réservé aux admins)",
         "security": [{ "bearerAuth": [] }],
         "responses": {
-          "200": { "description": "OK (admin)", "content": { "application/json": { "schema": { "type": "object", "properties": { "ok": { "type": "boolean" }, "area": { "type": "string" } } } } } },
+          "200": {
+            "description": "Réponse OK de la zone admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "ok": { "type": "boolean" }, "area": { "type": "string" } },
+                  "example": { "ok": true, "area": "admin" }
+                }
+              }
+            }
+          },
           "401": { "description": "Non autorisé" },
-          "403": { "description": "Réservé aux admins" }
+          "403": { "description": "Accès réservé aux administrateurs" }
         }
       }
     },
 
     "/categories": {
       "get": {
-        "summary": "Lister les catégories",
+        "summary": "Lister toutes les catégories",
         "responses": {
           "200": {
             "description": "Liste des catégories",
             "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Category" } } } }
           }
         }
+      },
+      "post": {
+        "summary": "Créer une catégorie (admin)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NewCategoryInput" } } }
+        },
+        "responses": {
+          "201": { "description": "Catégorie créée", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Category" } } } },
+          "400": { "description": "Requête invalide" },
+          "401": { "description": "Non autorisé" },
+          "403": { "description": "Admins uniquement" }
+        }
+      }
+    },
+
+    "/categories/{id}": {
+      "get": {
+        "summary": "Obtenir une catégorie par ID",
+        "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }],
+        "responses": {
+          "200": { "description": "Catégorie", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Category" } } } },
+          "404": { "description": "Catégorie introuvable" }
+        }
+      }
+    },
+
+    "/categories/seed": {
+      "post": {
+        "summary": "Créer/mettre à jour des catégories par défaut (admin)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "201": {
+            "description": "Catégories seedées",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "count": { "type": "integer" },
+                    "categories": { "type": "array", "items": { "$ref": "#/components/schemas/Category" } }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Non autorisé" },
+          "403": { "description": "Admins uniquement" }
+        }
       }
     },
 
     "/products": {
       "get": {
-        "summary": "Lister les produits (pagination + filtre + tri)",
+        "summary": "Lister les produits (pagination, tri, filtre par nom/catégorie)",
         "parameters": [
-          { "in": "query", "name": "page", "schema": { "type": "integer", "minimum": 1, "default": 1 }, "description": "Numéro de page (>=1)" },
-          { "in": "query", "name": "pageSize", "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 12 }, "description": "Taille de page (1..100)" },
-          { "in": "query", "name": "q", "schema": { "type": "string" }, "description": "Recherche texte (name contient, insensible à la casse)" },
-          { "in": "query", "name": "categoryId", "schema": { "type": "string" }, "description": "Filtrer par catégorie (ID)" },
-          { "in": "query", "name": "sort", "schema": { "type": "string", "enum": ["name", "priceAsc", "priceDesc", "createdDesc"], "default": "name" }, "description": "Critère de tri" }
+          { "in": "query", "name": "q", "schema": { "type": "string" }, "description": "Recherche partielle sur le nom (insensible à la casse)" },
+          { "in": "query", "name": "categoryId", "schema": { "type": "string" }, "description": "Filtrer par ID de catégorie" },
+          { "in": "query", "name": "page", "schema": { "type": "integer", "minimum": 1, "default": 1 } },
+          { "in": "query", "name": "pageSize", "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 10 } },
+          { "in": "query", "name": "sort", "schema": { "type": "string", "enum": ["name", "nameDesc", "price", "priceDesc", "createdAt", "createdAtDesc"], "default": "name" },
+            "description": "Clé de tri (asc par défaut). Suffixe 'Desc' pour l’ordre décroissant." }
         ],
         "responses": {
-          "200": {
-            "description": "Liste paginée de produits",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProductListResponse" } } }
-          },
-          "400": { "description": "Paramètres invalides" }
+          "200": { "description": "Liste paginée de produits", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedProducts" } } } }
         }
       },
       "post": {
-        "summary": "Créer un produit (admin)",
+        "summary": "Créer un nouveau produit (admin)",
         "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
@@ -121,9 +203,9 @@
         },
         "responses": {
           "201": { "description": "Produit créé", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } } },
-          "400": { "description": "Corps invalide" },
+          "400": { "description": "Corps de requête invalide" },
           "401": { "description": "Non autorisé" },
-          "403": { "description": "Réservé aux admins" },
+          "403": { "description": "Admins uniquement" },
           "404": { "description": "Catégorie introuvable (si categoryId fourni)" }
         }
       }
@@ -131,70 +213,49 @@
 
     "/products/{id}": {
       "get": {
-        "summary": "Détails d’un produit",
+        "summary": "Obtenir les détails d’un produit par ID",
         "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }],
         "responses": {
-          "200": { "description": "Produit", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } } },
-          "404": { "description": "Produit introuvable" }
-        }
-      },
-      "patch": {
-        "summary": "Mettre à jour un produit (admin)",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }],
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdateProductInput" } } }
-        },
-        "responses": {
-          "200": { "description": "Produit mis à jour", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } } },
-          "400": { "description": "Corps invalide" },
-          "401": { "description": "Non autorisé" },
-          "403": { "description": "Réservé aux admins" },
-          "404": { "description": "Produit ou catégorie introuvable" }
-        }
-      },
-      "delete": {
-        "summary": "Supprimer un produit (admin)",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }],
-        "responses": {
-          "200": { "description": "Produit supprimé" },
-          "401": { "description": "Non autorisé" },
-          "403": { "description": "Réservé aux admins" },
+          "200": { "description": "Produit trouvé", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } } },
           "404": { "description": "Produit introuvable" }
         }
       }
     },
 
-    "/products/by-category/{id}": {
+    "/products/by-category/{categoryId}": {
       "get": {
-        "summary": "Lister les produits d’une catégorie (avec pagination/filtre/tri)",
+        "summary": "Lister les produits d’une catégorie (pagination/tri)",
         "parameters": [
-          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } },
+          { "in": "path", "name": "categoryId", "required": true, "schema": { "type": "string" } },
           { "in": "query", "name": "page", "schema": { "type": "integer", "minimum": 1, "default": 1 } },
-          { "in": "query", "name": "pageSize", "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 12 } },
-          { "in": "query", "name": "q", "schema": { "type": "string" } },
-          { "in": "query", "name": "sort", "schema": { "type": "string", "enum": ["name", "priceAsc", "priceDesc", "createdDesc"], "default": "name" } }
+          { "in": "query", "name": "pageSize", "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 10 } },
+          { "in": "query", "name": "sort", "schema": { "type": "string", "enum": ["name", "nameDesc", "price", "priceDesc,","createdAt","createdAtDesc"], "default": "name" } }
         ],
         "responses": {
           "200": {
-            "description": "Liste paginée d’une catégorie",
+            "description": "Liste paginée de produits pour une catégorie",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedProductsByCategory" } } }
+          },
+          "404": { "description": "Catégorie introuvable" }
+        }
+      }
+    },
+
+    "/products/seed": {
+      "post": {
+        "summary": "Créer 5 pizzas de démo (admin)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "201": {
+            "description": "Pizzas créées",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "category": { "$ref": "#/components/schemas/Category" },
-                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } },
-                    "meta": { "$ref": "#/components/schemas/Meta" }
-                  }
-                }
+                "schema": { "type": "object", "properties": { "message": { "type": "string" }, "count": { "type": "integer" } } }
               }
             }
           },
-          "400": { "description": "Paramètres invalides" },
-          "404": { "description": "Catégorie introuvable" }
+          "401": { "description": "Non autorisé" },
+          "403": { "description": "Admins uniquement" }
         }
       }
     },
@@ -204,7 +265,7 @@
         "summary": "Obtenir le panier de l’utilisateur connecté",
         "security": [{ "bearerAuth": [] }],
         "responses": {
-          "200": { "description": "Panier", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Cart" } } } },
+          "200": { "description": "Panier actuel de l’utilisateur", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Cart" } } } },
           "401": { "description": "Non autorisé" }
         }
       }
@@ -212,11 +273,11 @@
 
     "/cart/items": {
       "post": {
-        "summary": "Ajouter un article au panier",
+        "summary": "Ajouter un article au panier (ou augmenter la quantité si déjà présent)",
         "security": [{ "bearerAuth": [] }],
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AddCartItemInput" } } } },
         "responses": {
-          "201": { "description": "Panier à jour", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Cart" } } } },
+          "201": { "description": "Article ajouté au panier", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Cart" } } } },
           "400": { "description": "Requête invalide" },
           "401": { "description": "Non autorisé" },
           "404": { "description": "Produit introuvable" }
@@ -226,12 +287,12 @@
 
     "/cart/items/{itemId}": {
       "patch": {
-        "summary": "Modifier la quantité d’un article (0 = suppression)",
+        "summary": "Modifier la quantité d’un article du panier (0 = suppression)",
         "security": [{ "bearerAuth": [] }],
         "parameters": [{ "in": "path", "name": "itemId", "required": true, "schema": { "type": "string" } }],
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdateCartItemInput" } } } },
         "responses": {
-          "200": { "description": "Panier à jour", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Cart" } } } },
+          "200": { "description": "Panier mis à jour", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Cart" } } } },
           "400": { "description": "Requête invalide" },
           "401": { "description": "Non autorisé" },
           "404": { "description": "Article introuvable" }
@@ -242,7 +303,14 @@
         "security": [{ "bearerAuth": [] }],
         "parameters": [{ "in": "path", "name": "itemId", "required": true, "schema": { "type": "string" } }],
         "responses": {
-          "200": { "description": "Article supprimé + panier renvoyé" },
+          "200": {
+            "description": "Article supprimé et panier renvoyé",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "deleted": { "$ref": "#/components/schemas/CartItem" }, "cart": { "$ref": "#/components/schemas/Cart" } } }
+              }
+            }
+          },
           "401": { "description": "Non autorisé" },
           "404": { "description": "Article introuvable" }
         }
@@ -251,7 +319,7 @@
 
     "/checkout/start": {
       "post": {
-        "summary": "Démarrer le checkout (création commande + PaymentIntent)",
+        "summary": "Démarrer le checkout : crée la commande + PaymentIntent Stripe et renvoie le client_secret",
         "security": [{ "bearerAuth": [] }],
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CheckoutStartInput" } } } },
         "responses": {
@@ -264,11 +332,15 @@
 
     "/checkout/webhook": {
       "post": {
-        "summary": "Webhook Stripe (RAW)",
-        "description": "Corps RAW requis. En dev, un JSON brut Postman est accepté. En prod, vérification de signature Stripe.",
+        "summary": "Webhook Stripe (émis par Stripe après tentative de paiement)",
+        "description": "⚠️ Corps RAW requis. En dev, peut accepter un JSON brut (simulation Postman). En prod/Stripe CLI, la signature est vérifiée.",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } }
+        },
         "responses": {
           "200": { "description": "Événement reçu" },
-          "400": { "description": "Signature/payload invalide" }
+          "400": { "description": "Signature invalide ou payload invalide" }
         }
       }
     },
@@ -278,7 +350,7 @@
         "summary": "Lister les commandes de l’utilisateur connecté",
         "security": [{ "bearerAuth": [] }],
         "responses": {
-          "200": { "description": "Liste des commandes", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Order" } } } } },
+          "200": { "description": "Liste des commandes de l’utilisateur", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Order" } } } } },
           "401": { "description": "Non autorisé" }
         }
       }
@@ -286,11 +358,11 @@
 
     "/orders/{id}": {
       "get": {
-        "summary": "Détail d’une commande (utilisateur connecté)",
+        "summary": "Obtenir le détail d’une commande de l’utilisateur connecté",
         "security": [{ "bearerAuth": [] }],
         "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }],
         "responses": {
-          "200": { "description": "Commande", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } },
+          "200": { "description": "Commande trouvée", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } },
           "401": { "description": "Non autorisé" },
           "404": { "description": "Commande introuvable" }
         }
@@ -299,12 +371,15 @@
 
     "/orders/admin": {
       "get": {
-        "summary": "Lister toutes les commandes (admin)",
+        "summary": "Lister toutes les commandes (administrateur)",
         "security": [{ "bearerAuth": [] }],
         "responses": {
-          "200": { "description": "Liste des commandes (admin)", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/AdminOrder" } } } } },
+          "200": {
+            "description": "Liste de toutes les commandes",
+            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/AdminOrder" } } } }
+          },
           "401": { "description": "Non autorisé" },
-          "403": { "description": "Réservé aux admins" }
+          "403": { "description": "Accès réservé aux administrateurs" }
         }
       }
     }
@@ -315,44 +390,81 @@
       "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" }
     },
     "schemas": {
-      "Meta": {
+      "RegisterInput": {
         "type": "object",
+        "required": ["email", "password", "fullName"],
         "properties": {
-          "page": { "type": "integer", "example": 1 },
-          "pageSize": { "type": "integer", "example": 12 },
-          "total": { "type": "integer", "example": 42 },
-          "totalPages": { "type": "integer", "example": 4 }
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "minLength": 6 },
+          "fullName": { "type": "string", "minLength": 2 }
         }
       },
-
+      "LoginInput": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "minLength": 6 }
+        }
+      },
+      "PublicUser": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "u_ab12cd34" },
+          "email": { "type": "string", "example": "alice@example.com" },
+          "fullName": { "type": "string", "example": "Alice Dupont" },
+          "role": { "type": "string", "enum": ["USER", "ADMIN"], "example": "USER" }
+        }
+      },
+      "PublicUserExtended": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "u_ab12cd34" },
+          "email": { "type": "string", "example": "alice@example.com" },
+          "fullName": { "type": "string", "example": "Alice Dupont" },
+          "role": { "type": "string", "enum": ["USER", "ADMIN"], "example": "USER" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "AuthToken": {
+        "type": "object",
+        "properties": { "accessToken": { "type": "string", "description": "Jeton d’accès (JWT)" } }
+      },
       "Category": {
         "type": "object",
         "properties": {
           "id": { "type": "string", "example": "c_pizza" },
-          "name": { "type": "string", "example": "Pizza" }
+          "name": { "type": "string", "example": "Pizza" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
         }
       },
-
+      "NewCategoryInput": {
+        "type": "object",
+        "required": ["name"],
+        "properties": { "name": { "type": "string", "example": "Tex-Mex" } }
+      },
       "Product": {
         "type": "object",
         "required": ["id", "name", "priceCents"],
         "properties": {
-          "id": { "type": "string", "example": "p_abc123" },
+          "id": { "type": "string", "example": "p2" },
           "name": { "type": "string", "example": "Pizza Pepperoni" },
-          "priceCents": { "type": "integer", "example": 1100 },
-          "description": { "type": "string", "nullable": true, "example": "Tomate, mozzarella, pepperoni" },
-          "category": { "allOf": [{ "$ref": "#/components/schemas/Category" }], "nullable": true }
+          "priceCents": { "type": "integer", "minimum": 0, "example": 1100 },
+          "description": { "type": "string", "example": "Tomate, mozzarella, pepperoni", "nullable": true },
+          "category": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": { "type": "string", "example": "c_pizza" },
+              "name": { "type": "string", "example": "Pizza" }
+            }
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
         }
       },
-
-      "ProductListResponse": {
-        "type": "object",
-        "properties": {
-          "data": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } },
-          "meta": { "$ref": "#/components/schemas/Meta" }
-        }
-      },
-
       "NewProductInput": {
         "type": "object",
         "required": ["name", "priceCents"],
@@ -363,101 +475,60 @@
           "categoryId": { "type": "string", "nullable": true, "example": "c_pizza" }
         }
       },
-
-      "UpdateProductInput": {
+      "PaginatedProducts": {
         "type": "object",
         "properties": {
-          "name": { "type": "string", "example": "Pizza Reine" },
-          "priceCents": { "type": "integer", "example": 1190 },
-          "description": { "type": "string", "nullable": true, "example": "Jambon, champignons, mozzarella" },
-          "categoryId": { "type": "string", "nullable": true, "example": "c_pizza" }
+          "page": { "type": "integer", "example": 1 },
+          "pageSize": { "type": "integer", "example": 10 },
+          "total": { "type": "integer", "example": 42 },
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } }
         }
       },
-
-      "RegisterInput": {
-        "type": "object",
-        "required": ["email", "password", "fullName"],
-        "properties": {
-          "email": { "type": "string", "format": "email" },
-          "password": { "type": "string", "minLength": 6 },
-          "fullName": { "type": "string", "minLength": 2 }
-        }
-      },
-
-      "LoginInput": {
-        "type": "object",
-        "required": ["email", "password"],
-        "properties": {
-          "email": { "type": "string", "format": "email" },
-          "password": { "type": "string", "minLength": 6 }
-        }
-      },
-
-      "PublicUser": {
+      "PaginatedProductsByCategory": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "example": "u_ab12cd34" },
-          "email": { "type": "string", "example": "alice@example.com" },
-          "fullName": { "type": "string", "example": "Alice Dupont" },
-          "role": { "type": "string", "enum": ["USER", "ADMIN"], "example": "USER" }
+          "category": { "$ref": "#/components/schemas/Category" },
+          "page": { "type": "integer", "example": 1 },
+          "pageSize": { "type": "integer", "example": 10 },
+          "total": { "type": "integer", "example": 17 },
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } }
         }
       },
-
-      "PublicUserExtended": {
-        "allOf": [
-          { "$ref": "#/components/schemas/PublicUser" },
-          {
-            "type": "object",
-            "properties": {
-              "createdAt": { "type": "string", "format": "date-time" },
-              "updatedAt": { "type": "string", "format": "date-time" }
-            }
-          }
-        ]
-      },
-
-      "AuthToken": {
-        "type": "object",
-        "properties": { "accessToken": { "type": "string", "description": "Jeton d’accès (JWT)" } }
-      },
-
       "CartItem": {
         "type": "object",
         "required": ["id", "productId", "name", "unitPriceCents", "quantity"],
         "properties": {
           "id": { "type": "string", "example": "ci_x1y2z3a4" },
-          "productId": { "type": "string", "example": "p_abc123" },
+          "productId": { "type": "string", "example": "p2" },
           "name": { "type": "string", "example": "Pizza Pepperoni" },
-          "unitPriceCents": { "type": "integer", "example": 1100 },
-          "quantity": { "type": "integer", "example": 2 }
+          "unitPriceCents": { "type": "integer", "minimum": 0, "example": 1100 },
+          "quantity": { "type": "integer", "minimum": 0, "maximum": 99, "example": 2 }
         }
       },
-
       "Cart": {
         "type": "object",
         "required": ["id", "items", "totalCents"],
         "properties": {
           "id": { "type": "string", "example": "cart_u_ab12cd34" },
           "items": { "type": "array", "items": { "$ref": "#/components/schemas/CartItem" } },
-          "totalCents": { "type": "integer", "example": 2200 }
+          "totalCents": { "type": "integer", "minimum": 0, "example": 2200 }
         }
       },
-
       "AddCartItemInput": {
         "type": "object",
         "required": ["productId", "quantity"],
         "properties": {
-          "productId": { "type": "string", "example": "p_abc123" },
+          "productId": { "type": "string", "example": "p2" },
           "quantity": { "type": "integer", "minimum": 1, "maximum": 99, "example": 2 }
         }
       },
-
       "UpdateCartItemInput": {
         "type": "object",
         "required": ["quantity"],
-        "properties": { "quantity": { "type": "integer", "minimum": 0, "maximum": 99, "example": 3 } }
+        "properties": {
+          "quantity": { "type": "integer", "minimum": 0, "maximum": 99, "example": 3 }
+        }
       },
-
       "CheckoutStartInput": {
         "type": "object",
         "required": ["addressLine", "city", "postalCode", "phone"],
@@ -468,7 +539,6 @@
           "phone": { "type": "string", "example": "+33601020304" }
         }
       },
-
       "CheckoutStartResponse": {
         "type": "object",
         "required": ["orderId", "clientSecret", "paymentIntentId"],
@@ -478,22 +548,21 @@
           "paymentIntentId": { "type": "string", "example": "pi_3SIV6fPDmY57KJ5r0uGb1jdZ" }
         }
       },
-
       "OrderItem": {
         "type": "object",
         "required": ["id", "productId", "name", "unitPriceCents", "quantity"],
         "properties": {
           "id": { "type": "string", "example": "oi_123" },
-          "productId": { "type": "string", "example": "p_abc123" },
+          "productId": { "type": "string", "example": "p2" },
           "name": { "type": "string", "example": "Pizza Margherita" },
           "unitPriceCents": { "type": "integer", "example": 950 },
           "quantity": { "type": "integer", "example": 2 }
         }
       },
-
       "Payment": {
         "type": "object",
         "nullable": true,
+        "required": ["id", "orderId", "provider", "status", "intentId", "createdAt"],
         "properties": {
           "id": { "type": "string", "example": "pay_abc123" },
           "orderId": { "type": "string", "example": "o_abc123" },
@@ -503,7 +572,6 @@
           "createdAt": { "type": "string", "format": "date-time" }
         }
       },
-
       "Order": {
         "type": "object",
         "required": ["id", "userId", "status", "totalCents", "items", "createdAt", "updatedAt"],
@@ -519,7 +587,6 @@
           "updatedAt": { "type": "string", "format": "date-time" }
         }
       },
-
       "AdminOrder": {
         "allOf": [
           { "$ref": "#/components/schemas/Order" },
