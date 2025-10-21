@@ -1,40 +1,54 @@
-// src/components/AddToCartButton.tsx
 "use client";
 
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { apiClient } from "@/lib/api-client";
+import { apiAuthed } from "@/lib/api";
 
-export default function AddToCartButton({ productId }: { productId: string }) {
+type Props = {
+  productId: string;
+};
+
+export default function AddToCartButton({ productId }: Props) {
   const { token } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [ok, setOk] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
-  async function add() {
+  async function handleAdd() {
+    setErr(null);
+    setOk(false);
+
     if (!token) {
-      alert("Connecte-toi pour ajouter au panier.");
+      setErr("Veuillez vous connecter pour ajouter au panier.");
       return;
     }
+
     try {
       setLoading(true);
-      await apiClient("/cart/items", {
+      await apiAuthed("/cart/items", {
         method: "POST",
-        token,
-        body: { productId, quantity: 1 },
+        body: JSON.stringify({ productId, quantity: 1 }),
       });
+      setOk(true);
+      setTimeout(() => setOk(false), 1500);
     } catch (e: any) {
-      alert(e.message ?? "Erreur ajout panier");
+      setErr(e?.message ?? "Erreur inconnue");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <button
-      onClick={add}
-      disabled={loading}
-      className="mt-2 w-full rounded-lg bg-white text-black py-2 text-sm font-medium hover:opacity-90 disabled:opacity-60"
-    >
-      {loading ? "Ajout..." : "Ajouter au panier"}
-    </button>
+    <div className="flex flex-col gap-1">
+      <button
+        disabled={loading}
+        onClick={handleAdd}
+        className="w-full rounded-md bg-white text-black font-medium py-2 hover:opacity-90 disabled:opacity-50"
+      >
+        {loading ? "Ajout..." : "Ajouter au panier"}
+      </button>
+      {ok && <span className="text-xs text-emerald-400">Ajouté ✅</span>}
+      {err && <span className="text-xs text-red-400">{err}</span>}
+    </div>
   );
 }
