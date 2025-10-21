@@ -14,3 +14,10 @@ html, body {
   background: var(--bg);
   color: var(--fg);
 }
+
+/* --- Buttons micro-animations --- */
+@keyframes btn-shine {
+  0% { transform: translateX(-120%) skewX(-15deg); opacity: 0; }
+  30% { opacity: 0.5; }
+  100% { transform: translateX(220%) skewX(-15deg); opacity: 0; }
+}
