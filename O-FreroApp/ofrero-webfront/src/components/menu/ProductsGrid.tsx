@@ -1,8 +1,8 @@
 "use client"; // ✅ obligatoire
 
-import { motion, useReducedMotion } from "framer-motion"; // ✅ important
-import AddToCartButton from "@/components/ui/AddToCartButton";
-import type { Variants } from "framer-motion"; // (optionnel mais utile)
+import { motion, useReducedMotion } from "framer-motion";
+import AddToCartButton from "../ui/AddToCartButton";
+import type { Variants } from "framer-motion"; 
 
 type Category = { id: string; name: string } | null;
 type Product = {

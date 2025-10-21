@@ -1,9 +1,10 @@
+// src/components/ui/AddToCartButton.tsx
 "use client";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart, Check } from "lucide-react";
-import { apiAuthed } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
 
 type AddToCartButtonProps = {
   productId: string;
@@ -17,6 +18,7 @@ export default function AddToCartButton({
   className = "",
 }: AddToCartButtonProps) {
   const { token } = useAuth();
+  const { add } = useCart(); // ← ICI : on récupère `add` et plus `addItem`
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -27,14 +29,12 @@ export default function AddToCartButton({
     }
     try {
       setLoading(true);
-      await apiAuthed("/cart/items", {
-        method: "POST",
-        body: JSON.stringify({ productId, quantity }),
-      });
+
+      await add(productId, quantity); // ← ICI : on appelle `add`
 
       // mini vibration (si supporté)
       if ("vibrate" in navigator) {
-        try { (navigator as any).vibrate?.(20); } catch {}
+        try { (navigator as any).vibrate?.(25); } catch {}
       }
 
       setSuccess(true);
@@ -60,7 +60,6 @@ export default function AddToCartButton({
         ${className}
       `}
     >
-      {/* zone icône fixe pour éviter les décalages/chevauchements */}
       <span className="inline-flex items-center justify-center w-5">
         <AnimatePresence mode="wait" initial={false}>
           {success ? (
@@ -89,7 +88,6 @@ export default function AddToCartButton({
         </AnimatePresence>
       </span>
 
-      {/* texte animé */}
       <AnimatePresence mode="wait" initial={false}>
         {success ? (
           <motion.span

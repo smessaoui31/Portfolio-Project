@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { CartProvider } from "@/context/CartContext";
 import Navbar from "@/components/ui/Navbar";
 import PageTransition from "@/components/ui/PageTransition";
 import NextTopLoader from "nextjs-toploader";
@@ -33,13 +34,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
 
         <AuthProvider>
-          <Navbar />
-          {/* Transition smooth entre les pages */}
-          <PageTransition>{children}</PageTransition>
+          <CartProvider>
+            <Navbar />
+            {/* Transition smooth entre les pages */}
+            <PageTransition>{children}</PageTransition>
 
-          <footer className="mt-12 border-t border-neutral-800/80 py-8 text-center text-sm text-neutral-500">
-            © {new Date().getFullYear()} O’Frero Pizza — Fait par Messaoui Sofian
-          </footer>
+            <footer className="mt-12 border-t border-neutral-800/80 py-8 text-center text-sm text-neutral-500">
+              © {new Date().getFullYear()} O’Frero Pizza — Fait par Messaoui Sofian
+            </footer>
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>

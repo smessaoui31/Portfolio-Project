@@ -1,166 +1,114 @@
-// src/app/cart/page.tsx
 "use client";
-
-import { useEffect, useState } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { apiClient } from "@/lib/api-client";
-
-type CartItem = {
-  id: string;
-  productId: string;
-  name: string;
-  unitPriceCents: number;
-  quantity: number;
-};
-type Cart = { id: string; items: CartItem[]; totalCents: number };
+import { useCart } from "@/context/CartContext";
+import { Trash2, Minus, Plus } from "lucide-react";
+import Link from "next/link";
+import { useMemo } from "react";
 
 export default function CartPage() {
-  const { token } = useAuth();
-  const [cart, setCart] = useState<Cart | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { cart, loading, error, update, remove } = useCart();
 
-  async function load() {
-    if (!token) return;
-    try {
-      setLoading(true);
-      const data = await apiClient<Cart>("/cart", { token });
-      setCart(data);
-    } catch (e: any) {
-      alert(e.message ?? "Erreur chargement panier");
-    } finally {
-      setLoading(false);
-    }
-  }
+  const total = useMemo(() => cart?.totalCents ?? 0, [cart]);
+  const items = cart?.items ?? [];
 
-  useEffect(() => {
-    load();
-  }, [token]);
-
-  async function setQty(itemId: string, quantity: number) {
-    if (!token) return;
-    try {
-      const data = await apiClient<Cart>(`/cart/items/${itemId}`, {
-        method: "PATCH",
-        token,
-        body: { quantity },
-      });
-      setCart(data);
-    } catch (e: any) {
-      alert(e.message ?? "Erreur maj quantité");
-    }
-  }
-
-  async function remove(itemId: string) {
-    if (!token) return;
-    try {
-      const data = await apiClient<{ cart: Cart }>(`/cart/items/${itemId}`, {
-        method: "DELETE",
-        token,
-      });
-      setCart(data.cart);
-    } catch (e: any) {
-      alert(e.message ?? "Erreur suppression");
-    }
-  }
-
-  async function checkout() {
-    if (!token) return;
-    try {
-      const r = await apiClient<{ orderId: string; clientSecret: string; paymentIntentId: string }>(
-        "/checkout/start",
-        {
-          method: "POST",
-          token,
-          body: {
-            addressLine: "12 rue de la République",
-            city: "Paris",
-            postalCode: "75001",
-            phone: "+33601020304",
-          },
-        }
-      );
-      alert(`Commande ${r.orderId} créée.\nPI: ${r.paymentIntentId}\nclient_secret: ${r.clientSecret}`);
-      // TO DO: intégration Stripe Elements ensuite
-    } catch (e: any) {
-      alert(e.message ?? "Erreur checkout (panier vide ?)");
-    }
-  }
-
-  if (!token) {
-    return <div className="text-neutral-400">Connecte-toi pour voir ton panier.</div>;
-  }
-
-  if (loading) {
+  if (loading && !cart) {
     return <div className="text-neutral-400">Chargement du panier…</div>;
   }
-
-  if (!cart || cart.items.length === 0) {
-    return (
-      <div>
-        <h1 className="text-2xl font-semibold text-white mb-4">Ton panier</h1>
-        <p className="text-neutral-400">Ton panier est vide.</p>
-      </div>
-    );
+  if (error) {
+    return <div className="text-red-400">Erreur : {error}</div>;
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold text-white mb-6">Ton panier</h1>
+    <div className="mx-auto w-full max-w-5xl">
+      <header className="mb-8">
+        <h1 className="text-2xl font-semibold text-white">Votre panier</h1>
+        <p className="text-sm text-neutral-400">Modifiez vos articles avant de passer au paiement.</p>
+      </header>
 
-      <div className="space-y-4">
-        {cart.items.map((it) => (
-          <div
-            key={it.id}
-            className="flex items-center justify-between rounded-xl border border-neutral-800 bg-neutral-900/40 p-4"
-          >
-            <div>
-              <div className="text-white font-medium">{it.name}</div>
-              <div className="text-neutral-400 text-sm">
-                {(it.unitPriceCents / 100).toFixed(2)} € / unité
+      {items.length === 0 ? (
+        <div className="rounded-xl border border-neutral-800 p-8 text-center text-neutral-400">
+          Votre panier est vide.{" "}
+          <Link href="/" className="underline hover:text-white">Voir le menu</Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
+          {/* Liste des items */}
+          <ul className="space-y-4">
+            {items.map((it) => (
+              <li key={it.id} className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-4 flex items-center gap-4">
+                <div className="grid h-16 w-16 place-items-center rounded-lg bg-neutral-800 text-2xl">🍕</div>
+
+                <div className="flex-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="text-white font-medium">{it.name}</h3>
+                    <div className="text-white font-semibold">{(it.unitPriceCents / 100).toFixed(2)} €</div>
+                  </div>
+                  <div className="mt-2 flex items-center gap-2">
+                    <button
+                      aria-label="Diminuer"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-neutral-700 text-neutral-200 hover:bg-neutral-800"
+                      onClick={() => update(it.id, Math.max(0, it.quantity - 1))}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </button>
+                    <span className="min-w-[36px] text-center">{it.quantity}</span>
+                    <button
+                      aria-label="Augmenter"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-neutral-700 text-neutral-200 hover:bg-neutral-800"
+                      onClick={() => update(it.id, it.quantity + 1)}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+
+                    <button
+                      aria-label="Supprimer l'article"
+                      className="ml-3 inline-flex h-8 items-center gap-2 rounded-md border border-red-800/50 px-2 text-red-300 hover:bg-red-900/20"
+                      onClick={() => remove(it.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="text-sm">Retirer</span>
+                    </button>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          {/* Récapitulatif */}
+          <aside className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-5 h-fit">
+            <h2 className="mb-4 text-white font-semibold">Résumé</h2>
+            <div className="space-y-2 text-sm text-neutral-300">
+              <div className="flex items-center justify-between">
+                <span>Sous-total</span>
+                <span>{(total / 100).toFixed(2)} €</span>
+              </div>
+              <div className="flex items-center justify-between text-neutral-500">
+                <span>Livraison</span>
+                <span>Calculée au paiement</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                className="h-8 w-8 rounded-lg border border-neutral-700 text-white"
-                onClick={() => setQty(it.id, Math.max(0, it.quantity - 1))}
-              >
-                −
-              </button>
-              <span className="w-8 text-center">{it.quantity}</span>
-              <button
-                className="h-8 w-8 rounded-lg border border-neutral-700 text-white"
-                onClick={() => setQty(it.id, it.quantity + 1)}
-              >
-                +
-              </button>
+            <div className="my-4 h-px bg-neutral-800" />
 
-              <button
-                className="ml-4 rounded-lg border border-red-700/60 text-red-300 px-3 py-1.5 hover:bg-red-900/20"
-                onClick={() => remove(it.id)}
-              >
-                Retirer
-              </button>
+            <div className="mb-4 flex items-center justify-between text-white font-semibold">
+              <span>Total</span>
+              <span>{(total / 100).toFixed(2)} €</span>
             </div>
-          </div>
-        ))}
-      </div>
 
-      <div className="mt-6 flex items-center justify-between rounded-xl border border-neutral-800 bg-neutral-900/60 p-4">
-        <div className="text-neutral-400">Total</div>
-        <div className="text-white text-xl font-semibold">
-          {(cart.totalCents / 100).toFixed(2)} €
+            {/* À brancher sur /checkout/start plus tard */}
+            <Link
+              href="/checkout" // tu peux mettre une vraie page de checkout ensuite
+              className="
+                group relative inline-flex w-full items-center justify-center rounded-md
+                border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-black
+                transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(255,255,255,0.15)]
+                active:translate-y-0
+              "
+            >
+              Passer au paiement
+            </Link>
+          </aside>
         </div>
-      </div>
-
-      <div className="mt-6 flex justify-end">
-        <button
-          onClick={checkout}
-          className="rounded-xl bg-white text-black px-5 py-3 font-medium hover:opacity-90"
-        >
-          Passer au paiement
-        </button>
-      </div>
+      )}
     </div>
   );
 }

@@ -1,48 +1,40 @@
 // src/lib/api.ts
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://127.0.0.1:5050";
 
-/** Récupère le token stocké (côté client uniquement) */
-function getToken(): string | null {
+function getToken() {
   if (typeof window === "undefined") return null;
+  const raw = localStorage.getItem("auth");
+  if (!raw) return null;
   try {
-    const auth = localStorage.getItem("auth");
-    if (!auth) return null;
-    const parsed = JSON.parse(auth);
-    return parsed.token ?? null;
+    const parsed = JSON.parse(raw);
+    return parsed.token as string | null;
   } catch {
     return null;
   }
 }
 
-/** Requête API simple (sans token, pour le SSR) */
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, { cache: "no-store", ...init });
+  const headers = new Headers(init.headers || {});
+  headers.set("Content-Type", "application/json");
+
+  const res = await fetch(`${API_BASE}${path}`, { ...init, headers, cache: "no-store" });
   if (!res.ok) {
-    let msg = `HTTP ${res.status}`;
-    try {
-      const data = await res.json();
-      msg = data.error || msg;
-    } catch {}
-    throw new Error(msg);
+    const text = await res.text().catch(() => "");
+    throw new Error(text || `HTTP ${res.status}`);
   }
   return res.json() as Promise<T>;
 }
 
-/** Version authentifiée (client-side, token automatique) */
 export async function apiAuthed<T>(path: string, init: RequestInit = {}): Promise<T> {
   const token = getToken();
-  const headers = new Headers(init.headers as HeadersInit);
+  const headers = new Headers(init.headers || {});
   headers.set("Content-Type", "application/json");
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
-  const res = await fetch(`${API_BASE}${path}`, { cache: "no-store", ...init, headers });
+  const res = await fetch(`${API_BASE}${path}`, { ...init, headers, cache: "no-store" });
   if (!res.ok) {
-    let msg = `HTTP ${res.status}`;
-    try {
-      const data = await res.json();
-      msg = data.error || msg;
-    } catch {}
-    throw new Error(msg);
+    const text = await res.text().catch(() => "");
+    throw new Error(text || `HTTP ${res.status}`);
   }
   return res.json() as Promise<T>;
 }

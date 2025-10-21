@@ -1,16 +1,15 @@
 "use client";
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { api } from "@/lib/api";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { apiAuthed } from "@/lib/api";
 
-type CartItem = {
+export type CartItem = {
   id: string;
   productId: string;
   name: string;
   unitPriceCents: number;
   quantity: number;
 };
-
-type Cart = {
+export type Cart = {
   id: string;
   items: CartItem[];
   totalCents: number;
@@ -20,10 +19,11 @@ type CartContextType = {
   cart: Cart | null;
   count: number;
   loading: boolean;
+  error: string | null;
   refresh: () => Promise<void>;
-  addItem: (productId: string, quantity?: number) => Promise<void>;
-  updateItem: (itemId: string, quantity: number) => Promise<void>;
-  removeItem: (itemId: string) => Promise<void>;
+  add: (productId: string, quantity?: number) => Promise<void>;
+  update: (itemId: string, quantity: number) => Promise<void>;
+  remove: (itemId: string) => Promise<void>;
   clear: () => Promise<void>;
 };
 
@@ -31,89 +31,73 @@ const CartContext = createContext<CartContextType>({
   cart: null,
   count: 0,
   loading: false,
+  error: null,
   refresh: async () => {},
-  addItem: async () => {},
-  updateItem: async () => {},
-  removeItem: async () => {},
+  add: async () => {},
+  update: async () => {},
+  remove: async () => {},
   clear: async () => {},
 });
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const count = useMemo(() => cart?.items?.reduce((n, it) => n + it.quantity, 0) ?? 0, [cart]);
 
   const refresh = useCallback(async () => {
-    setLoading(true);
     try {
-      const data = await api<Cart>("/cart");
+      setLoading(true);
+      setError(null);
+      const data = await apiAuthed<Cart>("/cart", { method: "GET" });
       setCart(data);
+    } catch (e: any) {
+      setError(e?.message || "Erreur panier");
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const addItem = useCallback(async (productId: string, quantity = 1) => {
-    setLoading(true);
-    try {
-      const data = await api<Cart>("/cart/items", {
-        method: "POST",
-        body: JSON.stringify({ productId, quantity }),
-      });
-      setCart(data);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const add = useCallback(async (productId: string, quantity = 1) => {
+    await apiAuthed<Cart>("/cart/items", {
+      method: "POST",
+      body: JSON.stringify({ productId, quantity }),
+    });
+    await refresh();
+  }, [refresh]);
 
-  const updateItem = useCallback(async (itemId: string, quantity: number) => {
-    setLoading(true);
-    try {
-      const data = await api<Cart>(`/cart/items/${itemId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ quantity }),
-      });
-      setCart(data);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const update = useCallback(async (itemId: string, quantity: number) => {
+    await apiAuthed<Cart>(`/cart/items/${itemId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ quantity }),
+    });
+    await refresh();
+  }, [refresh]);
 
-  const removeItem = useCallback(async (itemId: string) => {
-    setLoading(true);
-    try {
-      const data = await api<{ deleted: CartItem; cart: Cart }>(`/cart/items/${itemId}`, {
-        method: "DELETE",
-      });
-      setCart(data.cart);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const remove = useCallback(async (itemId: string) => {
+    await apiAuthed(`/cart/items/${itemId}`, { method: "DELETE" });
+    await refresh();
+  }, [refresh]);
 
   const clear = useCallback(async () => {
-    if (!cart) return;
-    setLoading(true);
-    try {
-      // met tout à 0 via PATCH 
-      await Promise.all(cart.items.map((it) => api(`/cart/items/${it.id}`, {
+    // simple clear: passer tous les items à 0
+    const items = cart?.items ?? [];
+    for (const it of items) {
+      await apiAuthed(`/cart/items/${it.id}`, {
         method: "PATCH",
         body: JSON.stringify({ quantity: 0 }),
-      })));
-      await refresh();
-    } finally {
-      setLoading(false);
+      });
     }
+    await refresh();
   }, [cart, refresh]);
 
-  // auto-load au mount
   useEffect(() => {
     refresh().catch(() => {});
   }, [refresh]);
 
-  const count = cart?.items.reduce((n, it) => n + it.quantity, 0) ?? 0;
-
   return (
-    <CartContext.Provider value={{ cart, count, loading, refresh, addItem, updateItem, removeItem, clear }}>
+    <CartContext.Provider value={{ cart, count, loading, error, refresh, add, update, remove, clear }}>
       {children}
     </CartContext.Provider>
   );
