@@ -22,7 +22,6 @@ export default function LoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erreur de connexion");
 
-      // Exemple : ton backend renvoie { accessToken, user: { role, email } }
       login(data.accessToken, data.user.role, data.user.email);
       window.location.href = "/"; // redirection vers l’accueil
     } catch (err: any) {
