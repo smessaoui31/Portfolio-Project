@@ -21,3 +21,37 @@ html, body {
   30% { opacity: 0.5; }
   100% { transform: translateX(220%) skewX(-15deg); opacity: 0; }
 }
+
+/* Effet spotlight moderne */
+.animate-spotlight {
+  animation: spotlight-enter 900ms ease forwards, spotlight-float 10s ease-in-out 900ms infinite alternate;
+  transform-origin: 50% 50%;
+  opacity: 0; /* sera animé à 1 */
+}
+
+@keyframes spotlight-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4rem) scale(1.05) rotate(-2deg);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+    filter: blur(0);
+  }
+}
+
+@keyframes spotlight-float {
+  from {
+    transform: translateY(0) translateX(0) rotate(0deg) scale(1);
+  }
+  to {
+    transform: translateY(-12px) translateX(8px) rotate(0.6deg) scale(1.015);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: scale(1.05); }
+  to { opacity: 0.6; transform: scale(1); }
+}
