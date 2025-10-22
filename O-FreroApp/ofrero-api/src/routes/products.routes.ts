@@ -17,10 +17,7 @@ function parsePagination(query: any) {
 
 function parseSort(query: any): Prisma.ProductOrderByWithRelationInput {
   const sort = String(query.sort ?? "").trim(); // ex: "priceDesc", "name", "createdAtDesc"
-  const map: Record<string, Prisma.SortOrder> = { asc: "asc", desc: "desc" };
-  const kv: [keyof Prisma.ProductOrderByWithRelationInput, Prisma.SortOrder][] = [
-    ["name", "asc"],
-  ];
+  const kv: [keyof Prisma.ProductOrderByWithRelationInput, Prisma.SortOrder][] = [["name", "asc"]];
 
   if (!sort) return Object.fromEntries(kv);
 
@@ -39,10 +36,12 @@ function parseSort(query: any): Prisma.ProductOrderByWithRelationInput {
 productsRouter.get("/", async (req, res) => {
   const q = (req.query.q as string | undefined)?.trim();
   const categoryId = (req.query.categoryId as string | undefined)?.trim() || undefined;
+  const featured = (req.query.featured as string | undefined)?.trim(); // "true" pour ne renvoyer que les “featured”
 
   const where: Prisma.ProductWhereInput = {
     ...(q ? { name: { contains: q, mode: "insensitive" } } : {}),
     ...(categoryId ? { categoryId } : {}),
+    ...(featured === "true" ? { isFeatured: true } : {}),
   };
 
   const { skip, take, page, pageSize } = parsePagination(req.query);
@@ -59,12 +58,22 @@ productsRouter.get("/", async (req, res) => {
     prisma.product.count({ where }),
   ]);
 
-  res.json({
-    page,
-    pageSize,
-    total,
-    items,
+  res.json({ page, pageSize, total, items });
+});
+
+/* --------------------------- GET /products/featured ----------------------- */
+/** Liste courte des produits “mis en avant” (tri récents) */
+productsRouter.get("/featured", async (req, res) => {
+  const take = Math.min(parseInt(String(req.query.take ?? "8"), 10) || 8, 24);
+
+  const items = await prisma.product.findMany({
+    where: { isFeatured: true },
+    orderBy: { createdAt: "desc" },
+    take,
+    include: { category: { select: { id: true, name: true } } },
   });
+
+  res.json({ items, total: items.length });
 });
 
 /* --------------------------- GET /products/:id ---------------------------- */
@@ -83,6 +92,8 @@ const NewProductSchema = z.object({
   priceCents: z.number().int().min(0),
   description: z.string().optional(),
   categoryId: z.string().optional().nullable(),
+  // optionnel: permettre de créer directement en featured , pour plus tard on sait jms
+  isFeatured: z.boolean().optional().default(false),
 });
 
 productsRouter.post("/", requireAuth, requireAdmin, async (req, res) => {
@@ -104,7 +115,6 @@ productsRouter.get("/by-category/:categoryId", async (req, res) => {
   const { skip, take, page, pageSize } = parsePagination(req.query);
   const orderBy = parseSort(req.query);
 
-  // vérifie la catégorie
   const cat = await prisma.category.findUnique({ where: { id: req.params.categoryId } });
   if (!cat) return res.status(404).json({ error: "Category not found" });
 
@@ -121,13 +131,27 @@ productsRouter.get("/by-category/:categoryId", async (req, res) => {
     prisma.product.count({ where }),
   ]);
 
-  res.json({
-    category: { id: cat.id, name: cat.name },
-    page,
-    pageSize,
-    total,
-    items,
+  res.json({ category: { id: cat.id, name: cat.name }, page, pageSize, total, items });
+});
+
+/* ----------------------- PATCH /products/:id/feature (admin) -------------- */
+const FeatureSchema = z.object({ isFeatured: z.boolean() });
+
+productsRouter.patch("/:id/feature", requireAuth, requireAdmin, async (req, res) => {
+  const parsed = FeatureSchema.safeParse(req.body);
+  if (!parsed.success)
+    return res.status(400).json({ error: "Invalid body", details: parsed.error.flatten() });
+
+  const exists = await prisma.product.findUnique({ where: { id: req.params.id } });
+  if (!exists) return res.status(404).json({ error: "Not found" });
+
+  const updated = await prisma.product.update({
+    where: { id: req.params.id },
+    data: { isFeatured: parsed.data.isFeatured },
+    include: { category: { select: { id: true, name: true } } },
   });
+
+  res.json(updated);
 });
 
 /* ----------------------------- POST /products/seed ------------------------ */
@@ -149,7 +173,14 @@ productsRouter.post("/seed", requireAuth, requireAdmin, async (_req, res) => {
 
   try {
     const created = await prisma.product.createMany({ data });
-    res.status(201).json({ message: `🍕 ${created.count} pizzas ajoutées`, count: created.count });
+
+    // marque 2 pizzas en “featured” pour une mise en avant spécifique voulu par les patrons
+    await prisma.product.updateMany({
+      where: { name: { in: ["Pizza Margherita", "Pizza Diavola"] } },
+      data: { isFeatured: true },
+    });
+
+    res.status(201).json({ message: `🍕 ${created.count} pizzas ajoutées (dont 2 en sélection)`, count: created.count });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Erreur lors de la création des pizzas" });
