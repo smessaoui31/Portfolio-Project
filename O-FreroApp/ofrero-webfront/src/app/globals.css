@@ -105,3 +105,12 @@ html, body {
 /* -- DarkMode --***/
 :root { color-scheme: light dark; }
 html { transition: background-color 200ms ease, color 200ms ease; }
+
+@media print {
+  nav, footer, .print\:hidden { display: none !important; }
+  body { background: white !important; color: black !important; }
+  * { box-shadow: none !important; text-shadow: none !important; }
+  .border, .border-neutral-800 { border-color: #e5e7eb !important; }
+  .bg-neutral-900\/50, .bg-neutral-900, .bg-neutral-950 { background: white !important; }
+  .text-white, .text-neutral-100, .text-neutral-200, .text-neutral-300, .text-neutral-400 { color: #111 !important; }
+}

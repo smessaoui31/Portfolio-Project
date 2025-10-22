@@ -91,7 +91,7 @@ export default function Navbar() {
           <NavLink href="/contact" label="Contact" />
         </div>
 
-        {/* Right: auth + panier */}
+        {/* Right: auth + commandes + panier */}
         <div
           className="relative flex items-center gap-3"
           onMouseMove={onMove}
@@ -99,6 +99,15 @@ export default function Navbar() {
         >
           {token ? (
             <>
+              {/* Mes commandes (visible si connecté) */}
+              <Link
+                href="/orders"
+                className="rounded-md border border-neutral-700 bg-neutral-900/70 px-3 py-1.5 text-sm text-white transition-all hover:bg-neutral-800 hover:-translate-y-0.5"
+                title="Voir mes commandes"
+              >
+                Mes commandes
+              </Link>
+
               <span className="hidden sm:inline text-neutral-400 text-sm" title={email ?? undefined}>
                 {email}
               </span>
@@ -220,6 +229,16 @@ export default function Navbar() {
             <NavLink href="/menu" label="Menu" />
             <NavLink href="/about" label="À propos" />
             <NavLink href="/contact" label="Contact" />
+
+            {/* Mes commandes (mobile, seulement connecté) */}
+            {token && (
+              <Link
+                href="/orders"
+                className="mt-2 inline-flex items-center justify-between rounded-md border border-neutral-800 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800/60"
+              >
+                <span>Mes commandes</span>
+              </Link>
+            )}
 
             {/* Panier + compteur aussi dans le menu mobile */}
             <Link
