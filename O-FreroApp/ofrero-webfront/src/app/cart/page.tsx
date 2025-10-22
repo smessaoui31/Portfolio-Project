@@ -1,114 +1,153 @@
 "use client";
+
+import { useEffect } from "react";
 import { useCart } from "@/context/CartContext";
-import { Trash2, Minus, Plus } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { useMemo } from "react";
 
 export default function CartPage() {
-  const { cart, loading, error, update, remove } = useCart();
+  const { cart, loading, refresh, update, remove } = useCart();
 
-  const total = useMemo(() => cart?.totalCents ?? 0, [cart]);
-  const items = cart?.items ?? [];
+  useEffect(() => {
+    refresh().catch(() => {});
+  }, [refresh]);
 
   if (loading && !cart) {
-    return <div className="text-neutral-400">Chargement du panier…</div>;
+    return (
+      <div className="min-h-[60vh] grid place-items-center text-neutral-400 text-sm animate-pulse">
+        Chargement du panier…
+      </div>
+    );
   }
-  if (error) {
-    return <div className="text-red-400">Erreur : {error}</div>;
+
+  if (!cart || cart.items.length === 0) {
+    return (
+      <main className="mx-auto w-full max-w-4xl px-4 py-20 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h1 className="text-3xl font-semibold text-white mb-3">Votre panier</h1>
+          <p className="text-neutral-400 mb-6">Votre panier est vide.</p>
+          <Link
+            href="/menu"
+            className="inline-flex items-center justify-center rounded-md bg-white px-5 py-2.5 text-sm font-medium text-black hover:opacity-90 transition"
+          >
+            Voir le menu
+          </Link>
+        </motion.div>
+      </main>
+    );
   }
+
+  const handleDec = (id: string, qty: number) => {
+    const next = Math.max(qty - 1, 0);
+    update(id, next).catch(() => {});
+  };
+
+  const handleInc = (id: string, qty: number) => {
+    update(id, qty + 1).catch(() => {});
+  };
+
+  const handleRemove = (id: string) => {
+    remove(id).catch(() => {});
+  };
+
+  const totalEuro = (cart.totalCents / 100).toFixed(2);
 
   return (
-    <div className="mx-auto w-full max-w-5xl">
-      <header className="mb-8">
-        <h1 className="text-2xl font-semibold text-white">Votre panier</h1>
-        <p className="text-sm text-neutral-400">Modifiez vos articles avant de passer au paiement.</p>
-      </header>
+    <main className="relative mx-auto w-full max-w-5xl px-4 py-10">
+      <motion.h1
+        className="mb-8 text-3xl font-semibold text-white text-center md:text-left"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        Votre panier
+      </motion.h1>
 
-      {items.length === 0 ? (
-        <div className="rounded-xl border border-neutral-800 p-8 text-center text-neutral-400">
-          Votre panier est vide.{" "}
-          <Link href="/" className="underline hover:text-white">Voir le menu</Link>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
-          {/* Liste des items */}
-          <ul className="space-y-4">
-            {items.map((it) => (
-              <li key={it.id} className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-4 flex items-center gap-4">
-                <div className="grid h-16 w-16 place-items-center rounded-lg bg-neutral-800 text-2xl">🍕</div>
-
-                <div className="flex-1">
-                  <div className="flex items-start justify-between gap-3">
-                    <h3 className="text-white font-medium">{it.name}</h3>
-                    <div className="text-white font-semibold">{(it.unitPriceCents / 100).toFixed(2)} €</div>
-                  </div>
-                  <div className="mt-2 flex items-center gap-2">
-                    <button
-                      aria-label="Diminuer"
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-neutral-700 text-neutral-200 hover:bg-neutral-800"
-                      onClick={() => update(it.id, Math.max(0, it.quantity - 1))}
-                    >
-                      <Minus className="h-4 w-4" />
-                    </button>
-                    <span className="min-w-[36px] text-center">{it.quantity}</span>
-                    <button
-                      aria-label="Augmenter"
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-neutral-700 text-neutral-200 hover:bg-neutral-800"
-                      onClick={() => update(it.id, it.quantity + 1)}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-
-                    <button
-                      aria-label="Supprimer l'article"
-                      className="ml-3 inline-flex h-8 items-center gap-2 rounded-md border border-red-800/50 px-2 text-red-300 hover:bg-red-900/20"
-                      onClick={() => remove(it.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="text-sm">Retirer</span>
-                    </button>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-
-          {/* Récapitulatif */}
-          <aside className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-5 h-fit">
-            <h2 className="mb-4 text-white font-semibold">Résumé</h2>
-            <div className="space-y-2 text-sm text-neutral-300">
-              <div className="flex items-center justify-between">
-                <span>Sous-total</span>
-                <span>{(total / 100).toFixed(2)} €</span>
-              </div>
-              <div className="flex items-center justify-between text-neutral-500">
-                <span>Livraison</span>
-                <span>Calculée au paiement</span>
-              </div>
-            </div>
-
-            <div className="my-4 h-px bg-neutral-800" />
-
-            <div className="mb-4 flex items-center justify-between text-white font-semibold">
-              <span>Total</span>
-              <span>{(total / 100).toFixed(2)} €</span>
-            </div>
-
-            {/* À brancher sur /checkout/start plus tard */}
-            <Link
-              href="/checkout" // tu peux mettre une vraie page de checkout ensuite
-              className="
-                group relative inline-flex w-full items-center justify-center rounded-md
-                border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-black
-                transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(255,255,255,0.15)]
-                active:translate-y-0
-              "
+      {/* Liste des articles */}
+      <section className="space-y-4 mb-8">
+        <AnimatePresence mode="popLayout">
+          {cart.items.map((it) => (
+            <motion.div
+              key={it.id}
+              layout
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, x: 80 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-5 shadow-[0_0_20px_rgba(255,255,255,0.02)] hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] transition-all duration-300"
             >
-              Passer au paiement
-            </Link>
-          </aside>
+              <div className="flex-1">
+                <h2 className="text-white font-medium text-lg">{it.name}</h2>
+                <p className="text-sm text-neutral-400 mt-1">
+                  {(it.unitPriceCents / 100).toFixed(2)} € / unité
+                </p>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <motion.div
+                  layout
+                  className="flex items-center gap-3 rounded-lg border border-neutral-700 bg-neutral-950/40 px-3 py-1.5"
+                >
+                  <button
+                    onClick={() => handleDec(it.id, it.quantity)}
+                    className="h-9 w-9 flex items-center justify-center text-lg text-white hover:bg-neutral-800/70 active:scale-95 rounded-md transition-all"
+                  >
+                    −
+                  </button>
+
+                  <span className="min-w-[2rem] text-center text-white font-medium select-none">
+                    {it.quantity}
+                  </span>
+
+                  <button
+                    onClick={() => handleInc(it.id, it.quantity)}
+                    className="h-9 w-9 flex items-center justify-center text-lg text-white hover:bg-neutral-800/70 active:scale-95 rounded-md transition-all"
+                  >
+                    +
+                  </button>
+                </motion.div>
+
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleRemove(it.id)}
+                  className="rounded-md border border-neutral-700 px-3 py-1.5 text-sm text-neutral-300 hover:bg-neutral-800/60 transition"
+                >
+                  Supprimer
+                </motion.button>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </section>
+
+      {/* Total + CTA aligné à droite */}
+      <motion.div
+        layout
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut", delay: 0.2 }}
+        className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-6 shadow-[0_0_25px_rgba(255,255,255,0.05)]"
+      >
+        <div className="flex flex-col sm:flex-row items-end sm:items-center justify-between gap-4">
+          <div className="text-right sm:text-left">
+            <div className="text-neutral-300 text-sm uppercase tracking-wide mb-1">
+              Total à payer
+            </div>
+            <div className="text-2xl font-semibold text-white">{totalEuro} €</div>
+          </div>
+
+          <Link
+            href="/checkout"
+            className="rounded-md bg-white px-6 py-3 text-sm font-semibold text-black hover:opacity-90 transition-all duration-300 hover:-translate-y-0.5"
+          >
+            Passer au paiement →
+          </Link>
         </div>
-      )}
-    </div>
+      </motion.div>
+    </main>
   );
 }

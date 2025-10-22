@@ -2,12 +2,11 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
-import Image from "next/image";
-import { Weight } from "lucide-react";
 
 function NavLink({ href, label }: { href: string; label: string }) {
   const pathname = usePathname();
@@ -40,38 +39,49 @@ export default function Navbar() {
     setPos({ x, y });
   }
 
+  // Badge du panier : petite anim à chaque changement de count
+  const badgeRef = useRef<HTMLSpanElement | null>(null);
+  useEffect(() => {
+    if (!badgeRef.current) return;
+    badgeRef.current.classList.remove("badge-bump");
+    // force reflow pour relancer l’animation
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    badgeRef.current.offsetWidth;
+    badgeRef.current.classList.add("badge-bump");
+  }, [count]);
+
   return (
     <header className="sticky top-0 z-40 border-b border-neutral-800/80 bg-black/70 backdrop-blur">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
         {/* Left: Logo → accueil */}
-<Link
-  href="/"
-  className="flex items-center gap-3 transition-transform hover:scale-[1.03] active:scale-100"
->
-  <div
-    className="relative h-12 w-12 md:h-14 md:w-14 lg:h-16 lg:w-16
-               rounded-xl border border-neutral-800 bg-gradient-to-br from-neutral-900 to-neutral-950
-               p-2 shadow-[0_0_20px_rgba(255,255,255,0.05)]
-               hover:shadow-[0_0_25px_rgba(255,255,255,0.1)]
-               transition-all duration-300 ease-out"
-  >
-    <Image
-      src="/ofrero-pizza-logo.png"
-      alt="O’Frero Pizza"
-      fill
-      className="object-contain"
-      sizes="(min-width:1024px) 4rem, (min-width:768px) 3.5rem, 3rem"
-      priority
-    />
-  </div>
+        <Link
+          href="/"
+          className="flex items-center gap-3 transition-transform hover:scale-[1.03] active:scale-100"
+        >
+          <div
+            className="relative h-12 w-12 md:h-14 md:w-14 lg:h-16 lg:w-16
+                       rounded-xl border border-neutral-800 bg-gradient-to-br from-neutral-900 to-neutral-950
+                       p-2 shadow-[0_0_20px_rgba(255,255,255,0.05)]
+                       hover:shadow-[0_0_25px_rgba(255,255,255,0.1)]
+                       transition-all duration-300 ease-out"
+          >
+            <Image
+              src="/ofrero-pizza-logo.png"
+              alt="O’Frero Pizza"
+              fill
+              className="object-contain"
+              sizes="(min-width:1024px) 4rem, (min-width:768px) 3.5rem, 3rem"
+              priority
+            />
+          </div>
 
-  <span
-    className="text-lg md:text-xl font-semibold tracking-tight text-white
-               bg-gradient-to-r from-neutral-100 to-neutral-400 bg-clip-text text-transparent"
-  >
-    O’Frero Pizza
-  </span>
-</Link>
+          <span
+            className="text-lg md:text-xl font-semibold tracking-tight text-white
+                       bg-gradient-to-r from-neutral-100 to-neutral-400 bg-clip-text text-transparent"
+          >
+            O’Frero Pizza
+          </span>
+        </Link>
 
         {/* Middle: liens */}
         <div className="hidden items-center gap-1 md:flex">
@@ -174,7 +184,7 @@ export default function Navbar() {
             </Link>
           )}
 
-          {/* Panier */}
+          {/* Panier (avec badge animé) */}
           <Link
             href="/cart"
             className="relative rounded-md border border-neutral-800 px-3 py-2 text-sm text-white hover:bg-neutral-800/60"
@@ -182,7 +192,10 @@ export default function Navbar() {
           >
             Panier
             <span className="sr-only"> — {count} article{count > 1 ? "s" : ""}</span>
-            <span className="ml-2 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-white/10 px-1 text-xs text-white">
+            <span
+              ref={badgeRef}
+              className="ml-2 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-white/10 px-1 text-xs text-white"
+            >
               {count}
             </span>
           </Link>

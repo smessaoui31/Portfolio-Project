@@ -18,7 +18,7 @@ export default function AddToCartButton({
   className = "",
 }: AddToCartButtonProps) {
   const { token } = useAuth();
-  const { add } = useCart(); // ← ICI : on récupère `add` et plus `addItem`
+  const { add } = useCart();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -29,10 +29,8 @@ export default function AddToCartButton({
     }
     try {
       setLoading(true);
+      await add(productId, quantity); // ← on passe par le contexte
 
-      await add(productId, quantity); // ← ICI : on appelle `add`
-
-      // mini vibration (si supporté)
       if ("vibrate" in navigator) {
         try { (navigator as any).vibrate?.(25); } catch {}
       }

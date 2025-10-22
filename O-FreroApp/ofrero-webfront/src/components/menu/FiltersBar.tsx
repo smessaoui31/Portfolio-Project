@@ -97,7 +97,7 @@ export default function FiltersBar({ categories }: Props) {
             : "border-neutral-800 bg-neutral-900 text-neutral-300 hover:bg-neutral-800/60"}`}
         aria-pressed={featured}
       >
-        ⭐ Sélection
+        La Sélection du Chef
       </button>
     </div>
   );

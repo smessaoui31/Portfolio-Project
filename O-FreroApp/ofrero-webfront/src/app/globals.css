@@ -55,3 +55,50 @@ html, body {
   from { opacity: 0; transform: scale(1.05); }
   to { opacity: 0.6; transform: scale(1); }
 }
+
+/* --- Skeleton shimmer --- */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #171717; /* neutral-900 */
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  animation: skeleton-shimmer 1.2s infinite;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,0.06),
+    transparent
+  );
+}
+@keyframes skeleton-shimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* --- Badge bump quand count change --- */
+@keyframes badge-bump {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+.badge-bump {
+  animation: badge-bump 300ms ease-out;
+}
+
+/* --- Petits fade/slide pour listes --- */
+.item-enter {
+  opacity: 0; transform: translateY(6px);
+}
+.item-enter-active {
+  opacity: 1; transform: translateY(0); transition: all .2s ease-out;
+}
+.item-exit {
+  opacity: 1; transform: translateY(0);
+}
+.item-exit-active {
+  opacity: 0; transform: translateY(-6px); transition: all .2s ease-out;
+}
