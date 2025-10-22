@@ -4,8 +4,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
-import Navbar from "@/components/ui/Navbar";
-import PageTransition from "@/components/ui/PageTransition";
+import Navbar from "@/components/theme/ui/Navbar";
+import PageTransition from "@/components/theme/ui/PageTransition";
 import NextTopLoader from "nextjs-toploader";
 
 const inter = Inter({ subsets: ["latin"] });

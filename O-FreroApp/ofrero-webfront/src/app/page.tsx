@@ -1,7 +1,7 @@
 // Page d’accueil — Hero noir & blanc avec spotlight, logo et CTAs
 import Image from "next/image";
 import Link from "next/link";
-import { Spotlight } from "@/components/ui/Spotlight"; 
+import { Spotlight } from "@/components/theme/ui/Spotlight"; 
 export const revalidate = 0;
 
 export default function HomePage() {

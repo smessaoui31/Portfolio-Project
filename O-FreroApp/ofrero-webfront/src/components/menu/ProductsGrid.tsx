@@ -1,6 +1,6 @@
 "use client";
 
-import AddToCartButton from "@/components/ui/AddToCartButton";
+import AddToCartButton from "@/components/theme/ui/AddToCartButton";
 import type { Paginated, Product } from "@/types";
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";

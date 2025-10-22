@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import ProductCard, { type Product } from "../components/ui/ProductCard";
-import SkeletonGrid from "../components/ui/SkeletonGrid";
+import ProductCard, { type Product } from "../components/theme/ui/ProductCard";
+import SkeletonGrid from "../components/theme/ui/SkeletonGrid";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:5050";
 
