@@ -48,6 +48,8 @@ const ALLOWED_ORIGINS = [
   "http://127.0.0.1:3001",
   "http://127.0.0.1:3002",
   "http://localhost:3002",
+   "http://localhost:5050",
+  "http://127.0.0.1:5050",
 ];
 
 const corsOptions: cors.CorsOptions = {
