@@ -1,3 +1,4 @@
+// src/components/ui/Navbar.tsx
 "use client";
 
 import Link from "next/link";
@@ -5,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
+import Image from "next/image";
+import { Weight } from "lucide-react";
 
 function NavLink({ href, label }: { href: string; label: string }) {
   const pathname = usePathname();
@@ -40,22 +43,45 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-neutral-800/80 bg-black/70 backdrop-blur">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-        {/* Left: Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <div className="grid h-8 w-8 place-items-center rounded-md bg-neutral-800 text-lg">🍕</div>
-          <span className="text-white font-semibold tracking-tight">
-            O’Frero Pizza
-          </span>
-        </Link>
+        {/* Left: Logo → accueil */}
+<Link
+  href="/"
+  className="flex items-center gap-3 transition-transform hover:scale-[1.03] active:scale-100"
+>
+  <div
+    className="relative h-12 w-12 md:h-14 md:w-14 lg:h-16 lg:w-16
+               rounded-xl border border-neutral-800 bg-gradient-to-br from-neutral-900 to-neutral-950
+               p-2 shadow-[0_0_20px_rgba(255,255,255,0.05)]
+               hover:shadow-[0_0_25px_rgba(255,255,255,0.1)]
+               transition-all duration-300 ease-out"
+  >
+    <Image
+      src="/ofrero-pizza-logo.png"
+      alt="O’Frero Pizza"
+      fill
+      className="object-contain"
+      sizes="(min-width:1024px) 4rem, (min-width:768px) 3.5rem, 3rem"
+      priority
+    />
+  </div>
 
-        {/* Middle: links */}
+  <span
+    className="text-lg md:text-xl font-semibold tracking-tight text-white
+               bg-gradient-to-r from-neutral-100 to-neutral-400 bg-clip-text text-transparent"
+  >
+    O’Frero Pizza
+  </span>
+</Link>
+
+        {/* Middle: liens */}
         <div className="hidden items-center gap-1 md:flex">
-          <NavLink href="/" label="Menu" />
+          <NavLink href="/" label="Accueil" />
+          <NavLink href="/menu" label="Menu" />
           <NavLink href="/about" label="À propos" />
           <NavLink href="/contact" label="Contact" />
         </div>
 
-        {/* Right: auth actions + panier (avec glow/shine) */}
+        {/* Right: auth + panier */}
         <div
           className="relative flex items-center gap-3"
           onMouseMove={onMove}
@@ -177,7 +203,8 @@ export default function Navbar() {
       {open && (
         <div className="border-t border-neutral-800/80 bg-black/90 px-4 py-3 md:hidden">
           <div className="flex flex-col gap-1">
-            <NavLink href="/" label="Menu" />
+            <NavLink href="/" label="Accueil" />
+            <NavLink href="/menu" label="Menu" />
             <NavLink href="/about" label="À propos" />
             <NavLink href="/contact" label="Contact" />
 
