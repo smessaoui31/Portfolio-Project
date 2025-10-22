@@ -15,9 +15,7 @@
     "db:start": "sudo service postgresql start || sudo systemctl start postgresql",
     "db:restart": "sudo service postgresql restart || sudo systemctl restart postgresql",
     "db:status": "sudo service postgresql status || sudo systemctl status postgresql",
-    "dev:5050": "PORT=5050 ts-node-dev --respawn --transpile-only src/index.ts",
     "dev:full": "fuser -k 5050/tcp || true && service postgresql start && ts-node-dev --respawn --transpile-only src/index.ts"
-
   },
   "keywords": [],
   "author": "",
@@ -30,6 +28,7 @@
     "express": "^5.1.0",
     "jq": "^1.7.2",
     "jsonwebtoken": "^9.0.2",
+    "next-themes": "^0.4.6",
     "prisma": "^6.17.1",
     "stripe": "^19.1.0",
     "swagger-ui-express": "^5.0.1",
