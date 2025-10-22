@@ -1,11 +1,9 @@
 // src/context/CartContext.tsx
 "use client";
-
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { apiAuthed } from "@/lib/api";
 
-/* --- Types alignés avec l’API --- */
-export type CartItem = {
+type CartItem = {
   id: string;
   productId: string;
   name: string;
@@ -13,7 +11,7 @@ export type CartItem = {
   quantity: number;
 };
 
-export type Cart = {
+type Cart = {
   id: string;
   items: CartItem[];
   totalCents: number;
@@ -21,34 +19,38 @@ export type Cart = {
 
 type CartContextType = {
   cart: Cart | null;
-  count: number;
+  items: CartItem[];
+  count: number; // ← important
+  totalCents: number;
   loading: boolean;
   add: (productId: string, quantity?: number) => Promise<void>;
   update: (itemId: string, quantity: number) => Promise<void>;
   remove: (itemId: string) => Promise<void>;
   refresh: () => Promise<void>;
-  clear: () => Promise<void>;
 };
 
 const CartContext = createContext<CartContextType>({
   cart: null,
-  count: 0,
+  items: [],
+  count: 0,            // ← default
+  totalCents: 0,
   loading: false,
   add: async () => {},
   update: async () => {},
   remove: async () => {},
   refresh: async () => {},
-  clear: async () => {},
 });
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const items = cart?.items ?? [];
   const count = useMemo(
-    () => (cart?.items?.reduce((s, it) => s + it.quantity, 0) ?? 0),
-    [cart]
+    () => items.reduce((n, it) => n + it.quantity, 0),
+    [items]
   );
+  const totalCents = cart?.totalCents ?? 0;
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -60,75 +62,51 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const add = useCallback(
-    async (productId: string, quantity = 1) => {
-      setLoading(true);
-      try {
-        // POST /cart/items -> renvoie le panier
-        const data = await apiAuthed<Cart>("/cart/items", {
-          method: "POST",
-          body: JSON.stringify({ productId, quantity }),
-        });
-        setCart(data);
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
-
-  const update = useCallback(
-    async (itemId: string, quantity: number) => {
-      setLoading(true);
-      try {
-        const data = await apiAuthed<Cart>("/cart/items/" + itemId, {
-          method: "PATCH",
-          body: JSON.stringify({ quantity }),
-        });
-        setCart(data);
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
-
-  const remove = useCallback(
-    async (itemId: string) => {
-      setLoading(true);
-      try {
-        // Selon ton API, DELETE renvoie { deleted, cart } ou juste Cart
-        const res = await apiAuthed<any>("/cart/items/" + itemId, { method: "DELETE" });
-        setCart(res?.cart ?? res ?? null);
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
-
-  const clear = useCallback(async () => {
+  const add = useCallback(async (productId: string, quantity = 1) => {
     setLoading(true);
     try {
-      // Adapte si ton backend expose /cart/clear ou DELETE /cart
-      // Ici on tente DELETE /cart qui renverrait le cart vide
-      const data = await apiAuthed<Cart>("/cart", { method: "DELETE" });
+      const data = await apiAuthed<Cart>("/cart/items", {
+        method: "POST",
+        body: JSON.stringify({ productId, quantity }),
+      });
       setCart(data);
-    } catch {
-      // si pas de route clear, on retombe sur refresh
-      await refresh();
     } finally {
       setLoading(false);
     }
-  }, [refresh]);
+  }, []);
 
-  // Charger à l’arrivée (utile quand on arrive direct sur /cart)
+  const update = useCallback(async (itemId: string, quantity: number) => {
+    setLoading(true);
+    try {
+      const data = await apiAuthed<Cart>(`/cart/items/${itemId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ quantity }),
+      });
+      setCart(data);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const remove = useCallback(async (itemId: string) => {
+    setLoading(true);
+    try {
+      const data = await apiAuthed<{ cart: Cart }>(`/cart/items/${itemId}`, { method: "DELETE" });
+      setCart(data.cart);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
+    // charge le panier au mount
     refresh().catch(() => {});
   }, [refresh]);
 
   return (
-    <CartContext.Provider value={{ cart, count, loading, add, update, remove, refresh, clear }}>
+    <CartContext.Provider
+      value={{ cart, items, count, totalCents, loading, add, update, remove, refresh }}
+    >
       {children}
     </CartContext.Provider>
   );
