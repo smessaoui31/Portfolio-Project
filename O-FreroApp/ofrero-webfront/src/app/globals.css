@@ -102,3 +102,6 @@ html, body {
 .item-exit-active {
   opacity: 0; transform: translateY(-6px); transition: all .2s ease-out;
 }
+/* -- DarkMode --***/
+:root { color-scheme: light dark; }
+html { transition: background-color 200ms ease, color 200ms ease; }
