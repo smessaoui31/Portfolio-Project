@@ -79,7 +79,7 @@ paths:
             schema: { $ref: "#/components/schemas/LoginInput" }
             examples:
               exemple:
-                value: { email: "alice@example.com", password: "secret123" }
+                value: { email: "admin@ofrero.fr", password: "admin123" }
       responses:
         "200":
           description: Connexion réussie — jeton JWT renvoyé
