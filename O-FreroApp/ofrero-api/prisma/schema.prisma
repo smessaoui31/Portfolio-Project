@@ -43,6 +43,7 @@ model Product {
   categoryId  String?
   category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
+  isFeatured  Boolean   @default(false)
   orderItems OrderItem[]
   cartItems  CartItem[]
   createdAt  DateTime    @default(now())
