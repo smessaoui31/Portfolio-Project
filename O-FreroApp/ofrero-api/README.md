@@ -70,7 +70,6 @@ Use Postman or curl to test endpoints.
 ## Documentation
 
 - API Reference (Swagger UI): `/docs` (served from `openapi/openapi.json`)
-- Technical Documentation : `docs/Technical_Documentation_Stage4.md`
 
 ## Deployment
 Build and start:
@@ -109,7 +108,7 @@ Implemented routes:
 See .env.example for the full list:
 PORT, DATABASE_URL, JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_FULLNAME, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET.
 
-## Team ## Team & Roles Roles 
+## Team ## Team ## Team ## Team & Roles Roles  Roles Roles
 
 - **Project Manager / QA (PM)** â€“ *Sofiane Messaoui*  
   Oversees project planning, sprint organization, and progress tracking.  
@@ -124,12 +123,22 @@ PORT, DATABASE_URL, JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_FULLNAME, STR
 > while Philippe ensures clean development, Git workflow, and documentation.
 
 
----
 
 ## í³„ Technical Documentation
 
-For full backend specifications, including database schema, API endpoints, and QA evidence:  
-í±‰ [**docs/Technical_Documentation_Stage4.md**](docs/Technical_Documentation_Stage4.md)
+
+
+
+## Technical Documentation
+
+
+
+
+
+
+
+
+
 
 
 ---
