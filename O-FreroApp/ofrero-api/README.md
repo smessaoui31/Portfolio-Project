@@ -121,5 +121,5 @@ PORT, DATABASE_URL, JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_FULLNAME, STR
 
 > *Agile Duo Workflow:*  
 > Sofiane drives project vision, sprint planning, and QA testing,  
-> while Philippe ensures clean development, Git workflow, and documentation throughout Stage 4.
+> while Philippe ensures clean development, Git workflow, and documentation.
 
