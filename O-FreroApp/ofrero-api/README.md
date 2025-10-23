@@ -123,3 +123,11 @@ PORT, DATABASE_URL, JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_FULLNAME, STR
 > Sofiane drives project vision, sprint planning, and QA testing,  
 > while Philippe ensures clean development, Git workflow, and documentation.
 
+
+---
+
+## í³„ Technical Documentation
+
+For full backend specifications, including database schema, API endpoints, and QA evidence:  
+í±‰ [**docs/Technical_Documentation_Stage4.md**](docs/Technical_Documentation_Stage4.md)
+
