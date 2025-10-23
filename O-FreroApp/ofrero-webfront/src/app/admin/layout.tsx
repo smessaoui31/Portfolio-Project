@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminHeader from "@/components/admin/AdminHeader";
+import AdminShell from "@/components/admin/AdminShell";
 
 export const metadata: Metadata = {
   title: "Admin • O’Frero Pizza",
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <AdminGuard>
+      <AdminShell>{children}</AdminShell>
       <div className="min-h-[calc(100vh-4rem)] bg-neutral-950 text-neutral-100">
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[260px_1fr]">
           {/* Sidebar */}
