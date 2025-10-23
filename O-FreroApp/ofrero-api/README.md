@@ -4,7 +4,7 @@
 Backend API for O-Frero, the MVP built during Stage 4 of the Holberton Portfolio Project.
 Implements a minimal but functional e-commerce backend with authentication, products, and Stripe integration.
 
-## Tech Stack 
+## Tech Stack
 - Node.js + TypeScript
 - Express 5
 - Prisma + PostgreSQL
@@ -50,8 +50,7 @@ ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_FULLNAME, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_S
 - GET /health returns `{ ok: true }`
 - GET /products returns list or [] (seed)
 - GET /products/:id returns 200 or 404
-- Stripe CLI: `stripe listen --forward-to localhost:5050/checkout/webhook` then `stripe trigger payment_intent.succeeded` â†’ webhook received
-
+- Stripe CLI: `stripe listen --forward-to localhost:5050/checkout/webhook` then `stripe trigger payment_intent.succeeded`  webhook received
 
 ## Agile Workflow 
 
@@ -83,38 +82,12 @@ Use Render/Railway/Fly.io with the same environment variables as .env.
 - Sofiane Messaoui - Project Lead
 Holberton School - Portfolio Project, Stage 4.
 
-## Quick Start
-```bash
-cp .env.example .env
-npm install
-npx prisma generate
-npx prisma migrate dev
-npm run dev:5050   # http://localhost:5050
-```
-
-## API Documentation
-Swagger UI: http://localhost:5050/docs
-Healthcheck: http://localhost:5050/health
-
-Implemented routes:
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET    | /products/        | Public       | List all products |
-| GET    | /products/:id     | Public       | Get product by ID |
-| POST   | /products/        | Auth + Admin | Create product |
-| POST   | /checkout/webhook | None         | Stripe webhook |
-
-## Environment Variables
-See .env.example for the full list:
-PORT, DATABASE_URL, JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_FULLNAME, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET.
-
-## Team ## Team ## Team ## Team & Roles Roles  Roles Roles
-
-- **Project Manager / QA (PM)** â€“ *Sofiane Messaoui*  
+## Team & Roles
+- **Project Manager / QA (PM)**  *Sofiane Messaoui*  
   Oversees project planning, sprint organization, and progress tracking.  
   Coordinates task distribution, manages deadlines, and ensures quality through testing and validation.
 
-- **Developer / SCM** â€“ *Philippe Doudou*  
+- **Developer / SCM**  *Philippe Doudou*  
   Contributes to backend development (Express, Prisma, Stripe).  
   Manages the `mr-philips` branch and handles version control with Git.
 
@@ -122,28 +95,11 @@ PORT, DATABASE_URL, JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_FULLNAME, STR
 > Sofiane drives project vision, sprint planning, and QA testing,  
 > while Philippe ensures clean development, Git workflow, and documentation.
 
-
-
-## í³„ Technical Documentation
-
-
-
-
 ## Technical Documentation
-
-
-
-
-
-
-
-
-
-
 
 ---
 
-## Technical Documentation
-
 For full backend specifications, including database schema, API endpoints, and QA evidence:  
 [**docs/Technical_Documentation_Stage4.md**](docs/Technical_Documentation_Stage4.md)
+
+
