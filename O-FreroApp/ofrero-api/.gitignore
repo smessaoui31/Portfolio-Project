@@ -49,4 +49,4 @@ tsconfig.tsbuildinfo
 docker-compose.override.yml
 *.pid
 *.seed
-.package-lock.json
+.package-lock.jsonREADME.backup.md
