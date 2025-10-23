@@ -103,3 +103,21 @@ Use Render / Railway / Fly.io with the same environment variables as .env.
 - Philippe Doudou - Developer
 - Sofiane Messaoui - Project Lead
 Holberton School - Portfolio Project, Stage 4.
+
+---
+
+### í¼Ÿ Team & Roles (real)
+
+- **í·­ Project Manager (PM)** â€“ *Sofiane Messaoui*  
+  Oversees project planning, sprint organization, and progress tracking.  
+  Coordinates task distribution, manages deadlines, and ensures project alignment with MVP goals.
+
+- **í²» Developer / SCM / QA** â€“ *Philippe Doudou*  
+  Contributes to backend development (Express, Prisma, Stripe).  
+  Manages the \`mr-philips\` branch, performs manual testing (Postman, curl),  
+  and ensures code quality and stability before merging into \`main\`.
+
+> í±¥ *Agile Duo Workflow:*  
+> Sofiane drives the project vision, sprint management, and reviews,  
+> while Philippe ensures technical quality, documentation, and continuous delivery.
+
