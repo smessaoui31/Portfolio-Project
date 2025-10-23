@@ -114,3 +114,13 @@ html { transition: background-color 200ms ease, color 200ms ease; }
   .bg-neutral-900\/50, .bg-neutral-900, .bg-neutral-950 { background: white !important; }
   .text-white, .text-neutral-100, .text-neutral-200, .text-neutral-300, .text-neutral-400 { color: #111 !important; }
 }
+
+@keyframes popIn {
+  0% { transform: scale(0.8); opacity: 0; filter: blur(2px); }
+  100% { transform: scale(1); opacity: 1; filter: blur(0); }
+}
+
+@keyframes ringPulse {
+  0%   { transform: scale(1);   opacity: .55; }
+  100% { transform: scale(1.65); opacity: 0;  }
+}

@@ -1,16 +1,23 @@
 "use client";
+
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useSearchParams, useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { loginFromApi } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setSubmitting(true);
 
     try {
       const res = await fetch("http://127.0.0.1:5050/auth/login", {
@@ -22,10 +29,23 @@ export default function LoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erreur de connexion");
 
-      login(data.accessToken, data.user.role, data.user.email);
-      window.location.href = "/"; // redirection vers l’accueil
+      // Stockage du token et redirection
+      loginFromApi(data);
+
+      toast.success("Connexion réussie ✨", {
+        description: `Bienvenue${
+          data?.user?.fullName ? `, ${data.user.fullName}` : ""
+        } !`,
+      });
+
+      const returnTo = searchParams.get("returnTo") || "/";
+      router.push(returnTo);
     } catch (err: any) {
-      setError(err.message);
+      const msg = err?.message || "Échec de connexion";
+      setError(msg);
+      toast.error("Échec de connexion", { description: msg });
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -37,6 +57,7 @@ export default function LoginPage() {
       >
         <h1 className="text-2xl font-semibold text-white text-center">Connexion</h1>
         {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+
         <input
           type="email"
           placeholder="Email"
@@ -51,11 +72,13 @@ export default function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
           className="w-full rounded-md px-3 py-2 bg-neutral-800 text-white focus:outline-none"
         />
+
         <button
           type="submit"
-          className="w-full bg-white text-black font-medium py-2 rounded-md hover:opacity-90 transition"
+          disabled={submitting}
+          className="w-full bg-white text-black font-medium py-2 rounded-md transition hover:opacity-90 disabled:opacity-60"
         >
-          Se connecter
+          {submitting ? "Connexion…" : "Se connecter"}
         </button>
       </form>
     </main>

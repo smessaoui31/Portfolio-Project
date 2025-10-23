@@ -1,26 +1,33 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
 export default function AdminGuard({ children }: { children: React.ReactNode }) {
-  const { token, role } = useAuth();
+  const { ready, token, role } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    // pas connecté → login
-    if (!token) router.replace("/login");
-    // connecté mais pas admin → accueil
-    else if (role !== "ADMIN") router.replace("/");
-  }, [token, role, router]);
+    if (!ready) return; // attendre l’hydratation
+    if (!token || role !== "ADMIN") {
+      const returnTo = encodeURIComponent(pathname || "/admin");
+      router.replace(`/login?returnTo=${returnTo}`);
+    }
+  }, [ready, token, role, pathname, router]);
 
-  if (!token || role !== "ADMIN") {
+  if (!ready) {
     return (
-      <main className="min-h-[60vh] grid place-items-center text-neutral-400">
-        Vérification des droits…
+      <main className="min-h-[50vh] grid place-items-center text-neutral-400">
+        Initialisation…
       </main>
     );
   }
+
+  if (!token || role !== "ADMIN") {
+    return null; // on va être redirigé
+  }
+
   return <>{children}</>;
 }
