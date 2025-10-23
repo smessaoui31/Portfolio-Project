@@ -1,10 +1,10 @@
-# O-Frero API - MVP (Stage 4)
+# O-Frero API - MVP 
 
 ## Overview
 Backend API for O-Frero, the MVP built during Stage 4 of the Holberton Portfolio Project.
 Implements a minimal but functional e-commerce backend with authentication, products, and Stripe integration.
 
-## Tech Stack (real)
+## Tech Stack 
 - Node.js + TypeScript
 - Express 5
 - Prisma + PostgreSQL
@@ -53,7 +53,7 @@ ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_FULLNAME, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_S
 - Stripe CLI: `stripe listen --forward-to localhost:5050/checkout/webhook` then `stripe trigger payment_intent.succeeded` â†’ webhook received
 
 
-## Agile Workflow (real)
+## Agile Workflow 
 
 - Sprint planning: lightweight sprints with clear goals (Products API + Swagger, then Stripe webhook + database).
 - Daily syncs: brief Discord updates to track progress and blockers.
@@ -70,7 +70,7 @@ Use Postman or curl to test endpoints.
 ## Documentation
 
 - API Reference (Swagger UI): `/docs` (served from `openapi/openapi.json`)
-- Technical Documentation (Stage 4): `docs/Technical_Documentation_Stage4.md`
+- Technical Documentation : `docs/Technical_Documentation_Stage4.md`
 
 ## Deployment
 Build and start:
@@ -109,7 +109,7 @@ Implemented routes:
 See .env.example for the full list:
 PORT, DATABASE_URL, JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_FULLNAME, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET.
 
-## Team & Roles 
+## Team ## Team & Roles Roles 
 
 - **Project Manager / QA (PM)** â€“ *Sofiane Messaoui*  
   Oversees project planning, sprint organization, and progress tracking.  
@@ -131,3 +131,10 @@ PORT, DATABASE_URL, JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_FULLNAME, STR
 For full backend specifications, including database schema, API endpoints, and QA evidence:  
 í±‰ [**docs/Technical_Documentation_Stage4.md**](docs/Technical_Documentation_Stage4.md)
 
+
+---
+
+## Technical Documentation
+
+For full backend specifications, including database schema, API endpoints, and QA evidence:  
+[**docs/Technical_Documentation_Stage4.md**](docs/Technical_Documentation_Stage4.md)
