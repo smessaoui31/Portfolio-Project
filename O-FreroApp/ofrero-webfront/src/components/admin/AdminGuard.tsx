@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
-export default function AdminGuard({ children }: { children: React.ReactNode }) {
+export default function AdminGuard({ children }: { children: React.ReactNode }) { // On bloque l'acces si l'user n'est pas admin
   const { ready, token, role } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
