@@ -38,11 +38,8 @@ adminOrdersRouter.get(
           skip,
           take: pageSize,
           include: {
-            
             user: { select: { id: true, email: true, fullName: true } },
-            items: {
-              select: { id: true, name: true, quantity: true, unitPriceCents: true },
-            },
+            items: { select: { id: true, name: true, quantity: true, unitPriceCents: true } },
             payment: { select: { status: true, provider: true, intentId: true } },
           },
         }),
@@ -59,11 +56,7 @@ adminOrdersRouter.get(
           status: o.status,
           totalCents: o.totalCents,
           user: o.user
-            ? {
-                id: o.user.id,
-                email: o.user.email,
-                fullName: o.user.fullName,
-              }
+            ? { id: o.user.id, email: o.user.email, fullName: o.user.fullName }
             : null,
           items: o.items,
           payment: o.payment ?? null,
@@ -71,6 +64,63 @@ adminOrdersRouter.get(
       });
     } catch (err: any) {
       console.error("[admin/orders] error:", err);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+);
+
+/**
+ * GET /admin/orders/:id
+ * Détail d’une commande (admin-only)
+ */
+adminOrdersRouter.get(
+  "/orders/:id",
+  requireAuth,
+  requireAdmin,
+  async (req: AuthRequest, res) => {
+    try {
+      const id = req.params.id;
+
+      const order = await prisma.order.findUnique({
+        where: { id },
+        include: {
+          user: { select: { id: true, email: true, fullName: true } },
+          items: {
+            select: {
+              id: true,
+              productId: true,
+              name: true,
+              quantity: true,
+              unitPriceCents: true,
+            },
+            orderBy: { id: "asc" },
+          },
+          payment: { select: { status: true, provider: true, intentId: true, createdAt: true } },
+        },
+      });
+
+      if (!order) return res.status(404).json({ error: "Order not found" });
+
+      res.json({
+        id: order.id,
+        createdAt: order.createdAt,
+        status: order.status,
+        totalCents: order.totalCents,
+        user: order.user
+          ? { id: order.user.id, email: order.user.email, fullName: order.user.fullName }
+          : null,
+        items: order.items,
+        payment: order.payment ?? null,
+        shipping: {
+          line1: order.shippingLine1,
+          line2: order.shippingLine2,
+          city: order.shippingCity,
+          postalCode: order.shippingPostalCode,
+          phone: order.shippingPhone,
+        },
+      });
+    } catch (err: any) {
+      console.error("[admin/orders/:id] error:", err);
       res.status(500).json({ error: "Internal Server Error" });
     }
   }
