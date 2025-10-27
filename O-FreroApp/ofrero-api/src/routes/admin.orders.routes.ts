@@ -24,13 +24,11 @@ adminOrdersRouter.get(
       );
       const skip = (page - 1) * pageSize;
 
-      // status optionnel, validé contre l’enum Prisma
       const raw = (req.query.status as string | undefined)?.toUpperCase();
       const allowed: OrderStatus[] = ["PENDING", "PAID", "FAILED", "CANCELLED"];
       const status: OrderStatus | undefined =
         raw && (allowed as readonly string[]).includes(raw) ? (raw as OrderStatus) : undefined;
 
-      // ✅ where typé correctement
       const where: Prisma.OrderWhereInput = status ? { status } : {};
 
       const [items, total] = await Promise.all([
@@ -40,7 +38,7 @@ adminOrdersRouter.get(
           skip,
           take: pageSize,
           include: {
-            // ✅ ta relation s’appelle "user" dans le schema
+            
             user: { select: { id: true, email: true, fullName: true } },
             items: {
               select: { id: true, name: true, quantity: true, unitPriceCents: true },
