@@ -1,164 +1,172 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useState, useMemo } from "react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
 import { apiAuthed } from "@/lib/api";
-import { useAuth } from "@/context/AuthContext";
 
-type OrderItem = {
-  id: string;
-  productId: string | null;
-  name: string;
-  unitPriceCents: number;
-  quantity: number;
-};
+type OrderStatus = "PENDING" | "PAID" | "FAILED" | "CANCELLED";
 
-type Payment = {
+type AdminOrderDetail = {
   id: string;
-  provider: string;
-  status: string;
-  intentId: string;
-};
-
-type Order = {
-  id: string;
-  userId?: string;
-  userEmail?: string;
-  status: string;
-  totalCents: number;
   createdAt: string;
-  items: OrderItem[];
-  payment?: Payment | null;
-
-  shippingLine1?: string | null;
-  shippingLine2?: string | null;
-  shippingCity?: string | null;
-  shippingPostalCode?: string | null;
-  shippingPhone?: string | null;
+  status: OrderStatus | string;
+  totalCents: number;
+  user: { id: string; email: string; fullName: string } | null;
+  items: { id: string; productId: string; name: string; quantity: number; unitPriceCents: number }[];
+  payment: { status: string; provider: string; intentId: string; createdAt?: string } | null;
+  shipping: {
+    line1: string;
+    line2?: string | null;
+    city: string;
+    postalCode: string;
+    phone: string;
+  };
 };
 
 export default function AdminOrderDetailPage() {
-  const params = useParams<{ id: string }>();
-  const { token } = useAuth();
-  const [order, setOrder] = useState<Order | null>(null);
+  const { id } = useParams<{ id: string }>();
+  const router = useRouter();
+
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string>("");
+  const [order, setOrder] = useState<AdminOrderDetail | null>(null);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
-    if (!token || !params?.id) return;
+    if (!id) return;
     (async () => {
+      setLoading(true);
+      setError("");
       try {
-        // ⚠️ Backend : assure-toi que l’endpoint permet à un ADMIN de lire la commande
-        // (sinon tu auras un 403/404 via la route user-only).
-        const data = await apiAuthed<Order>(`/orders/${params.id}`);
+        const data = await apiAuthed<AdminOrderDetail>(`/admin/orders/${id}`);
         setOrder(data);
       } catch (e: any) {
-        setErr(e?.message || "Impossible de charger la commande.");
+        setError(e?.message || "Erreur de chargement");
       } finally {
         setLoading(false);
       }
     })();
-  }, [token, params?.id]);
+  }, [id]);
 
-  if (loading) {
-    return (
-      <main className="mx-auto max-w-5xl px-4 py-8 text-neutral-400">
-        Chargement de la commande…
-      </main>
-    );
-  }
-  if (err) {
-    return (
-      <main className="mx-auto max-w-5xl px-4 py-8">
-        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-red-300">
-          {err}
-        </div>
-      </main>
-    );
-  }
-  if (!order) {
-    return (
-      <main className="mx-auto max-w-5xl px-4 py-8 text-neutral-400">
-        Commande introuvable.
-      </main>
-    );
-  }
+  const totalFormatted = useMemo(
+    () => (order ? (order.totalCents / 100).toFixed(2) + " €" : "—"),
+    [order]
+  );
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8 space-y-6">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-white">Commande {order.id}</h1>
-        <StatusBadge status={order.status} />
+    <main className="space-y-4">
+      {/* Breadcrumb + actions */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="text-sm text-neutral-400">
+          <Link href="/admin/orders" className="hover:underline hover:text-white">
+            Commandes
+          </Link>{" "}
+          / <span className="text-neutral-300">Détail</span>
+        </div>
+        <button
+          onClick={() => router.refresh()}
+          className="rounded-md border border-neutral-800 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800/60"
+        >
+          Actualiser
+        </button>
+      </div>
+
+      {/* Header */}
+      <header className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4">
+        {loading ? (
+          <div className="text-neutral-400">Chargement…</div>
+        ) : error ? (
+          <div className="text-red-300">{error}</div>
+        ) : !order ? (
+          <div className="text-neutral-400">Commande introuvable.</div>
+        ) : (
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-xl font-semibold text-white">
+                {order.user?.fullName || "Client inconnu"}
+              </h1>
+              <div className="text-sm text-neutral-400">
+                #{order.id} • {new Date(order.createdAt).toLocaleString()} •{" "}
+                <span className="text-white font-medium">{totalFormatted}</span>
+              </div>
+            </div>
+            <StatusBadge status={order.status} />
+          </div>
+        )}
       </header>
 
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4 lg:col-span-2">
-          <h2 className="text-white font-medium mb-3">Articles</h2>
-          <ul className="divide-y divide-neutral-800">
-            {order.items.map((it) => (
-              <li key={it.id} className="py-3 flex items-center justify-between">
-                <div className="min-w-0">
-                  <div className="truncate text-sm text-white">{it.name}</div>
-                  <div className="text-xs text-neutral-400">
-                    {(it.unitPriceCents / 100).toFixed(2)} € × {it.quantity}
+      {/* Grid détail */}
+      {!loading && order && (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          {/* Items */}
+          <section className="lg:col-span-2 rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4">
+            <h2 className="text-white font-medium mb-3">Articles</h2>
+            {order.items.length === 0 ? (
+              <p className="text-neutral-400 text-sm">Aucun article.</p>
+            ) : (
+              <ul className="divide-y divide-neutral-800">
+                {order.items.map((it) => (
+                  <li key={it.id} className="py-3 flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="text-sm text-white truncate">{it.name}</div>
+                      <div className="text-xs text-neutral-400">
+                        {(it.unitPriceCents / 100).toFixed(2)} € × {it.quantity}
+                      </div>
+                    </div>
+                    <div className="text-sm text-white font-medium">
+                      {((it.unitPriceCents * it.quantity) / 100).toFixed(2)} €
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="mt-4 flex items-center justify-between border-t border-neutral-800 pt-3">
+              <span className="text-neutral-400 text-sm">Total</span>
+              <span className="text-white font-semibold">{totalFormatted}</span>
+            </div>
+          </section>
+
+          {/* Client & livraison & paiement */}
+          <aside className="space-y-4">
+            <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4">
+              <h3 className="text-white font-medium mb-2">Client</h3>
+              <div className="text-sm text-neutral-200">
+                {order.user?.fullName || "—"}
+              </div>
+              <div className="text-xs text-neutral-400">{order.user?.email || "—"}</div>
+            </div>
+
+            <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4">
+              <h3 className="text-white font-medium mb-2">Livraison</h3>
+              <div className="text-sm text-neutral-200">{order.shipping.line1}</div>
+              {order.shipping.line2 ? (
+                <div className="text-sm text-neutral-200">{order.shipping.line2}</div>
+              ) : null}
+              <div className="text-sm text-neutral-200">
+                {order.shipping.postalCode} {order.shipping.city}
+              </div>
+              <div className="text-sm text-neutral-200">{order.shipping.phone}</div>
+            </div>
+
+            <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4">
+              <h3 className="text-white font-medium mb-2">Paiement</h3>
+              {order.payment ? (
+                <div className="space-y-1 text-sm">
+                  <div className="text-neutral-200">
+                    {order.payment.provider} • {order.payment.status}
+                  </div>
+                  <div className="text-neutral-400 text-xs break-all">
+                    {order.payment.intentId}
                   </div>
                 </div>
-                <div className="text-sm text-white font-medium">
-                  {((it.unitPriceCents * it.quantity) / 100).toFixed(2)} €
-                </div>
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-4 flex items-center justify-between border-t border-neutral-800 pt-3">
-            <span className="text-neutral-400 text-sm">Total</span>
-            <span className="text-white font-semibold">
-              {(order.totalCents / 100).toFixed(2)} €
-            </span>
-          </div>
+              ) : (
+                <div className="text-neutral-400 text-sm">Aucun paiement enregistré.</div>
+              )}
+            </div>
+          </aside>
         </div>
-
-        <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4 space-y-4">
-          <div>
-            <h3 className="text-white font-medium">Client</h3>
-            <p className="text-sm text-neutral-400">
-              {order.userEmail ?? "—"}
-            </p>
-          </div>
-
-          <div>
-            <h3 className="text-white font-medium">Adresse</h3>
-            <p className="text-sm text-neutral-300">
-              {order.shippingLine1}
-              {order.shippingLine2 ? <><br />{order.shippingLine2}</> : null}
-              <br />
-              {order.shippingPostalCode} {order.shippingCity}
-              <br />
-              {order.shippingPhone}
-            </p>
-          </div>
-
-          <div>
-            <h3 className="text-white font-medium">Paiement</h3>
-            {order.payment ? (
-              <div className="text-sm text-neutral-300">
-                <div>Provider : {order.payment.provider}</div>
-                <div>Statut : {order.payment.status}</div>
-                <div className="truncate">Intent : {order.payment.intentId}</div>
-              </div>
-            ) : (
-              <p className="text-sm text-neutral-400">Aucun paiement enregistré.</p>
-            )}
-          </div>
-
-          <div>
-            <h3 className="text-white font-medium">Créée le</h3>
-            <p className="text-sm text-neutral-400">
-              {new Date(order.createdAt).toLocaleString("fr-FR")}
-            </p>
-          </div>
-        </div>
-      </section>
+      )}
     </main>
   );
 }
@@ -179,9 +187,15 @@ function StatusBadge({ status }: { status: string }) {
           Payée
         </span>
       );
-    case "CANCELLED":
+    case "FAILED":
       return (
         <span className={`${base} border-red-500/40 bg-red-500/10 text-red-300`}>
+          Échouée
+        </span>
+      );
+    case "CANCELLED":
+      return (
+        <span className={`${base} border-neutral-700 bg-neutral-800 text-neutral-300`}>
           Annulée
         </span>
       );
