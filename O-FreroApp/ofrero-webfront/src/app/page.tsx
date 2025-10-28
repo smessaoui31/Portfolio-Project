@@ -28,7 +28,7 @@ export default function HomePage() {
             alt="O’Frero Pizza"
             width={600}  // ~12rem
             height={600}
-            className="rounded-xl border border-neutral-800 bg-neutral-900 object-contain p-2"
+            className= /*"rounded-xl border border-neutral-800 bg-neutral-900*/ "object-contain p-2"
             priority
           />
         </div>
