@@ -95,13 +95,13 @@ Each day:
 - Plan the next steps.
 
 ###  Tools
-- **Trello / Jira** — task tracking.
 - **GitHub Projects** — issue management.
+- **MY FAMOUS YELLOW NOTEBOOK**
 - **Metrics:**
   - Sprint velocity.
   - % of completed vs planned tasks.
   - Bug count and resolution rate.
-
+  
 ---
 
 ## 🔍 3. Conduct Sprint Reviews & Retrospectives
