@@ -2,6 +2,7 @@
 <p align="center">
   <img src="/Templates/ofrero-pizza-logo.png" alt="O'Frero Pizza Logo" width="400" />
 </p>
+
 ##  Project Overview
 
 **O’Frero Pizza** is a full-stack web application for an artisan pizza restaurant.  
