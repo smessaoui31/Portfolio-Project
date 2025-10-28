@@ -34,13 +34,12 @@ export default function HomePage() {
         </div>
         
         {/* Titre & tagline */}
-        <h1 className="text-center text-4xl font-semibold tracking-tight md:text-5xl">
-          O’Frero Pizza
+       <h1 className="bg-opacity-50 bg-gradient-to-b from-neutral-50 to-neutral-400 bg-clip-text text-center text-4xl font-bold text-transparent md:text-7xl">
+          O'Frero Pizza <br /> 
         </h1>
-        <p className="mt-3 max-w-2xl text-center text-neutral-400">
-          Pizzeria artisanale tenue par deux frères. Pâte maison, produits frais, cuisson soignée au feu de bois
+        <p className="mx-auto mt-4 max-w-lg text-center text-base font-normal text-neutral-300">
+          Une Pizzeria artisanale au feu de bois , tenue par deux frères passionnés de la pizza façon italienne.
         </p>
-
         {/* CTAs */}
         <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
           <Link
