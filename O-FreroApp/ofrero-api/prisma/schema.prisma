@@ -1,3 +1,4 @@
+// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,17 +9,17 @@ datasource db {
 }
 
 model User {
-  id           String @id @default(cuid())
-  email        String @unique
+  id           String   @id @default(cuid())
+  email        String   @unique
   fullName     String
   passwordHash String
-  role         Role   @default(USER)
+  role         Role     @default(USER)
 
-  orders    Order[]
-  addresses    Address[]
-  cart      Cart?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  orders     Order[]
+  addresses  Address[]
+  cart       Cart?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 }
 
 enum Role {
@@ -27,27 +28,31 @@ enum Role {
 }
 
 model Category {
-  id       String    @id @default(cuid())
-  name     String    @unique
-  products Product[]
+  id        String    @id @default(cuid())
+  name      String    @unique
+  products  Product[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Product {
-  id          String    @id @default(cuid())
-  name        String
-  description String?
-  priceCents  Int
-  categoryId  String?
-  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  id           String     @id @default(cuid())
+  name         String
+  description  String?
+  priceCents   Int
+  categoryId   String?
+  category     Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
-  isFeatured  Boolean   @default(false)
-  orderItems OrderItem[]
-  cartItems  CartItem[]
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  isFeatured   Boolean    @default(false)
+
+  // relations
+  orderItems   OrderItem[]
+  cartItems    CartItem[]
+  supplements  ProductSupplement[]   // <— produits qui acceptent suppléments
+
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
 
 model Order {
@@ -57,8 +62,9 @@ model Order {
   status                OrderStatus @default(PENDING)
   totalCents            Int         @default(0)
   stripePaymentIntentId String?     @unique
-  orderNumber           String?      @unique
-// Snapshot de l'adresse à ce niveau la 
+  orderNumber           String?     @unique
+
+  // Snapshot adresse
   shippingLine1       String
   shippingLine2       String?
   shippingCity        String
@@ -72,15 +78,15 @@ model Order {
 }
 
 model Address {
-  id         String  @id @default(cuid())
+  id         String   @id @default(cuid())
   userId     String
-  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   line1      String
   line2      String?
   city       String
   postalCode String
   phone      String
-  isDefault  Boolean @default(false)
+  isDefault  Boolean  @default(false)
 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -93,48 +99,112 @@ enum OrderStatus {
   CANCELLED
 }
 
-model OrderItem {
-  id      String @id @default(cuid())
-  orderId String
-  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
-
-  name           String
-  unitPriceCents Int
-  quantity       Int
+enum CookingLevel {
+  NORMAL
+  WELL_DONE
+  EXTRA_CRISPY
 }
 
+model Supplement {
+  id           String    @id @default(cuid())
+  name         String    @unique
+  priceCents   Int
+  isActive     Boolean   @default(true)
+  cartItemSupplements  CartItemSupplement[]
+  productSupplements   ProductSupplement[] 
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model ProductSupplement {
+  productId        String
+  supplementId     String
+  product          Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supplement       Supplement @relation(fields: [supplementId], references: [id], onDelete: Cascade)
+
+  // Permet de surcharger le prix du supplément pour ce produit
+  overridePriceCents Int?
+
+  @@id([productId, supplementId])
+}
+
+/* ----- PANIER (snapshot cuisson + suppléments) ----- */
+
+model Cart {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model CartItem {
+  id        String    @id @default(cuid())
+  cartId    String
+  cart      Cart      @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  quantity  Int       @default(1)
+  cooking   CookingLevel @default(NORMAL)
+
+  supplements CartItemSupplement[]
+
+  @@unique([cartId, productId, cooking], name: "cartId_productId_cooking")
+}
+
+model CartItemSupplement {
+  id           String     @id @default(cuid())
+  cartItemId   String
+  supplementId String
+  cartItem     CartItem   @relation(fields: [cartItemId], references: [id], onDelete: Cascade)
+  supplement   Supplement @relation(fields: [supplementId], references: [id], onDelete: Cascade)
+
+  // Snapshot au moment de l’ajout au panier
+  name           String
+  unitPriceCents Int
+}
+
+/* ----- COMMANDE (snapshot cuisson + suppléments) ----- */
+
+model OrderItem {
+  id               String     @id @default(cuid())
+  orderId          String
+  order            Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId        String
+  product          Product    @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  name             String
+  unitPriceCents   Int
+  quantity         Int
+
+  cooking          CookingLevel @default(NORMAL)
+
+  // total de suppléments pour cette ligne (par unité * quantité)
+  supplementsTotalCents Int     @default(0)
+
+  supplements      OrderItemSupplement[]
+}
+
+model OrderItemSupplement {
+  id            String    @id @default(cuid())
+  orderItemId   String
+  orderItem     OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  // Snapshot au moment de la commande
+  name           String
+  unitPriceCents Int
+}
 model Payment {
   id        String   @id @default(cuid())
   orderId   String   @unique
   order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  provider  String // "stripe"
-  status    String // "succeeded" | "failed" | etc.
+  provider  String
+  status    String
   intentId  String   @unique
   createdAt DateTime @default(now())
-}
-
-model Cart {
-  id     String     @id @default(cuid())
-  userId String     @unique
-  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items  CartItem[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model CartItem {
-  id     String @id @default(cuid())
-  cartId String
-  cart   Cart   @relation(fields: [cartId], references: [id], onDelete: Cascade)
-
-  productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
-
-  quantity Int @default(1)
-
-  @@unique([cartId, productId], name: "cartId_productId")
 }
