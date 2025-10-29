@@ -1,153 +1,182 @@
+// src/app/cart/page.tsx
 "use client";
 
 import { useEffect } from "react";
-import { useCart } from "@/context/CartContext";
-import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useCart } from "@/context/CartContext";
 
 export default function CartPage() {
-  const { cart, loading, refresh, update, remove } = useCart();
+  const { id, items, totalCents, loading, error, reload, update, remove, clear } = useCart();
 
+  // Optional: force a load on first mount (context already loads on login change)
   useEffect(() => {
-    refresh().catch(() => {});
-  }, [refresh]);
+    reload().catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  if (loading && !cart) {
+  const isEmpty = (items?.length ?? 0) === 0;
+
+  if (loading && !id) {
     return (
-      <div className="min-h-[60vh] grid place-items-center text-neutral-400 text-sm animate-pulse">
+      <main className="min-h-[60vh] grid place-items-center text-neutral-400">
         Chargement du panier…
-      </div>
-    );
-  }
-
-  if (!cart || cart.items.length === 0) {
-    return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-20 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <h1 className="text-3xl font-semibold text-white mb-3">Votre panier</h1>
-          <p className="text-neutral-400 mb-6">Votre panier est vide.</p>
-          <Link
-            href="/menu"
-            className="inline-flex items-center justify-center rounded-md bg-white px-5 py-2.5 text-sm font-medium text-black hover:opacity-90 transition"
-          >
-            Voir le menu
-          </Link>
-        </motion.div>
       </main>
     );
   }
 
-  const handleDec = (id: string, qty: number) => {
-    const next = Math.max(qty - 1, 0);
-    update(id, next).catch(() => {});
-  };
-
-  const handleInc = (id: string, qty: number) => {
-    update(id, qty + 1).catch(() => {});
-  };
-
-  const handleRemove = (id: string) => {
-    remove(id).catch(() => {});
-  };
-
-  const totalEuro = (cart.totalCents / 100).toFixed(2);
-
   return (
-    <main className="relative mx-auto w-full max-w-5xl px-4 py-10">
-      <motion.h1
-        className="mb-8 text-3xl font-semibold text-white text-center md:text-left"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        Votre panier
-      </motion.h1>
-
-      {/* Liste des articles */}
-      <section className="space-y-4 mb-8">
-        <AnimatePresence mode="popLayout">
-          {cart.items.map((it) => (
-            <motion.div
-              key={it.id}
-              layout
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, x: 80 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-5 shadow-[0_0_20px_rgba(255,255,255,0.02)] hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] transition-all duration-300"
-            >
-              <div className="flex-1">
-                <h2 className="text-white font-medium text-lg">{it.name}</h2>
-                <p className="text-sm text-neutral-400 mt-1">
-                  {(it.unitPriceCents / 100).toFixed(2)} € / unité
-                </p>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <motion.div
-                  layout
-                  className="flex items-center gap-3 rounded-lg border border-neutral-700 bg-neutral-950/40 px-3 py-1.5"
-                >
-                  <button
-                    onClick={() => handleDec(it.id, it.quantity)}
-                    className="h-9 w-9 flex items-center justify-center text-lg text-white hover:bg-neutral-800/70 active:scale-95 rounded-md transition-all"
-                  >
-                    −
-                  </button>
-
-                  <span className="min-w-[2rem] text-center text-white font-medium select-none">
-                    {it.quantity}
-                  </span>
-
-                  <button
-                    onClick={() => handleInc(it.id, it.quantity)}
-                    className="h-9 w-9 flex items-center justify-center text-lg text-white hover:bg-neutral-800/70 active:scale-95 rounded-md transition-all"
-                  >
-                    +
-                  </button>
-                </motion.div>
-
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleRemove(it.id)}
-                  className="rounded-md border border-neutral-700 px-3 py-1.5 text-sm text-neutral-300 hover:bg-neutral-800/60 transition"
-                >
-                  Supprimer
-                </motion.button>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </section>
-
-      {/* Total + CTA aligné à droite */}
-      <motion.div
-        layout
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: "easeOut", delay: 0.2 }}
-        className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-6 shadow-[0_0_25px_rgba(255,255,255,0.05)]"
-      >
-        <div className="flex flex-col sm:flex-row items-end sm:items-center justify-between gap-4">
-          <div className="text-right sm:text-left">
-            <div className="text-neutral-300 text-sm uppercase tracking-wide mb-1">
-              Total à payer
-            </div>
-            <div className="text-2xl font-semibold text-white">{totalEuro} €</div>
-          </div>
-
-          <Link
-            href="/checkout"
-            className="rounded-md bg-white px-6 py-3 text-sm font-semibold text-black hover:opacity-90 transition-all duration-300 hover:-translate-y-0.5"
+    <main className="mx-auto w-full max-w-5xl px-4 py-8">
+      <header className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-semibold text-white">Votre panier</h1>
+        <div className="flex items-center gap-2">
+          <button
+            disabled={loading || isEmpty}
+            onClick={() => clear().catch(() => {})}
+            className={`rounded-md border px-3 py-1.5 text-sm ${
+              loading || isEmpty
+                ? "cursor-not-allowed border-neutral-900 text-neutral-600"
+                : "border-neutral-800 text-neutral-200 hover:bg-neutral-800/60"
+            }`}
           >
-            Passer au paiement →
+            Vider
+          </button>
+          <button
+            disabled={loading}
+            onClick={() => reload().catch(() => {})}
+            className="rounded-md border border-neutral-800 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800/60"
+          >
+            Recharger
+          </button>
+        </div>
+      </header>
+
+      {error && (
+        <div className="mb-4 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+          {error}
+        </div>
+      )}
+
+      {/* Panier vide */}
+      {isEmpty ? (
+        <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-6 text-neutral-400">
+          Votre panier est vide.{" "}
+          <Link href="/menu" className="underline underline-offset-4 hover:text-white">
+            Parcourir le menu
           </Link>
         </div>
-      </motion.div>
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+          {/* Liste d’articles */}
+          <section className="rounded-2xl border border-neutral-800 bg-neutral-900/50">
+            <ul className="divide-y divide-neutral-800">
+              {items.map((it) => (
+                <li key={it.id} className="p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="text-white font-medium truncate">{it.name}</div>
+                      <div className="mt-1 text-xs text-neutral-400">
+                        {(it.unitPriceCents / 100).toFixed(2)} € / unité
+                      </div>
+
+                      {/* Détails optionnels si plus tard tu ajoutes cuisson/suppléments */}
+                      {it.cooking && (
+                        <div className="mt-1 text-xs text-neutral-400">
+                          Cuisson : <span className="text-neutral-300">{labelCooking(it.cooking)}</span>
+                        </div>
+                      )}
+                      {Array.isArray(it.supplements) && it.supplements.length > 0 && (
+                        <div className="mt-1 text-xs text-neutral-400">
+                          Suppléments :
+                          <ul className="mt-1 list-disc pl-4">
+                            {it.supplements.map((s) => (
+                              <li key={s.id} className="text-neutral-300">
+                                {s.name} (+{(s.unitPriceCents / 100).toFixed(2)} €)
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="shrink-0 text-right">
+                      <div className="text-white font-semibold">
+                        {((it.unitPriceCents * it.quantity) / 100).toFixed(2)} €
+                      </div>
+                      <div className="mt-2 inline-flex items-center gap-1 rounded-md border border-neutral-800">
+                        <button
+                          disabled={loading || it.quantity <= 1}
+                          onClick={() => update(it.id, Math.max(1, it.quantity - 1)).catch(() => {})}
+                          className={`px-2 py-1 text-sm ${
+                            loading || it.quantity <= 1
+                              ? "cursor-not-allowed text-neutral-600"
+                              : "text-neutral-200 hover:bg-neutral-800/60"
+                          }`}
+                          aria-label="Diminuer la quantité"
+                        >
+                          −
+                        </button>
+                        <span className="px-3 py-1 text-sm text-white tabular-nums">{it.quantity}</span>
+                        <button
+                          disabled={loading}
+                          onClick={() => update(it.id, it.quantity + 1).catch(() => {})}
+                          className="px-2 py-1 text-sm text-neutral-200 hover:bg-neutral-800/60"
+                          aria-label="Augmenter la quantité"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <div>
+                        <button
+                          disabled={loading}
+                          onClick={() => remove(it.id).catch(() => {})}
+                          className="mt-2 w-full rounded-md border border-neutral-800 px-2 py-1 text-xs text-neutral-300 hover:bg-neutral-800/60"
+                        >
+                          Retirer
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          {/* Récap / CTA */}
+          <aside className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-5 h-fit">
+            <div className="flex items-center justify-between">
+              <span className="text-neutral-400 text-sm">Total</span>
+              <span className="text-white text-lg font-semibold">
+                {(totalCents / 100).toFixed(2)} €
+              </span>
+            </div>
+
+            <Link
+              href="/checkout"
+              className="mt-4 block rounded-md bg-white px-4 py-2 text-center text-sm font-medium text-black hover:opacity-90"
+            >
+              Procéder au paiement
+            </Link>
+
+            <Link
+              href="/menu"
+              className="mt-2 block text-center text-sm text-neutral-400 underline-offset-4 hover:text-white hover:underline"
+            >
+              ← Continuer vos achats
+            </Link>
+          </aside>
+        </div>
+      )}
     </main>
   );
+}
+
+function labelCooking(c: "NORMAL" | "WELL_DONE" | "EXTRA_CRISPY") {
+  switch (c) {
+    case "WELL_DONE":
+      return "Bien cuite";
+    case "EXTRA_CRISPY":
+      return "Extra croustillante";
+    default:
+      return "Normale";
+  }
 }

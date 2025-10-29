@@ -1,17 +1,17 @@
 // src/services/checkout.prisma.service.ts
 import { prisma } from "../lib/prisma";
 import { Prisma } from "@prisma/client";
+import { getCartWithTotalPrisma } from "./cart.prisma.service";
 
-// --- helper: génération numéro de commande ---
+/* --------------------- Numéro de commande lisible --------------------- */
+
 function generateOrderNumber() {
-  // base36 + random pour un code court mais varié
-  const part1 = Date.now().toString(36).toUpperCase().slice(-4); // ex: 5K2J
-  const part2 = Math.random().toString(36).toUpperCase().slice(2, 6); // ex: 8A9F
-  return `OFR-${part1}${part2}`; // OFR-5K2J8A9F → on tronque un peu en dessous
+  const part1 = Date.now().toString(36).toUpperCase().slice(-4);
+  const part2 = Math.random().toString(36).toUpperCase().slice(2, 6);
+  return `OFR-${part1}${part2}`;
 }
 
 async function getUniqueOrderNumber(): Promise<string> {
-  // on limite à ~8 caractères après le préfixe pour rester court
   for (let i = 0; i < 5; i++) {
     const candidate = `OFR-${Date.now().toString(36).toUpperCase().slice(-3)}${Math.random()
       .toString(36)
@@ -20,13 +20,14 @@ async function getUniqueOrderNumber(): Promise<string> {
     const exists = await prisma.order.findUnique({ where: { orderNumber: candidate } });
     if (!exists) return candidate;
   }
-  // fallback si vraiment pas de chance
   return generateOrderNumber();
 }
 
+/* ---------------------------- Types d’entrée --------------------------- */
+
 type CreateOrderFromCartInput = {
   userId: string;
-  cartItems: Array<{ productId: string; quantity: number }>;
+  // On lit le panier DB (incluant cuisson + suppléments) pour construire la commande
   address: {
     line1: string;
     line2?: string | null;
@@ -37,38 +38,55 @@ type CreateOrderFromCartInput = {
 };
 
 export async function createOrderFromCartPrisma(input: CreateOrderFromCartInput) {
-  const { userId, cartItems, address } = input;
+  const { userId, address } = input;
 
-  const products = await prisma.product.findMany({
-    where: { id: { in: cartItems.map((c) => c.productId) } },
-    select: { id: true, name: true, priceCents: true },
-  });
-
-  const byId = new Map(products.map((p) => [p.id, p]));
-  let totalCents = 0;
-  const itemsData: Prisma.OrderItemCreateManyOrderInput[] = [];
-
-  for (const line of cartItems) {
-    const p = byId.get(line.productId);
-    if (!p) continue;
-    totalCents += p.priceCents * line.quantity;
-    itemsData.push({
-      productId: p.id,
-      name: p.name,
-      unitPriceCents: p.priceCents,
-      quantity: line.quantity,
-    });
+  // 1) Panier enrichi (produits + suppléments) + total calculé
+  const cart = await getCartWithTotalPrisma(userId);
+  if (!cart.items || cart.items.length === 0) {
+    throw new Error("Cart is empty");
   }
 
-  // 👇 Nouveau : numéro de commande lisible
+  // 2) Préparer les lignes de commande
+  const itemsData: Prisma.OrderItemCreateManyOrderInput[] = cart.items.map((it) => {
+    // Somme des suppléments par unité
+    const suppsUnitTotal =
+      Array.isArray((it as any).supplements)
+        ? (it as any).supplements.reduce(
+            (sum: number, s: { unitPriceCents?: number }) => sum + (s.unitPriceCents ?? 0),
+            0
+          )
+        : 0;
+
+    // Prix unitaire final (produit + suppléments)
+    const perUnitWithSupp = (it as any).unitPriceCents + suppsUnitTotal;
+
+    // Total suppléments pour la ligne (par unité * quantité)
+    const supplementsTotalCents = suppsUnitTotal * (it.quantity ?? 1);
+
+    return {
+      productId: it.productId,
+      name: it.name,                           // snapshot nom produit
+      unitPriceCents: perUnitWithSupp,         // prix unitaire incluant les suppléments
+      quantity: it.quantity,
+      // Champs optionnels selon ton modèle Prisma
+      cooking: ((it as any).cooking ?? "NORMAL") as any,
+      supplementsTotalCents,
+    };
+  });
+
+  // 3) Total depuis la vue panier (inclut suppléments)
+  const totalCents = cart.totalCents;
+
+  // 4) Numéro de commande lisible
   const orderNumber = await getUniqueOrderNumber();
 
+  // 5) Création de la commande + items
   const order = await prisma.order.create({
     data: {
       userId,
       status: "PENDING",
       totalCents,
-      orderNumber, // 👈
+      orderNumber, // affichage court type "OFR-AB12CD3"
       shippingLine1: address.line1,
       shippingLine2: address.line2 ?? null,
       shippingCity: address.city,
@@ -81,6 +99,8 @@ export async function createOrderFromCartPrisma(input: CreateOrderFromCartInput)
 
   return { order, totalCents };
 }
+
+/* ------------------------------ Utilitaires ----------------------------- */
 
 export async function findOrderByPaymentIntentPrisma(piId: string) {
   return prisma.order.findFirst({ where: { stripePaymentIntentId: piId } });

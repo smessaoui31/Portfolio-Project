@@ -1,5 +1,5 @@
 "use client";
-
+import ProductCustomizeButton from "@/components/menu/ProductCustomizeButton";
 import AddToCartButton from "@/components/theme/ui/AddToCartButton";
 import type { Paginated, Product } from "@/types";
 import { useEffect, useState } from "react";
@@ -36,10 +36,10 @@ export default function ProductsGrid() {
         qs.set("page", String(page));
         qs.set("pageSize", String(pageSize));
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:5050"}/products?${qs.toString()}`, {
-          signal: controller.signal,
-          cache: "no-store",
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:5050"}/products?${qs.toString()}`,
+          { signal: controller.signal, cache: "no-store" }
+        );
         const json = await res.json();
         setData(json);
       } catch (e) {
@@ -96,7 +96,13 @@ export default function ProductsGrid() {
                 </span>
               )}
 
-              <AddToCartButton productId={p.id} />
+              {/* Actions : Ajouter au panier + Personnaliser (côte à côte) */}
+              <div className="mt-3 flex items-center gap-2">
+                <AddToCartButton productId={p.id} className="flex-1" />
+                <div className="flex-1">
+                  <ProductCustomizeButton productId={p.id} priceCents={p.priceCents} />
+                </div>
+              </div>
             </div>
           </article>
         ))}
@@ -109,19 +115,13 @@ export default function ProductsGrid() {
       {/* Pagination */}
       {pageCount > 1 && (
         <div className="flex items-center justify-center gap-2">
-          <PageBtn
-            disabled={page <= 1}
-            onClick={() => pushPage(page - 1)}
-          >
+          <PageBtn disabled={page <= 1} onClick={() => pushPage(page - 1)}>
             ← Précédent
           </PageBtn>
           <span className="text-neutral-400 text-sm">
             Page <span className="text-white">{page}</span> / {pageCount}
           </span>
-          <PageBtn
-            disabled={page >= pageCount}
-            onClick={() => pushPage(page + 1)}
-          >
+          <PageBtn disabled={page >= pageCount} onClick={() => pushPage(page + 1)}>
             Suivant →
           </PageBtn>
         </div>

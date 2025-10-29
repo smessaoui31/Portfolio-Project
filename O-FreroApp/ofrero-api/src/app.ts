@@ -18,6 +18,7 @@ import { categoriesRouter } from "./routes/categories.routes";
 import { adminOrdersRouter } from "./routes/admin.orders.routes";
 import { adminProductsRouter } from "./routes/admin.products.routes";
 import { adminUsersRouter } from "./routes/admin.users.routes";
+import { supplementsRouter } from "./routes/supplements.routes";
 
 import bcrypt from "bcryptjs";
 import { USERS, newId } from "./data/store";
@@ -120,6 +121,7 @@ app.use("/addresses", addressRouter);
 app.use("/products", productsRouter);
 app.use("/checkout", checkoutRouter);
 app.use("/categories", categoriesRouter);
+app.use("/supplements", supplementsRouter);
 /** 404 */
 app.use((_req, res) => res.status(404).send("Not Found"));
 

@@ -28,7 +28,21 @@ function NavLink({ href, label }: { href: string; label: string }) {
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { token, role, email, logout } = useAuth();
-  const { count } = useCart();
+const cartCtx = useCart();
+// Si le contexte expose déjà count (number), on l’utilise. Sinon, on le dérive depuis items.
+const count =
+  typeof (cartCtx as any)?.count === "number"
+    ? (cartCtx as any).count
+    : Array.isArray((cartCtx as any)?.items)
+      ? (cartCtx as any).items.reduce(
+          (n: number, it: any) => n + (it?.quantity ?? 1),
+          0
+        )
+      : 0;
+  // 🔒 Normalize count for SSR to avoid hydration mismatch
+  const safeCount = Number.isFinite(count as any) ? (count as number) : 0;
+  const plural = safeCount > 1 ? "s" : "";
+  const cartAria = `Ouvrir le panier (${safeCount} article${plural})`;
 
   // Glow qui suit la souris (variables CSS --x / --y)
   const [pos, setPos] = useState({ x: 50, y: 50 });
@@ -44,11 +58,11 @@ export default function Navbar() {
   useEffect(() => {
     if (!badgeRef.current) return;
     badgeRef.current.classList.remove("badge-bump");
-    // force reflow pour relancer l’animation
+    // force reflow
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     badgeRef.current.offsetWidth;
     badgeRef.current.classList.add("badge-bump");
-  }, [count]);
+  }, [safeCount]);
 
   return (
     <header className="sticky top-0 z-40 border-b border-neutral-800/80 bg-black/70 backdrop-blur">
@@ -118,7 +132,7 @@ export default function Navbar() {
                 </span>
               )}
 
-              {/* Déconnexion — dark, glow + shine */}
+              {/* Déconnexion */}
               <button
                 onClick={logout}
                 className="
@@ -132,7 +146,6 @@ export default function Navbar() {
                   overflow-hidden
                 "
               >
-                {/* glow radial */}
                 <span
                   aria-hidden
                   className="
@@ -143,7 +156,6 @@ export default function Navbar() {
                     before:bg-[radial-gradient(200px_120px_at_var(--x,50%)_var(--y,50%),rgba(255,255,255,0.12),transparent_60%)]
                   "
                 />
-                {/* shine */}
                 <span
                   aria-hidden
                   className="
@@ -157,7 +169,6 @@ export default function Navbar() {
               </button>
             </>
           ) : (
-            // Connexion — version claire
             <Link
               href="/login"
               className="
@@ -197,15 +208,17 @@ export default function Navbar() {
           <Link
             href="/cart"
             className="relative rounded-md border border-neutral-800 px-3 py-2 text-sm text-white hover:bg-neutral-800/60"
-            aria-label={`Ouvrir le panier (${count} article${count > 1 ? "s" : ""})`}
+            aria-label={cartAria}
           >
             Panier
-            <span className="sr-only"> — {count} article{count > 1 ? "s" : ""}</span>
+            <span className="sr-only">
+              {`${safeCount} article${plural}`}
+            </span>
             <span
               ref={badgeRef}
               className="ml-2 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-white/10 px-1 text-xs text-white"
             >
-              {count}
+              {safeCount}
             </span>
           </Link>
         </div>
@@ -230,7 +243,6 @@ export default function Navbar() {
             <NavLink href="/about" label="À propos" />
             <NavLink href="/contact" label="Contact" />
 
-            {/* Mes commandes (mobile, seulement connecté) */}
             {token && (
               <Link
                 href="/orders"
@@ -240,14 +252,13 @@ export default function Navbar() {
               </Link>
             )}
 
-            {/* Panier + compteur aussi dans le menu mobile */}
             <Link
               href="/cart"
               className="mt-2 inline-flex items-center justify-between rounded-md border border-neutral-800 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800/60"
             >
               <span>Panier</span>
               <span className="ml-2 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-white/10 px-1 text-xs text-white">
-                {count}
+                {safeCount}
               </span>
             </Link>
 
