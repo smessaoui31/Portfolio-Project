@@ -16,3 +16,19 @@ export type AdminProductListResponse = {
   total: number;
   items: AdminProduct[];
 };
+
+export type AdminUser = {
+  id: string;
+  email: string;
+  fullName: string;
+  role: "USER" | "ADMIN";
+  createdAt: string;
+  ordersCount: number;
+};
+
+export type AdminUserListResponse = {
+  page: number;
+  pageSize: number;
+  total: number;
+  items: AdminUser[];
+};

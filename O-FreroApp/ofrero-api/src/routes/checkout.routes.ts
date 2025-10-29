@@ -2,7 +2,7 @@
 import express, { Router, Request, Response } from "express";
 import Stripe from "stripe";
 import { z } from "zod";
-import type { CartView, CartItemView } from "../services/cart.prisma.service";
+import type { CartView } from "../services/cart.prisma.service";
 
 import { requireAuth, AuthRequest } from "../middleware/auth";
 import { prisma } from "../lib/prisma";
@@ -104,6 +104,7 @@ checkoutRouter.post("/start", requireAuth, async (req: AuthRequest, res: Respons
   }));
 
   // 4) Crée l’Order + Items (transaction) et calcule total côté serveur
+  //    ⚠️ createOrderFromCartPrisma doit désormais générer un orderNumber unique côté serveur.
   const { order, totalCents } = await createOrderFromCartPrisma({
     userId: req.user!.id,
     cartItems,
@@ -118,6 +119,7 @@ checkoutRouter.post("/start", requireAuth, async (req: AuthRequest, res: Respons
       metadata: {
         order_id: order.id,
         user_id: req.user!.id,
+        order_number: order.orderNumber ?? "", // utile dans le dashboard Stripe
       },
       automatic_payment_methods: { enabled: true },
     },
@@ -135,6 +137,7 @@ checkoutRouter.post("/start", requireAuth, async (req: AuthRequest, res: Respons
 
   return res.status(200).json({
     orderId: order.id,
+    orderNumber: order.orderNumber, // 👈 renvoyé au front
     clientSecret: paymentIntent.client_secret,
     paymentIntentId: paymentIntent.id,
   });
@@ -198,7 +201,7 @@ export async function checkoutWebhookHandler(req: Request, res: Response) {
 }
 
 /* -------------------------- 3) GET /orders/:id --------------------------- */
-
+/** Lecture par ID (toujours utile pour nos liens internes) */
 checkoutRouter.get("/orders/:id", requireAuth, async (req: AuthRequest, res: Response) => {
   const order = await prisma.order.findFirst({
     where: { id: req.params.id, userId: req.user!.id },
@@ -207,3 +210,18 @@ checkoutRouter.get("/orders/:id", requireAuth, async (req: AuthRequest, res: Res
   if (!order) return res.status(404).json({ error: "Order not found" });
   return res.json(order);
 });
+
+/* ------------- 4) GET /orders/by-number/:orderNumber (nouveau) ---------- */
+/** Lecture par numéro lisible — pratique pour pages de succès / support */
+checkoutRouter.get(
+  "/orders/by-number/:orderNumber",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    const order = await prisma.order.findFirst({
+      where: { orderNumber: req.params.orderNumber, userId: req.user!.id },
+      include: { items: true, payment: true },
+    });
+    if (!order) return res.status(404).json({ error: "Order not found" });
+    return res.json(order);
+  }
+);
