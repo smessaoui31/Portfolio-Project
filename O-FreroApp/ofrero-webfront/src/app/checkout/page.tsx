@@ -13,6 +13,7 @@ import CheckoutPayment from "@/components/checkout/CheckoutPayment";
 
 type StartCheckoutResponse = {
   orderId: string;
+  orderNumber: string;
   clientSecret: string;
   paymentIntentId: string;
 };
@@ -27,9 +28,10 @@ export default function CheckoutPage() {
   const [postalCode, setPostalCode] = useState("");
   const [phone, setPhone] = useState("");
 
-  // Stripe
+  // Stripe / Commande
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [orderNumber, setOrderNumber] = useState<string | null>(null);
 
   // UI
   const [submitting, setSubmitting] = useState(false);
@@ -70,6 +72,19 @@ export default function CheckoutPage() {
 
       setClientSecret(data.clientSecret);
       setOrderId(data.orderId);
+      setOrderNumber(data.orderNumber);
+
+      // (optionnel) garder pour la page succès si tu veux y accéder sans refetch immédiat
+      try {
+        sessionStorage.setItem(
+          "lastOrderMeta",
+          JSON.stringify({
+            orderId: data.orderId,
+            orderNumber: data.orderNumber,
+            totalCents,
+          })
+        );
+      } catch {}
 
       try {
         (navigator as any)?.vibrate?.(15);
@@ -116,6 +131,13 @@ export default function CheckoutPage() {
             Total à payer :{" "}
             <span className="font-medium text-white">{(totalCents / 100).toFixed(2)} €</span>
           </p>
+
+          {/* Affiche le n° de commande dès que créé */}
+          {orderNumber && (
+            <div className="mt-2 text-sm text-neutral-300">
+              N° de commande : <span className="font-medium text-white">#{orderNumber}</span>
+            </div>
+          )}
 
           {!token && (
             <div className="mt-3 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">

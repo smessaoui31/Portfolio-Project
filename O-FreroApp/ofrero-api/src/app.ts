@@ -17,6 +17,7 @@ import { addressRouter } from "./routes/address.routes";
 import { categoriesRouter } from "./routes/categories.routes";
 import { adminOrdersRouter } from "./routes/admin.orders.routes";
 import { adminProductsRouter } from "./routes/admin.products.routes";
+import { adminUsersRouter } from "./routes/admin.users.routes";
 
 import bcrypt from "bcryptjs";
 import { USERS, newId } from "./data/store";
@@ -113,6 +114,7 @@ app.use("/cart", cartRouter);
 app.use("/orders", ordersRouter);
 app.use("/admin", adminOrdersRouter);
 app.use("/admin", adminProductsRouter);
+app.use("/admin", adminUsersRouter);
 app.use("/admin", adminRouter);
 app.use("/addresses", addressRouter);
 app.use("/products", productsRouter);
