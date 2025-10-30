@@ -9,7 +9,7 @@ type CookingLevel = "NORMAL" | "WELL_DONE" | "EXTRA_CRISPY";
 type ProductSupplement = {
   supplementId: string;
   name: string;
-  priceCents: number; // déjà overridé côté API si besoin
+  priceCents: number;
 };
 
 async function fetchProductSupplements(productId: string): Promise<ProductSupplement[]> {

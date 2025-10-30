@@ -1,5 +1,5 @@
 "use client";
-import ProductCustomizeButton from "@/components/menu/ProductCustomizeButton";
+import ProductCustomizeButton from "@/components/-/ProductCustomizeButton";
 import AddToCartButton from "@/components/theme/ui/AddToCartButton";
 import type { Paginated, Product } from "@/types";
 import { useEffect, useState } from "react";

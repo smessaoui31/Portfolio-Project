@@ -1,6 +1,6 @@
 // Page Menu — charge les catégories côté serveur, le reste côté client
-import FiltersBar from "@/components/menu/FiltersBar";
-import ProductsGrid from "@/components/menu/ProductsGrid";
+import FiltersBar from "@/components/-/FiltersBar";
+import ProductsGrid from "@/components/-/ProductsGrid";
 import type { Category } from "@/types";
 
 export const revalidate = 0;
