@@ -45,6 +45,7 @@ model Product {
   category     Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
   isFeatured   Boolean    @default(false)
+  imageURL     String?
 
   // relations
   orderItems   OrderItem[]
