@@ -29,6 +29,8 @@ const UpsertProductSchema = z.object({
   priceCents: z.number().int().min(0),
   categoryId: z.string().optional().nullable(),
   isFeatured: z.boolean().optional().default(false),
+  imageUrl: z.string().url().optional().nullable(),
+
 });
 
 /* ---------- GET /admin/products ---------- */
