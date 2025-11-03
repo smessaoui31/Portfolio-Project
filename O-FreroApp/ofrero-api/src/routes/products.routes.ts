@@ -92,7 +92,6 @@ const NewProductSchema = z.object({
   priceCents: z.number().int().min(0),
   description: z.string().optional(),
   categoryId: z.string().optional().nullable(),
-  // optionnel: permettre de créer directement en featured , pour plus tard on sait jms
   isFeatured: z.boolean().optional().default(false),
 });
 
@@ -174,7 +173,6 @@ productsRouter.post("/seed", requireAuth, requireAdmin, async (_req, res) => {
   try {
     const created = await prisma.product.createMany({ data });
 
-    // marque 2 pizzas en “featured” pour une mise en avant spécifique voulu par les patrons
     await prisma.product.updateMany({
       where: { name: { in: ["Pizza Margherita", "Pizza Diavola"] } },
       data: { isFeatured: true },
