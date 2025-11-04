@@ -8,10 +8,8 @@ import { useCart } from "@/context/CartContext";
 export default function CartPage() {
   const { id, items, totalCents, loading, error, reload, update, remove, clear } = useCart();
 
-  // Optional: force a load on first mount (context already loads on login change)
   useEffect(() => {
     reload().catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const isEmpty = (items?.length ?? 0) === 0;
@@ -74,13 +72,12 @@ export default function CartPage() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <div className="text-white font-medium truncate">{it.name}</div>
-                      <div className="mt-1 text-xs text-neutral-400">
+                      <div className="mt-1 text-xm text-neutral-400">
                         {(it.unitPriceCents / 100).toFixed(2)} € / unité
                       </div>
 
-                      {/* Détails optionnels si plus tard tu ajoutes cuisson/suppléments */}
                       {it.cooking && (
-                        <div className="mt-1 text-xs text-neutral-400">
+                        <div className="mt-1 text-xm text-neutral-400">
                           Cuisson : <span className="text-neutral-300">{labelCooking(it.cooking)}</span>
                         </div>
                       )}

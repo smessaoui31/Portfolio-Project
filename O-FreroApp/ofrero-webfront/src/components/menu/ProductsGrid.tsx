@@ -1,5 +1,6 @@
 // src/components/menu/ProductsGrid.tsx
 "use client";
+import Image from "next/image";
 import ProductCustomizeButton from "@/components/menu/ProductCustomizeButton";
 import AddToCartButton from "@/components/theme/ui/AddToCartButton";
 import type { Paginated, Product } from "@/types";
@@ -9,6 +10,50 @@ import { useSearchParams, useRouter } from "next/navigation";
 const PAGE_SIZE_FALLBACK = 9;
 
 type ApiResponse = Paginated<Product>;
+
+function normalizeAssetUrl(raw?: string) {
+  if (!raw) return undefined;
+  const v = raw.trim();
+  if (!v) return undefined;
+  if (/^https?:\/\//i.test(v)) return v;
+  if (v.startsWith("/uploads/")) {
+    const base = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:5050";
+    return `${base}${v}`;
+  }
+  return v;
+} 
+const IMG_BY_NAME: Record<string, string> = {
+  margherita: "/images/pizzas/margherita.jpg",
+  cheesy : "/images/pizzas/4-fromages.jpg",
+  pepperoni: "/images/pizzas/pepperoni.jpg",
+  reine: "/images/pizzas/reine.jpg",
+  savoyarde: "/images/pizzas/savoyarde.jpg",
+  "bbq chicken": "/images/pizzas/bbq-chicken.jpg",
+  "la audrey": "/images/pizzas/hawaiian.webp",
+  "oasis tropical": "/images/pizzas/oasistrop.webp",
+  "coca cola": "/images/pizzas/coca.jpg",
+};
+
+function getProductImage(p: Product) {
+  const fromDb =
+    normalizeAssetUrl((p as any).imageURL) ||
+    normalizeAssetUrl((p as any).imageUrl);
+  if (fromDb) return fromDb;
+
+  const key = (p.name || "").trim().toLowerCase();
+  if (IMG_BY_NAME[key]) return IMG_BY_NAME[key];
+
+  const cat = (p.category?.name || "").trim().toLowerCase();
+  if (cat === "pizza") return "/images/pizzas/pizza-placeholder.jpg";
+  if (cat === "boisson" || cat === "boissons" || cat === "drink" || cat === "drinks") {
+    return "/images/drinks/drink-placeholder.jpg";
+  }
+  if (cat === "dessert" || cat === "desserts") {
+    return "/images/desserts/dessert-placeholder.jpg";
+  }
+
+  return "/images/placeholder-generic.jpg";
+}
 
 export default function ProductsGrid() {
   const params = useSearchParams();
@@ -74,13 +119,25 @@ export default function ProductsGrid() {
               key={p.id}
               className="bg-neutral-900/60 rounded-2xl border border-neutral-800 overflow-hidden hover:border-neutral-700 transition"
             >
-              <div className="aspect-square bg-neutral-800/60 grid place-items-center text-6xl">
-                🍕
+              {/* Image produit avec effet zoom */}
+              <div className="relative aspect-square overflow-hidden bg-neutral-800/60">
+                <Image
+                  src={getProductImage(p)}
+                  alt={p.name}
+                  fill
+                  unoptimized
+                  sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw"
+                  className="object-cover transition-transform duration-500 hover:scale-105"
+                />
+                <div className="pointer-events-none absolute bottom-3 left-3 rounded-full border border-white/20 bg-black/50 px-3 py-1 text-sm text-white backdrop-blur-sm">
+                  {(p.priceCents / 100).toFixed(2)} €
+                </div>
               </div>
+
+              {/* Informations du produit */}
               <div className="p-5 space-y-2">
                 <div className="flex items-start justify-between gap-3">
                   <h2 className="text-lg font-semibold text-white">{p.name}</h2>
-                  <div className="text-white font-bold">{(p.priceCents / 100).toFixed(2)} €</div>
                 </div>
 
                 {p.description && (
@@ -102,8 +159,6 @@ export default function ProductsGrid() {
                 {/* Boutons d’action */}
                 <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <AddToCartButton productId={p.id} />
-
-                  {/* Personnaliser : uniquement pour les pizzas */}
                   {isPizza && (
                     <ProductCustomizeButton productId={p.id} priceCents={p.priceCents} />
                   )}
