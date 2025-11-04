@@ -39,12 +39,10 @@ const count =
           0
         )
       : 0;
-  // 🔒 Normalize count for SSR to avoid hydration mismatch
   const safeCount = Number.isFinite(count as any) ? (count as number) : 0;
   const plural = safeCount > 1 ? "s" : "";
   const cartAria = `Ouvrir le panier (${safeCount} article${plural})`;
 
-  // Glow qui suit la souris (variables CSS --x / --y)
   const [pos, setPos] = useState({ x: 50, y: 50 });
   function onMove(e: React.MouseEvent<HTMLDivElement>) {
     const r = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
@@ -53,13 +51,10 @@ const count =
     setPos({ x, y });
   }
 
-  // Badge du panier : petite anim à chaque changement de count
   const badgeRef = useRef<HTMLSpanElement | null>(null);
   useEffect(() => {
     if (!badgeRef.current) return;
     badgeRef.current.classList.remove("badge-bump");
-    // force reflow
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     badgeRef.current.offsetWidth;
     badgeRef.current.classList.add("badge-bump");
   }, [safeCount]);
@@ -127,10 +122,14 @@ const count =
               </span>
 
               {role === "ADMIN" && (
-                <span className="text-xs rounded-full px-2 py-1 bg-neutral-800 border border-neutral-700 text-neutral-300">
-                  Admin
-                </span>
-              )}
+              <Link
+                href="/admin"
+                className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-300 hover:bg-amber-500/15 transition"
+                title="Ouvrir le dashboard admin"
+              >
+                Admin
+              </Link>
+            )}
 
               {/* Déconnexion */}
               <button
