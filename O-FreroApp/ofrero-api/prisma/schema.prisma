@@ -155,7 +155,7 @@ model CartItem {
 
   supplements CartItemSupplement[]
 
-  @@unique([cartId, productId, cooking], name: "cartId_productId")
+  @@unique([cartId, productId, cooking], name: "cartId_productId_cooking")
 }
 
 model CartItemSupplement {

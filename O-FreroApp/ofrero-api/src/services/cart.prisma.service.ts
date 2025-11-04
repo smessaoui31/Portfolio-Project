@@ -118,20 +118,22 @@ export async function addItemToCartPrisma(
   const cooking: CookingLevel = (options?.cooking as CookingLevel) ?? "NORMAL";
   const supplementIds = options?.supplementIds ?? [];
 
-  // upsert 1 ligne max par (cartId, productId)
-  const upserted = await prisma.cartItem.upsert({
-    where: { cartId_productId_cooking: { cartId: cart.id, productId, cooking } },
-    update: {
-      quantity: { increment: quantity },
-      cooking, // on garde la dernière cuisson choisie
-    },
-    create: {
-      cartId: cart.id,
-      productId,
-      quantity,
-      cooking,
-    },
+  // 🔁 Remplace l'upsert par findFirst + update/create pour éviter l'erreur Prisma
+  const existing = await prisma.cartItem.findFirst({
+    where: { cartId: cart.id, productId, cooking },
+    select: { id: true },
   });
+
+  const target = existing
+    ? await prisma.cartItem.update({
+        where: { id: existing.id },
+        data: { quantity: { increment: quantity } },
+        select: { id: true },
+      })
+    : await prisma.cartItem.create({
+        data: { cartId: cart.id, productId, quantity, cooking },
+        select: { id: true },
+      });
 
   // Attacher les suppléments demandés (s’ils n’y sont pas déjà)
   if (supplementIds.length > 0) {
@@ -146,14 +148,14 @@ export async function addItemToCartPrisma(
       if (!s.isActive) continue;
 
       const already = await prisma.cartItemSupplement.findFirst({
-        where: { cartItemId: upserted.id, supplementId: s.id },
+        where: { cartItemId: target.id, supplementId: s.id },
         select: { id: true },
       });
       if (already) continue;
 
       await prisma.cartItemSupplement.create({
         data: {
-          cartItemId: upserted.id,
+          cartItemId: target.id,
           supplementId: s.id,
           name: s.name,
           unitPriceCents: s.priceCents,
