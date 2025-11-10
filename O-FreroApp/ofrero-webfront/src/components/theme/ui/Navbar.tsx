@@ -1,10 +1,11 @@
-// src/components/ui/Navbar.tsx
 "use client";
 
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { Lock, Unlock } from "lucide-react";
+import { Button } from "@/components/theme/ui/button"; // Shadcn UI
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 
@@ -28,28 +29,19 @@ function NavLink({ href, label }: { href: string; label: string }) {
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { token, role, email, logout } = useAuth();
-const cartCtx = useCart();
-// Si le contexte expose déjà count (number), on l’utilise. Sinon, on le dérive depuis items.
-const count =
-  typeof (cartCtx as any)?.count === "number"
-    ? (cartCtx as any).count
-    : Array.isArray((cartCtx as any)?.items)
-      ? (cartCtx as any).items.reduce(
-          (n: number, it: any) => n + (it?.quantity ?? 1),
-          0
-        )
-      : 0;
+  const cartCtx = useCart();
+
+  const count =
+    typeof (cartCtx as any)?.count === "number"
+      ? (cartCtx as any).count
+      : Array.isArray((cartCtx as any)?.items)
+        ? (cartCtx as any).items.reduce(
+            (n: number, it: any) => n + (it?.quantity ?? 1),
+            0
+          )
+        : 0;
   const safeCount = Number.isFinite(count as any) ? (count as number) : 0;
   const plural = safeCount > 1 ? "s" : "";
-  const cartAria = `Ouvrir le panier (${safeCount} article${plural})`;
-
-  const [pos, setPos] = useState({ x: 50, y: 50 });
-  function onMove(e: React.MouseEvent<HTMLDivElement>) {
-    const r = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-    const x = ((e.clientX - r.left) / r.width) * 100;
-    const y = ((e.clientY - r.top) / r.height) * 100;
-    setPos({ x, y });
-  }
 
   const badgeRef = useRef<HTMLSpanElement | null>(null);
   useEffect(() => {
@@ -61,19 +53,13 @@ const count =
 
   return (
     <header className="sticky top-0 z-40 border-b border-neutral-800/80 bg-black/70 backdrop-blur">
-      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-        {/* Left: Logo → accueil */}
+      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 w-full">
+        {/* Logo */}
         <Link
           href="/"
-          className="flex items-center gap-3 transition-transform hover:scale-[1.03] active:scale-100"
+          className="flex items-center gap-3 transition-transform hover:scale-[1.03] active:scale-100 min-w-0"
         >
-          <div
-            className="relative h-12 w-12 md:h-14 md:w-14 lg:h-16 lg:w-16
-                       rounded-xl border border-neutral-800 bg-gradient-to-br from-neutral-900 to-neutral-950
-                       p-2 shadow-[0_0_20px_rgba(255,255,255,0.05)]
-                       hover:shadow-[0_0_25px_rgba(255,255,255,0.1)]
-                       transition-all duration-300 ease-out"
-          >
+          <div className="relative h-12 w-12 rounded-xl border border-neutral-800 bg-gradient-to-br from-neutral-900 to-neutral-950 p-2">
             <Image
               src="/ofrero-pizza-logo.png"
               alt="O’Frero Pizza"
@@ -83,136 +69,94 @@ const count =
               priority
             />
           </div>
-
-          <span
-            className="text-lg md:text-xl font-semibold tracking-tight text-white
-                       bg-gradient-to-r from-neutral-100 to-neutral-400 bg-clip-text text-transparent"
-          >
+          <span className="text-lg md:text-xl font-semibold bg-gradient-to-r from-neutral-100 to-neutral-400 bg-clip-text text-transparent truncate">
             O’Frero Pizza
           </span>
         </Link>
 
-        {/* Middle: liens */}
-        <div className="hidden items-center gap-1 md:flex">
+        {/* Navigation Links */}
+        <div className="hidden md:flex items-center gap-1">
           <NavLink href="/" label="Accueil" />
           <NavLink href="/menu" label="Menu" />
           <NavLink href="/about" label="À propos" />
           <NavLink href="/contact" label="Contact" />
         </div>
 
-        {/* Right: auth + commandes + panier */}
-        <div
-          className="relative flex items-center gap-3"
-          onMouseMove={onMove}
-          style={{ ["--x" as any]: `${pos.x}%`, ["--y" as any]: `${pos.y}%` }}
-        >
+        {/* Right zone */}
+        <div className="flex items-center gap-3">
           {token ? (
             <>
-              {/* Mes commandes (visible si connecté) */}
-              <Link
-                href="/orders"
-                className="rounded-md border border-neutral-700 bg-neutral-900/70 px-3 py-1.5 text-sm text-white transition-all hover:bg-neutral-800 hover:-translate-y-0.5"
-                title="Voir mes commandes"
-              >
-                Mes commandes
-              </Link>
+              {/* Desktop */}
+              <div className="hidden md:flex items-center gap-3">
+                <Link
+                  href="/orders"
+                  className="rounded-md border border-neutral-700 bg-neutral-900/70 px-3 py-1.5 text-sm text-white hover:bg-neutral-800 transition"
+                >
+                  Mes commandes
+                </Link>
 
-              <span className="hidden sm:inline text-neutral-400 text-sm" title={email ?? undefined}>
-                {email}
-              </span>
+                {role === "ADMIN" && (
+                  <Link
+                    href="/admin"
+                    className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-300 hover:bg-amber-500/15 transition"
+                  >
+                    Admin
+                  </Link>
+                )}
 
-              {role === "ADMIN" && (
-              <Link
-                href="/admin"
-                className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-300 hover:bg-amber-500/15 transition"
-                title="Ouvrir le dashboard admin"
-              >
-                Admin
-              </Link>
-            )}
+                <Button
+                  onClick={logout}
+                  variant="ghost"
+                  className="text-sm text-white border border-neutral-700 hover:bg-neutral-800"
+                >
+                  Se déconnecter
+                </Button>
+              </div>
 
-              {/* Déconnexion */}
-              <button
+              {/* Déconnexion — mobile (icône 🔓) */}
+              <Button
                 onClick={logout}
-                className="
-                  group relative inline-flex items-center justify-center
-                  rounded-md border border-neutral-700 bg-neutral-900/70
-                  px-4 py-1.5 text-sm font-medium text-white
-                  shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]
-                  transition-all duration-300
-                  hover:bg-neutral-800 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0
-                  focus:outline-none focus:ring-2 focus:ring-white/15
-                  overflow-hidden
-                "
+                size="icon"
+                variant="ghost"
+                className="md:hidden border border-neutral-700 text-white hover:bg-neutral-800 hover:text-red-400 transition transform active:scale-95"
+                title="Se déconnecter"
               >
-                <span
-                  aria-hidden
-                  className="
-                    pointer-events-none absolute inset-0 -z-10
-                    opacity-0 transition-opacity duration-300
-                    group-hover:opacity-100
-                    before:absolute before:inset-0 before:-z-10
-                    before:bg-[radial-gradient(200px_120px_at_var(--x,50%)_var(--y,50%),rgba(255,255,255,0.12),transparent_60%)]
-                  "
-                />
-                <span
-                  aria-hidden
-                  className="
-                    pointer-events-none absolute inset-y-0 -left-20 w-16
-                    bg-gradient-to-r from-white/0 via-white/30 to-white/0
-                    opacity-0 group-hover:opacity-100
-                    [animation:btn-shine_1000ms_ease]
-                  "
-                />
-                Se déconnecter
-              </button>
+                <Unlock className="h-5 w-5" />
+              </Button>
             </>
           ) : (
-            <Link
-              href="/login"
-              className="
-                group relative inline-flex items-center justify-center
-                rounded-md border border-neutral-200 bg-white
-                px-4 py-1.5 text-sm font-medium text-black
-                shadow-sm transition-all duration-300
-                hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(255,255,255,0.15)]
-                active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-black/15
-                overflow-hidden
-              "
-            >
-              <span
-                aria-hidden
-                className="
-                  pointer-events-none absolute inset-0 -z-10
-                  opacity-0 transition-opacity duration-300
-                  group-hover:opacity-100
-                  before:absolute before:inset-0 before:-z-10
-                  before:bg-[radial-gradient(200px_120px_at_var(--x,50%)_var(--y,50%),rgba(0,0,0,0.07),transparent_60%)]
-                "
-              />
-              <span
-                aria-hidden
-                className="
-                  pointer-events-none absolute inset-y-0 -left-20 w-16
-                  bg-gradient-to-r from-black/0 via-black/20 to-black/0
-                  opacity-0 group-hover:opacity-100
-                  [animation:btn-shine_1000ms_ease]
-                "
-              />
-              Se connecter
-            </Link>
+            <>
+              {/* Connexion — desktop */}
+              <Button
+                asChild
+                variant="outline"
+                className="hidden md:inline-flex border-neutral-200 bg-white text-black hover:bg-neutral-100 text-sm"
+              >
+                <Link href="/login">Se connecter</Link>
+              </Button>
+
+              {/* Connexion — mobile (icône 🔒) */}
+              <Button
+                asChild
+                size="icon"
+                variant="ghost"
+                className="md:hidden border border-neutral-700 text-white hover:bg-neutral-800 hover:text-emerald-400 transition transform active:scale-95"
+                title="Se connecter"
+              >
+                <Link href="/login">
+                  <Lock className="h-5 w-5" />
+                </Link>
+              </Button>
+            </>
           )}
 
-          {/* Panier (avec badge animé) */}
+          {/* Panier */}
           <Link
             href="/cart"
             className="relative rounded-md border border-neutral-800 px-3 py-2 text-sm text-white hover:bg-neutral-800/60"
-            aria-label={cartAria}
+            aria-label={`Panier (${safeCount} article${plural})`}
           >
             Panier
-            <span className="sr-only">
-              {`${safeCount} article${plural}`}
-            </span>
             <span
               ref={badgeRef}
               className="ml-2 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-white/10 px-1 text-xs text-white"
@@ -220,22 +164,28 @@ const count =
               {safeCount}
             </span>
           </Link>
-        </div>
 
-        {/* Mobile menu button */}
-        <button
-          className="ml-2 rounded-md p-2 text-neutral-300 hover:bg-neutral-800/60 md:hidden"
-          onClick={() => setOpen((v) => !v)}
-          aria-label="Menu"
-          aria-expanded={open}
-        >
-          ☰
-        </button>
+          {/* Menu mobile */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="ml-2 md:hidden text-neutral-300 hover:bg-neutral-800/60"
+            onClick={() => setOpen((v) => !v)}
+            aria-label="Menu"
+            aria-controls="mobile-drawer"
+            aria-expanded={open}
+          >
+            ☰
+          </Button>
+        </div>
       </nav>
 
       {/* Mobile Drawer */}
-      {open && (
-        <div className="border-t border-neutral-800/80 bg-black/90 px-4 py-3 md:hidden">
+      <div
+        id="mobile-drawer"
+        className={`md:hidden border-t border-neutral-800/80 bg-black/90 px-4 transition-[max-height,opacity] duration-200 overflow-hidden ${open ? "max-h-96 opacity-100 py-3" : "max-h-0 opacity-0 py-0"}`}
+      >
+        {open && (
           <div className="flex flex-col gap-1">
             <NavLink href="/" label="Accueil" />
             <NavLink href="/menu" label="Menu" />
@@ -245,40 +195,23 @@ const count =
             {token && (
               <Link
                 href="/orders"
-                className="mt-2 inline-flex items-center justify-between rounded-md border border-neutral-800 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800/60"
+                className="mt-2 rounded-md border border-neutral-800 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800/60"
               >
-                <span>Mes commandes</span>
+                Mes commandes
               </Link>
             )}
 
-            <Link
-              href="/cart"
-              className="mt-2 inline-flex items-center justify-between rounded-md border border-neutral-800 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800/60"
-            >
-              <span>Panier</span>
-              <span className="ml-2 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-white/10 px-1 text-xs text-white">
-                {safeCount}
-              </span>
-            </Link>
-
-            {token ? (
-              <button
-                onClick={logout}
-                className="mt-3 text-left rounded-md px-3 py-2 text-neutral-300 hover:text-white hover:bg-neutral-800/60 transition"
-              >
-                Se déconnecter
-              </button>
-            ) : (
+            {role === "ADMIN" && (
               <Link
-                href="/login"
-                className="mt-3 rounded-md px-3 py-2 text-neutral-300 hover:text-white hover:bg-neutral-800/60 transition"
+                href="/admin"
+                className="mt-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-300 hover:bg-amber-500/15 transition"
               >
-                Se connecter
+                Admin
               </Link>
             )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </header>
   );
 }

@@ -2,19 +2,18 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
-
 import Navbar from "@/components/theme/ui/Navbar";
 import PageTransition from "@/components/theme/ui/PageTransition";
 import NextTopLoader from "nextjs-toploader";
 import ToasterProvider from "@/components/theme/ui/ToasterProvider";
+import Footer from "@/components/theme/ui/Footer";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "O’Frero Pizza",
+  title: "O'Frero Pizza",
   description: "Pizzeria — Four au feu de bois détenu par deux frères",
 };
 
@@ -22,7 +21,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" className="bg-black">
       <body className={`${inter.className} bg-neutral-950 text-neutral-100 antialiased`}>
-        {/* Barre de progression lors des changements de page */}
         <NextTopLoader
           color="#ffffff"
           initialPosition={0.15}
@@ -35,23 +33,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           shadow="0 0 10px #ffffff50, 0 0 5px #ffffff30"
           zIndex={9999}
         />
-
-        {/* Contexte des toasts au plus haut niveau */}
         <ToasterProvider />
-          <AuthProvider>
-            <CartProvider>
-              <Navbar />
-              {/* Transition smooth entre les pages */}
-              <PageTransition>{children}</PageTransition>
-
-              <footer className="mt-12 border-t border-neutral-800/80 py-8 text-center text-sm text-neutral-500">
-                © {new Date().getFullYear()} O’Frero Pizza — Fait par Messaoui Sofian
-              </footer>
-            </CartProvider>
-          </AuthProvider>
-
-          {/* Portail visuel des toasts (à la toute fin du body pour overlay propre) */}
-         
+        <AuthProvider>
+          <CartProvider>
+            <Navbar />
+            <PageTransition>{children}</PageTransition>
+            <Footer />
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

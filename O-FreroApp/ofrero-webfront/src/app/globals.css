@@ -1,7 +1,6 @@
 /* src/app/globals.css */
 @import "tailwindcss";
 
-/* Ton thème noir & blanc */
 :root {
   --bg: #0a0a0a;
   --fg: #f4f4f5;
