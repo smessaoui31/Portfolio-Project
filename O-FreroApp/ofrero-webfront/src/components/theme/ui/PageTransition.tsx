@@ -21,7 +21,6 @@ export default function PageTransition({ children }: { children: ReactNode }) {
         }}
       >
         {children}
-        {/* Overlay noir subtil lors du changement */}
         <motion.div
           className="fixed inset-0 bg-black pointer-events-none"
           initial={{ opacity: 0 }}
