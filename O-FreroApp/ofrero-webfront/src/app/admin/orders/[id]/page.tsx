@@ -40,8 +40,8 @@ export default function AdminOrderDetailPage() {
       try {
         const data = await apiAuthed<AdminOrderDetail>(`/admin/orders/${id}`);
         setOrder(data);
-      } catch (e: any) {
-        setError(e?.message || "Erreur de chargement");
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : "Erreur de chargement");
       } finally {
         setLoading(false);
       }
