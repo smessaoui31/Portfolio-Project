@@ -30,13 +30,13 @@ export default function AdminUsersPage() {
     setErr(null);
     try {
       const data = await apiAuthed<AdminUserListResponse>("/admin/users");
-      const list = Array.isArray(data) ? data : Array.isArray((data as any)?.items) ? (data as any).items : [];
-      const totalCount = Array.isArray(data) ? list.length : Number((data as any)?.total ?? list.length);
+      const list = Array.isArray(data) ? data : Array.isArray((data as { items?: AdminUser[] })?.items) ? (data as { items: AdminUser[] }).items : [];
+      const totalCount = Array.isArray(data) ? list.length : Number((data as { total?: number })?.total ?? list.length);
       setUsers(list);
       setTotal(totalCount);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("[admin/users] fetch error:", e);
-      setErr(e?.message || "Failed to load users");
+      setErr(e instanceof Error ? e.message : "Failed to load users");
       setUsers([]);
       setTotal(0);
     } finally {
@@ -59,8 +59,8 @@ export default function AdminUsersPage() {
       // Optimistic update ou refetch
       setUsers((prev) => prev.filter((u) => u.id !== id));
       setTotal((t) => Math.max(0, t - 1));
-    } catch (e: any) {
-      alert(e?.message || "Erreur lors de la suppression.");
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : "Erreur lors de la suppression.");
     } finally {
       setBusyId(null);
     }

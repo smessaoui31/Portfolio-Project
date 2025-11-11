@@ -1,11 +1,11 @@
 // src/app/admin/users/[id]/page.tsx
 "use client";
-
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { apiAuthed } from "@/lib/api";
 
 type Role = "USER" | "ADMIN";
+
 type AdminUserDetail = {
   id: string;
   email: string;
@@ -32,8 +32,8 @@ export default function AdminUserDetailPage() {
     try {
       const data = await apiAuthed<AdminUserDetail>(`/admin/users/${id}`);
       setUser(data);
-    } catch (e: any) {
-      setErr(e?.message || "Failed to load user");
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : "Failed to load user");
       setUser(null);
     } finally {
       setLoading(false);
@@ -47,8 +47,8 @@ export default function AdminUserDetailPage() {
       setDeleting(true);
       await apiAuthed(`/admin/users/${id}`, { method: "DELETE" });
       router.push("/admin/users");
-    } catch (e: any) {
-      alert(e?.message || "Erreur lors de la suppression.");
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : "Erreur lors de la suppression.");
     } finally {
       setDeleting(false);
     }
@@ -64,7 +64,7 @@ export default function AdminUserDetailPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-white">User details</h1>
         <button
-          onClick={() => history.back()}
+          onClick={() => router.back()}
           className="rounded-md border border-neutral-700 px-3 py-1 text-sm text-neutral-300 hover:bg-neutral-800/70"
         >
           ← Back

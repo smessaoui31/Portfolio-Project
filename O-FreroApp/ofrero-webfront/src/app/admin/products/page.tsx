@@ -19,7 +19,7 @@ export default function AdminProductsListPage() {
   const [sortKey, setSortKey] = useState<SortKey>("createdAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
-  // states d’actions par ligne
+  // states d'actions par ligne
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -38,8 +38,8 @@ export default function AdminProductsListPage() {
       );
       setItems(Array.isArray(data?.items) ? data.items : []);
       setTotal(Number(data?.total ?? 0));
-    } catch (e: any) {
-      setErr(e?.message || "Erreur de chargement");
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : "Erreur de chargement");
       setItems([]);
       setTotal(0);
     } finally {
@@ -61,7 +61,6 @@ export default function AdminProductsListPage() {
     return () => {
       if (debounceRef.current) window.clearTimeout(debounceRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
 
   const filtered = useMemo(() => {
@@ -138,7 +137,7 @@ export default function AdminProductsListPage() {
         </div>
       </div>
 
-      {/* Barre d’actions : recherche + tri */}
+      {/* Barre d'actions : recherche + tri */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="flex-1">
           <input
