@@ -54,8 +54,8 @@ export default function AdminOrdersPage() {
 
         const res = await apiAuthed<AdminOrdersResponse>(`/admin/orders?${qs.toString()}`);
         setData(res);
-      } catch (e: any) {
-        setError(e?.message || "Erreur de chargement des commandes");
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : "Erreur de chargement des commandes");
       } finally {
         setLoading(false);
       }

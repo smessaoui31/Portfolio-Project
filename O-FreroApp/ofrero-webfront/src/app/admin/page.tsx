@@ -38,9 +38,9 @@ export default function AdminDashboardHome() {
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         setOrders(data);
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.error(e);
-        setErr(e?.message || "Impossible de charger les commandes");
+        setErr(e instanceof Error ? e.message : "Impossible de charger les commandes");
       } finally {
         setLoading(false);
       }

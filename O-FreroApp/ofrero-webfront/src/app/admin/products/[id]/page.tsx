@@ -1,8 +1,8 @@
 // src/app/admin/products/[id]/page.tsx
 "use client";
-
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import ProductForm from "@/components/admin/ProductForm";
 import { apiAuthed } from "@/lib/api";
 import type { AdminProduct } from "@/types/admin";
@@ -25,8 +25,8 @@ export default function AdminProductEditPage() {
       try {
         const data = await apiAuthed<AdminProduct>(`/admin/products/${id}`);
         setProduct(data);
-      } catch (e: any) {
-        setErr(e?.message || "Load failed");
+      } catch (e: unknown) {
+        setErr(e instanceof Error ? e.message : "Load failed");
       } finally {
         setLoading(false);
       }
@@ -46,7 +46,7 @@ export default function AdminProductEditPage() {
     }
   }
 
-  function handleSaved(_p: AdminProduct) {
+  function handleSaved(_: AdminProduct) {
     router.push("/admin/products");
   }
 
@@ -55,12 +55,12 @@ export default function AdminProductEditPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-white">Éditer le produit</h1>
         <div className="flex items-center gap-2">
-          <a
+          <Link
             href="/admin/products"
             className="rounded-md border border-neutral-700 px-3 py-2 text-sm text-white hover:bg-neutral-800/70"
           >
             ← Retour
-          </a>
+          </Link>
           <button
             onClick={handleDelete}
             disabled={deleting}
