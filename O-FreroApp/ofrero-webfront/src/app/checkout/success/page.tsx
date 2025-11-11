@@ -1,7 +1,7 @@
 // src/app/checkout/success/page.tsx
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { apiAuthed } from "@/lib/api";
@@ -36,7 +36,8 @@ type OrderDetail = {
   user?: { id: string; email?: string; fullName?: string } | null;
 };
 
-export default function CheckoutSuccessPage() {
+// Composant qui utilise useSearchParams
+function SuccessContent() {
   const search = useSearchParams();
   const orderId = search.get("orderId") || "";
 
@@ -63,8 +64,8 @@ export default function CheckoutSuccessPage() {
       try {
         const data = await apiAuthed<OrderDetail>(`/checkout/orders/${orderId}`);
         setOrder(data);
-      } catch (e: any) {
-        setErr(e?.message || "Impossible de charger la commande.");
+      } catch (e: unknown) {
+        setErr(e instanceof Error ? e.message : "Impossible de charger la commande.");
       } finally {
         setLoading(false);
       }
@@ -270,6 +271,24 @@ export default function CheckoutSuccessPage() {
         }
       `}</style>
     </main>
+  );
+}
+
+// Page principale avec Suspense
+export default function CheckoutSuccessPage() {
+  return (
+    <Suspense fallback={
+      <main className="mx-auto max-w-3xl px-4 py-16">
+        <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-8">
+          <div className="h-6 w-40 skeleton mb-4 rounded" />
+          <div className="h-4 w-64 skeleton mb-2 rounded" />
+          <div className="h-4 w-56 skeleton mb-6 rounded" />
+          <div className="h-24 w-full skeleton rounded" />
+        </div>
+      </main>
+    }>
+      <SuccessContent />
+    </Suspense>
   );
 }
 
