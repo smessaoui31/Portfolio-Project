@@ -76,32 +76,26 @@ const adminSlides: Preview[] = [
 /* ---------------------- FEATURES ---------------------- */
 const features = [
   {
-    icon: "🍕",
     title: "Personnalisation totale",
     desc: "Créez votre pizza parfaite avec notre configurateur intuitif",
   },
   {
-    icon: "🔥",
     title: "Four au feu de bois",
     desc: "Cuisson artisanale pour un goût authentique",
   },
   {
-    icon: "💳",
     title: "Paiement sécurisé",
     desc: "Intégration Stripe pour des transactions rapides et sûres",
   },
   {
-    icon: "📱",
     title: "100% Responsive",
     desc: "Commandez depuis n'importe quel appareil",
   },
   {
-    icon: "⚡",
     title: "Livraison rapide",
     desc: "Suivi en temps réel de votre commande",
   },
   {
-    icon: "👨‍💼",
     title: "Dashboard Admin",
     desc: "Gestion complète des commandes et produits",
   },
@@ -171,13 +165,13 @@ export default function LandingPage() {
                 O'Frero Pizza
                 <br />
                 <span className="bg-gradient-to-r from-neutral-100 via-neutral-200 to-neutral-400 bg-clip-text text-transparent">
-                  L'expérience pizza ultime 🍕
+                  L'expérience pizza à la toulousaine
                 </span>
               </h1>
 
               <p className="text-lg text-neutral-300 leading-relaxed max-w-xl">
-                De la navigation aux pizzas jusqu'à la commande personnalisée et au paiement sécurisé — 
-                découvrez une expérience moderne et fluide.
+                De la navigation aux pizzas jusqu'à la commande personnalisée et au paiement sécurisé .
+                Découvrez une expérience moderne et fluide.
               </p>
 
               {/* Stats */}
@@ -287,8 +281,8 @@ export default function LandingPage() {
               Parcours de commande
             </h2>
             <p className="text-neutral-400 max-w-2xl mx-auto">
-              Une démonstration fluide et automatisée du parcours complet — 
-              de la sélection au succès du paiement
+              Une démonstration fluide et automatisée du parcours complet
+              De la sélection au succès du paiement
             </p>
           </div>
 
@@ -348,7 +342,7 @@ export default function LandingPage() {
             Prêt à goûter l'expérience O'Frero Pizza ?
           </h3>
           <p className="text-lg text-neutral-400 mb-8">
-            Découvrez, personnalisez et commandez — le tout dans une interface élégante
+            Découvrez, personnalisez et commandez et le tout dans une interface élégante
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-4">
