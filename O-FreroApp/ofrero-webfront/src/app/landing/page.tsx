@@ -35,7 +35,7 @@ const pizzaSlides: Preview[] = [
     src: "/previews/checkout.png",
     alt: "Checkout process",
     title: "Paiement",
-    desc: "Paiement fluide et sécurisé avec l'intégration Stripe.",
+    desc: "Paiement fluide et sécurisé avec l&apos;intégration Stripe.",
   },
   {
     src: "/previews/payment-success.png",
@@ -89,7 +89,7 @@ const features = [
   },
   {
     title: "100% Responsive",
-    desc: "Commandez depuis n'importe quel appareil",
+    desc: "Commandez depuis n&apos;importe quel appareil",
   },
   {
     title: "Livraison rapide",
@@ -107,28 +107,28 @@ export default function LandingPage() {
   const [pauseAdmin, setPauseAdmin] = useState(false);
 
   /* ---------------- AUTO-SCROLL CAROUSELS ---------------- */
-    const userSliderRef = useRef<HTMLDivElement | null>(null);
-    const adminSliderRef = useRef<HTMLDivElement | null>(null);
-  
-    useEffect(() => {
-      const scrollCarousel = (ref: RefObject<HTMLDivElement | null>, paused: boolean) => {
-        const el = ref.current;
-        if (!el || paused) return;
-        const maxScroll = el.scrollWidth - el.clientWidth;
-        if (el.scrollLeft >= maxScroll - 2) {
-          el.scrollTo({ left: 0, behavior: "smooth" });
-        } else {
-          el.scrollBy({ left: 1.5, behavior: "smooth" });
-        }
-      };
-  
-      const interval = setInterval(() => {
-        scrollCarousel(userSliderRef, pauseUser);
-        scrollCarousel(adminSliderRef, pauseAdmin);
-      }, 25);
-  
-      return () => clearInterval(interval);
-    }, [pauseUser, pauseAdmin]);
+  const userSliderRef = useRef<HTMLDivElement | null>(null);
+  const adminSliderRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const scrollCarousel = (ref: RefObject<HTMLDivElement | null>, paused: boolean) => {
+      const el = ref.current;
+      if (!el || paused) return;
+      const maxScroll = el.scrollWidth - el.clientWidth;
+      if (el.scrollLeft >= maxScroll - 2) {
+        el.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        el.scrollBy({ left: 1.5, behavior: "smooth" });
+      }
+    };
+
+    const interval = setInterval(() => {
+      scrollCarousel(userSliderRef, pauseUser);
+      scrollCarousel(adminSliderRef, pauseAdmin);
+    }, 25);
+
+    return () => clearInterval(interval);
+  }, [pauseUser, pauseAdmin]);
 
   /* ---------------- ESC closes zoom ---------------- */
   useEffect(() => {
@@ -162,15 +162,15 @@ export default function LandingPage() {
               </div>
 
               <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl leading-tight">
-                O'Frero Pizza
+                O&apos;Frero Pizza
                 <br />
                 <span className="bg-gradient-to-r from-neutral-100 via-neutral-200 to-neutral-400 bg-clip-text text-transparent">
-                  L'expérience pizza à la toulousaine
+                  L&apos;expérience pizza à la toulousaine
                 </span>
               </h1>
 
               <p className="text-lg text-neutral-300 leading-relaxed max-w-xl">
-                De la navigation aux pizzas jusqu'à la commande personnalisée et au paiement sécurisé .
+                De la navigation aux pizzas jusqu&apos;à la commande personnalisée et au paiement sécurisé.
                 Découvrez une expérience moderne et fluide.
               </p>
 
@@ -247,7 +247,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-7xl px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-              Pourquoi choisir O'Frero Pizza ?
+              Pourquoi choisir O&apos;Frero Pizza ?
             </h2>
             <p className="text-neutral-400 max-w-2xl mx-auto">
               Une plateforme complète pour commander vos pizzas préférées en toute simplicité
@@ -260,7 +260,6 @@ export default function LandingPage() {
                 key={i}
                 className="group relative rounded-2xl border border-neutral-800 bg-neutral-900/40 p-6 backdrop-blur transition-all duration-300 hover:bg-neutral-900/60 hover:border-neutral-700 hover:scale-105"
               >
-                <div className="text-4xl mb-4">{feature.icon}</div>
                 <h3 className="text-lg font-semibold text-white mb-2">
                   {feature.title}
                 </h3>
@@ -281,7 +280,7 @@ export default function LandingPage() {
               Parcours de commande
             </h2>
             <p className="text-neutral-400 max-w-2xl mx-auto">
-              Une démonstration fluide et automatisée du parcours complet
+              Une démonstration fluide et automatisée du parcours complet.
               De la sélection au succès du paiement
             </p>
           </div>
@@ -339,10 +338,10 @@ export default function LandingPage() {
         
         <div className="relative mx-auto max-w-4xl px-4 text-center">
           <h3 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            Prêt à goûter l'expérience O'Frero Pizza ?
+            Prêt à goûter l&apos;expérience O&apos;Frero Pizza ?
           </h3>
           <p className="text-lg text-neutral-400 mb-8">
-            Découvrez, personnalisez et commandez et le tout dans une interface élégante
+            Découvrez, personnalisez et commandez, le tout dans une interface élégante
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-4">
