@@ -226,7 +226,7 @@ export default function LandingPage() {
               <div className="relative rounded-3xl border border-neutral-800 bg-gradient-to-br from-neutral-900/90 to-neutral-950/90 p-4 shadow-2xl backdrop-blur transition-transform duration-500 group-hover:scale-[1.02]">
                 <div className="aspect-[16/10] overflow-hidden rounded-2xl border border-neutral-800/50 bg-neutral-950">
                   <Image
-                    src="/previews/customize-pizza.png"
+                    src="/previews/ofrero-pizza-logo.png"
                     alt="Pizza customization preview"
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-105"
