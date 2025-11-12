@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -111,21 +111,23 @@ export default function LandingPage() {
   const adminSliderRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const scrollCarousel = (ref: RefObject<HTMLDivElement | null>, paused: boolean) => {
+    const scrollCarousel = (ref: React.RefObject<HTMLDivElement | null>, paused: boolean) => {
       const el = ref.current;
       if (!el || paused) return;
+
       const maxScroll = el.scrollWidth - el.clientWidth;
-      if (el.scrollLeft >= maxScroll - 2) {
-        el.scrollTo({ left: 0, behavior: "smooth" });
+
+      if (el.scrollLeft >= maxScroll) {
+        el.scrollLeft = 0;
       } else {
-        el.scrollBy({ left: 1.5, behavior: "smooth" });
+        el.scrollLeft += 1;
       }
     };
 
     const interval = setInterval(() => {
       scrollCarousel(userSliderRef, pauseUser);
       scrollCarousel(adminSliderRef, pauseAdmin);
-    }, 25);
+    }, 30);
 
     return () => clearInterval(interval);
   }, [pauseUser, pauseAdmin]);
@@ -136,6 +138,10 @@ export default function LandingPage() {
     window.addEventListener("keydown", close);
     return () => window.removeEventListener("keydown", close);
   }, []);
+
+  // Dupliquer les slides pour une boucle infinie
+  const duplicatedPizzaSlides = [...pizzaSlides, ...pizzaSlides];
+  const duplicatedAdminSlides = [...adminSlides, ...adminSlides];
 
   return (
     <main className="bg-neutral-950 text-neutral-100 relative overflow-hidden">
@@ -235,7 +241,6 @@ export default function LandingPage() {
                   />
                 </div>
               </div>
-              {/* Glow effect */}
               <div className="pointer-events-none absolute -inset-8 -z-10 rounded-[32px] bg-gradient-to-r from-neutral-500/20 via-neutral-400/10 to-neutral-500/20 opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100" />
             </div>
           </div>
@@ -264,7 +269,6 @@ export default function LandingPage() {
                   {feature.title}
                 </h3>
                 <p className="text-sm text-neutral-400">{feature.desc}</p>
-                {/* Hover glow */}
                 <div className="pointer-events-none absolute inset-0 -z-10 rounded-2xl bg-gradient-to-br from-white/5 to-transparent opacity-0 blur-xl transition-opacity group-hover:opacity-100" />
               </div>
             ))}
@@ -289,15 +293,15 @@ export default function LandingPage() {
             ref={userSliderRef}
             onMouseEnter={() => setPauseUser(true)}
             onMouseLeave={() => setPauseUser(false)}
-            className="flex gap-6 overflow-x-auto scroll-smooth pb-6 snap-x snap-mandatory scrollbar-hide"
+            className="flex gap-6 overflow-x-hidden pb-6"
           >
-            {pizzaSlides.map((p) => (
-              <PreviewCard key={p.src} {...p} onZoom={() => setZoomed(p)} />
+            {duplicatedPizzaSlides.map((p, idx) => (
+              <PreviewCard key={`${p.src}-${idx}`} {...p} onZoom={() => setZoomed(p)} />
             ))}
           </div>
 
           <div className="text-center mt-6 text-sm text-neutral-500">
-            Survolez pour mettre en pause • Cliquez pour agrandir
+            Survolez pour mettre en pause
           </div>
         </div>
       </section>
@@ -319,15 +323,15 @@ export default function LandingPage() {
             ref={adminSliderRef}
             onMouseEnter={() => setPauseAdmin(true)}
             onMouseLeave={() => setPauseAdmin(false)}
-            className="flex gap-6 overflow-x-auto scroll-smooth pb-6 snap-x snap-mandatory scrollbar-hide"
+            className="flex gap-6 overflow-x-hidden pb-6"
           >
-            {adminSlides.map((p) => (
-              <PreviewCard key={p.src} {...p} onZoom={() => setZoomed(p)} />
+            {duplicatedAdminSlides.map((p, idx) => (
+              <PreviewCard key={`${p.src}-${idx}`} {...p} onZoom={() => setZoomed(p)} />
             ))}
           </div>
 
           <div className="text-center mt-6 text-sm text-neutral-500">
-            Survolez pour mettre en pause • Cliquez pour agrandir
+            Survolez pour mettre en pause
           </div>
         </div>
       </section>
@@ -366,7 +370,7 @@ export default function LandingPage() {
       {/* ZOOM OVERLAY */}
       {zoomed && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-[fadeIn_0.2s_ease-out]"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4"
           onClick={() => setZoomed(null)}
         >
           <button
@@ -379,7 +383,7 @@ export default function LandingPage() {
             </svg>
           </button>
 
-          <div className="relative w-full max-w-6xl aspect-[16/9] rounded-2xl overflow-hidden border border-neutral-700 shadow-2xl animate-[zoomIn_0.3s_ease-out]">
+          <div className="relative w-full max-w-6xl aspect-[16/9] rounded-2xl overflow-hidden border border-neutral-700 shadow-2xl">
             <Image
               src={zoomed.src}
               alt={zoomed.alt}
@@ -416,9 +420,8 @@ function PreviewCard({
   return (
     <div
       onClick={onZoom}
-      className="group relative flex-shrink-0 w-[340px] sm:w-[420px] lg:w-[500px] snap-center rounded-2xl border border-neutral-800 bg-neutral-900/60 backdrop-blur shadow-xl transition-all duration-300 hover:scale-[1.03] hover:shadow-2xl hover:border-neutral-700 cursor-pointer overflow-hidden"
+      className="group relative flex-shrink-0 w-[340px] sm:w-[420px] lg:w-[500px] rounded-2xl border border-neutral-800 bg-neutral-900/60 backdrop-blur shadow-xl transition-all duration-300 hover:scale-[1.03] hover:shadow-2xl hover:border-neutral-700 cursor-pointer overflow-hidden"
     >
-      {/* Image container */}
       <div className="relative aspect-[16/9] overflow-hidden">
         <Image
           src={src}
@@ -427,10 +430,8 @@ function PreviewCard({
           className="object-cover transition-transform duration-700 group-hover:scale-110"
           sizes="(min-width:1024px) 500px, 90vw"
         />
-        {/* Overlay on hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         
-        {/* Zoom icon */}
         <div className="absolute top-3 right-3 rounded-full bg-white/10 p-2 backdrop-blur opacity-0 transition-opacity duration-300 group-hover:opacity-100">
           <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
@@ -438,7 +439,6 @@ function PreviewCard({
         </div>
       </div>
 
-      {/* Content */}
       <div className="p-5">
         <h3 className="text-white font-semibold text-lg mb-1 group-hover:text-neutral-100 transition-colors">
           {title}
@@ -446,7 +446,6 @@ function PreviewCard({
         <p className="text-sm text-neutral-400 line-clamp-2">{desc}</p>
       </div>
 
-      {/* Glow effect */}
       <div className="pointer-events-none absolute inset-0 -z-10 rounded-2xl bg-gradient-to-br from-white/5 to-transparent opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-100" />
     </div>
   );

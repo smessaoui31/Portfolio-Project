@@ -32,6 +32,9 @@ const IMG_BY_NAME: Record<string, string> = {
   "la audrey": "/images/pizzas/hawaiian.webp",
   "oasis tropical": "/images/pizzas/oasistrop.webp",
   "coca cola": "/images/pizzas/coca.jpg",
+  "tiramisu caramel": "/images/pizzas/tiramisu.png",
+  "cannoli": "/images/pizzas/cannoli.png",
+  "7up mojito": "/images/pizzas/7-up-mojito.png",
 };
 
 function getProductImage(p: Product) {
