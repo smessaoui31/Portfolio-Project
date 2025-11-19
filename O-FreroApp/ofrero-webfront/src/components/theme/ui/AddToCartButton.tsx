@@ -37,9 +37,14 @@ export default function AddToCartButton({
 
       setSuccess(true);
       setTimeout(() => setSuccess(false), 1200);
-    } catch (e) {
-      console.error(e);
-      alert("Erreur lors de l’ajout au panier.");
+    } catch (e: any) {
+      console.error("Erreur ajout panier:", e);
+      const errorMsg = e?.message || "Erreur lors de l'ajout au panier.";
+      if (errorMsg.includes("401") || errorMsg.includes("Unauthorized")) {
+        alert("Session expirée. Veuillez vous reconnecter.");
+      } else {
+        alert(errorMsg);
+      }
     } finally {
       setLoading(false);
     }
