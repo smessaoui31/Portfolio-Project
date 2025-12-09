@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
+import QueryProvider from "@/providers/QueryProvider";
 import Navbar from "@/components/theme/ui/Navbar";
 import PageTransition from "@/components/theme/ui/PageTransition";
 import NextTopLoader from "nextjs-toploader";
@@ -34,13 +35,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           zIndex={9999}
         />
         <ToasterProvider />
-        <AuthProvider>
-          <CartProvider>
-            <Navbar />
-            <PageTransition>{children}</PageTransition>
-            <Footer />
-          </CartProvider>
-        </AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <CartProvider>
+              <Navbar />
+              <PageTransition>{children}</PageTransition>
+              <Footer />
+            </CartProvider>
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );

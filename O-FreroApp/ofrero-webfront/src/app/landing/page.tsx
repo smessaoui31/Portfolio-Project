@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, memo, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -111,25 +111,52 @@ export default function LandingPage() {
   const adminSliderRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const scrollCarousel = (ref: React.RefObject<HTMLDivElement | null>, paused: boolean) => {
-      const el = ref.current;
-      if (!el || paused) return;
+    let animationFrameId: number;
+    let lastTimestamp = 0;
+    const scrollSpeed = 0.5; // pixels per frame at 60fps
 
-      const maxScroll = el.scrollWidth - el.clientWidth;
-
-      if (el.scrollLeft >= maxScroll) {
-        el.scrollLeft = 0;
-      } else {
-        el.scrollLeft += 1;
+    const animate = (timestamp: number) => {
+      // Throttle to ~60fps (16.67ms per frame)
+      if (timestamp - lastTimestamp < 16) {
+        animationFrameId = requestAnimationFrame(animate);
+        return;
       }
+      lastTimestamp = timestamp;
+
+      // Scroll user carousel
+      if (!pauseUser && userSliderRef.current) {
+        const el = userSliderRef.current;
+        const maxScroll = el.scrollWidth - el.clientWidth;
+
+        if (el.scrollLeft >= maxScroll - 1) {
+          el.scrollLeft = 0;
+        } else {
+          el.scrollLeft += scrollSpeed;
+        }
+      }
+
+      // Scroll admin carousel
+      if (!pauseAdmin && adminSliderRef.current) {
+        const el = adminSliderRef.current;
+        const maxScroll = el.scrollWidth - el.clientWidth;
+
+        if (el.scrollLeft >= maxScroll - 1) {
+          el.scrollLeft = 0;
+        } else {
+          el.scrollLeft += scrollSpeed;
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(animate);
     };
 
-    const interval = setInterval(() => {
-      scrollCarousel(userSliderRef, pauseUser);
-      scrollCarousel(adminSliderRef, pauseAdmin);
-    }, 30);
+    animationFrameId = requestAnimationFrame(animate);
 
-    return () => clearInterval(interval);
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
   }, [pauseUser, pauseAdmin]);
 
   /* ---------------- ESC closes zoom ---------------- */
@@ -139,9 +166,9 @@ export default function LandingPage() {
     return () => window.removeEventListener("keydown", close);
   }, []);
 
-  // Dupliquer les slides pour une boucle infinie
-  const duplicatedPizzaSlides = [...pizzaSlides, ...pizzaSlides];
-  const duplicatedAdminSlides = [...adminSlides, ...adminSlides];
+  // Dupliquer les slides pour une boucle infinie (memoized to avoid re-creating on each render)
+  const duplicatedPizzaSlides = useMemo(() => [...pizzaSlides, ...pizzaSlides], []);
+  const duplicatedAdminSlides = useMemo(() => [...adminSlides, ...adminSlides], []);
 
   return (
     <main className="bg-neutral-950 text-neutral-100 relative overflow-hidden">
@@ -294,6 +321,7 @@ export default function LandingPage() {
             onMouseEnter={() => setPauseUser(true)}
             onMouseLeave={() => setPauseUser(false)}
             className="flex gap-6 overflow-x-hidden pb-6"
+            style={{ willChange: "scroll-position" }}
           >
             {duplicatedPizzaSlides.map((p, idx) => (
               <PreviewCard key={`${p.src}-${idx}`} {...p} onZoom={() => setZoomed(p)} />
@@ -324,6 +352,7 @@ export default function LandingPage() {
             onMouseEnter={() => setPauseAdmin(true)}
             onMouseLeave={() => setPauseAdmin(false)}
             className="flex gap-6 overflow-x-hidden pb-6"
+            style={{ willChange: "scroll-position" }}
           >
             {duplicatedAdminSlides.map((p, idx) => (
               <PreviewCard key={`${p.src}-${idx}`} {...p} onZoom={() => setZoomed(p)} />
@@ -404,7 +433,7 @@ export default function LandingPage() {
 }
 
 /* PREVIEW CARD COMPONENT */
-function PreviewCard({
+const PreviewCard = memo(function PreviewCard({
   src,
   alt,
   title,
@@ -427,11 +456,12 @@ function PreviewCard({
           src={src}
           alt={alt}
           fill
+          loading="lazy"
           className="object-cover transition-transform duration-700 group-hover:scale-110"
           sizes="(min-width:1024px) 500px, 90vw"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-        
+
         <div className="absolute top-3 right-3 rounded-full bg-white/10 p-2 backdrop-blur opacity-0 transition-opacity duration-300 group-hover:opacity-100">
           <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
@@ -449,4 +479,4 @@ function PreviewCard({
       <div className="pointer-events-none absolute inset-0 -z-10 rounded-2xl bg-gradient-to-br from-white/5 to-transparent opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-100" />
     </div>
   );
-}
+});
