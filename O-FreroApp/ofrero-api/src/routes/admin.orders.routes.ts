@@ -171,7 +171,7 @@ adminOrdersRouter.get(
               id: true,
               productId: true,
               name: true,
-              quantity: true,
+              quantity: true, 
               unitPriceCents: true,
             },
             orderBy: { id: "asc" },
