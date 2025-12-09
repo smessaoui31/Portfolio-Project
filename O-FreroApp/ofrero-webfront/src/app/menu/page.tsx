@@ -31,7 +31,7 @@ export default async function MenuPage() {
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-8">
       <header className="mb-6">
-        <h1 className="text-2xl font-semibold text-zinc-50">Notre carte</h1>
+        <h1 className="text-2xl font-semibold text-zinc-50">La Carte</h1>
         <p className="text-sm text-zinc-400">
           Filtre par catégorie, recherche, tri
         </p>

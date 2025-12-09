@@ -21,9 +21,21 @@ export default function FiltersBar({ categories }: Props) {
   const params = useSearchParams();
 
   const [q, setQ] = useState(params.get("q") ?? "");
-  const categoryId = params.get("categoryId") ?? "";
+
+  // Trouver l'ID de la catégorie "Pizza" pour la sélectionner par défaut
+  const pizzaCategory = categories.find(c => c.name.toLowerCase() === "pizza");
+  const defaultCategoryId = pizzaCategory?.id ?? "";
+
+  const categoryId = params.get("categoryId") ?? defaultCategoryId;
   const sort = params.get("sort") ?? "";
   const featured = params.get("featured") === "true";
+
+  // Rediriger vers la catégorie Pizza par défaut si aucune catégorie n'est sélectionnée
+  useEffect(() => {
+    if (!params.get("categoryId") && defaultCategoryId) {
+      router.push(buildUrl({ categoryId: defaultCategoryId }));
+    }
+  }, []);
 
   // construit l’URL /menu?... proprement
   const buildUrl = useMemo(() => {

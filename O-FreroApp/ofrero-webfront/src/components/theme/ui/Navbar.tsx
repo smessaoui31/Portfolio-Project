@@ -77,7 +77,7 @@ export default function Navbar() {
         {/* Navigation Links */}
         <div className="hidden md:flex items-center gap-1">
           <NavLink href="/" label="Accueil" />
-          <NavLink href="/menu" label="Menu" />
+          <NavLink href="/menu" label="La Carte" />
           <NavLink href="/about" label="À propos" />
           <NavLink href="/contact" label="Contact" />
         </div>
