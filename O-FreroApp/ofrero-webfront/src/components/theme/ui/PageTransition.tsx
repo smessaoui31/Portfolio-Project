@@ -12,22 +12,15 @@ export default function PageTransition({ children }: { children: ReactNode }) {
       <motion.div
         key={pathname}
         className="relative min-h-screen"
-        initial={{ opacity: 0, scale: 0.98, filter: "blur(6px)" }}
-        animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-        exit={{ opacity: 0, scale: 1.02, filter: "blur(8px)" }}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
         transition={{
-          duration: 0.6,
-          ease: [0.16, 1, 0.3, 1],
+          duration: 0.2,
+          ease: "easeOut",
         }}
       >
         {children}
-        <motion.div
-          className="fixed inset-0 bg-black pointer-events-none"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0 }}
-          exit={{ opacity: 0.4 }}
-          transition={{ duration: 0.3 }}
-        />
       </motion.div>
     </AnimatePresence>
   );

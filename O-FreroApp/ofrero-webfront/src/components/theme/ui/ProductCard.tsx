@@ -2,6 +2,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { memo } from "react";
 import Price from "./Price";
 
 type Category = { id: string; name: string } | null;
@@ -14,7 +15,7 @@ export type Product = {
   category?: Category;
 };
 
-export default function ProductCard({
+const ProductCard = memo(function ProductCard({
   product,
   onAdd,
 }: {
@@ -23,7 +24,6 @@ export default function ProductCard({
 }) {
   return (
     <motion.article
-      layout
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.98 }}
       className="group rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 shadow-lg shadow-black/20 ring-1 ring-inset ring-white/5 transition"
@@ -60,4 +60,6 @@ export default function ProductCard({
       </div>
     </motion.article>
   );
-}
+});
+
+export default ProductCard;
