@@ -34,16 +34,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("auth");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setToken(parsed.token ?? null);
-        setRole(parsed.role ?? null);
-        setEmail(parsed.email ?? null);
-      }
-    } catch {}
-    setReady(true); // <- on ne redirige qu’après ça
+    // Use setTimeout to defer localStorage read to next tick (non-blocking)
+    const timer = setTimeout(() => {
+      try {
+        const stored = localStorage.getItem("auth");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          setToken(parsed.token ?? null);
+          setRole(parsed.role ?? null);
+          setEmail(parsed.email ?? null);
+        }
+      } catch {}
+      setReady(true);
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const login = (newToken: string, newRole: Role, newEmail: string) => {
