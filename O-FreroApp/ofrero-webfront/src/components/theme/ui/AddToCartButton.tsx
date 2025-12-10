@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart, Check } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
+import { toast } from "sonner";
 
 type AddToCartButtonProps = {
   productId: string;
@@ -24,12 +25,14 @@ export default function AddToCartButton({
 
   async function handleAdd() {
     if (!token) {
-      alert("Veuillez vous connecter pour ajouter au panier.");
+      toast.error("Veuillez vous connecter pour ajouter au panier", {
+        duration: 3000,
+      });
       return;
     }
     try {
       setLoading(true);
-      await add(productId, quantity); // ← on passe par le contexte
+      await add(productId, quantity);
 
       if ("vibrate" in navigator) {
         try { (navigator as any).vibrate?.(25); } catch {}
@@ -37,13 +40,24 @@ export default function AddToCartButton({
 
       setSuccess(true);
       setTimeout(() => setSuccess(false), 1200);
+
+      toast.success("Produit ajouté au panier", {
+        description: `Quantité: ${quantity}`,
+        duration: 2000,
+      });
     } catch (e: any) {
       console.error("Erreur ajout panier:", e);
       const errorMsg = e?.message || "Erreur lors de l'ajout au panier.";
       if (errorMsg.includes("401") || errorMsg.includes("Unauthorized")) {
-        alert("Session expirée. Veuillez vous reconnecter.");
+        toast.error("Session expirée", {
+          description: "Veuillez vous reconnecter",
+          duration: 4000,
+        });
       } else {
-        alert(errorMsg);
+        toast.error("Erreur", {
+          description: errorMsg,
+          duration: 3000,
+        });
       }
     } finally {
       setLoading(false);
