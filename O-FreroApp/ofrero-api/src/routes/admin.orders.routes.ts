@@ -93,7 +93,7 @@ adminOrdersRouter.get(
 
 /**
  * GET /admin/orders/:id
- * Détail d’une commande (admin-only)
+ * Détail d'une commande (admin-only)
  */
 adminOrdersRouter.get(
   "/orders/:id",
@@ -118,6 +118,9 @@ adminOrdersRouter.get(
             orderBy: { id: "asc" },
           },
           payment: { select: { status: true, provider: true, intentId: true, createdAt: true } },
+          logs: {
+            orderBy: { createdAt: "asc" },
+          },
         },
       });
 
@@ -142,6 +145,13 @@ adminOrdersRouter.get(
           phone: order.shippingPhone,
         },
         stripePaymentIntentId: order.stripePaymentIntentId ?? null,
+        logs: order.logs.map((log) => ({
+          id: log.id,
+          status: log.status,
+          message: log.message,
+          createdBy: log.createdBy,
+          createdAt: log.createdAt,
+        })),
       });
     } catch (err: any) {
       console.error("[admin/orders/:id] error:", err);
@@ -219,7 +229,7 @@ adminOrdersRouter.patch(
   requireAdmin,
   async (req: AuthRequest, res) => {
     try {
-      const { status } = req.body as { status: OrderStatus };
+      const { status, message } = req.body as { status: OrderStatus; message?: string };
       const allowedStatuses: OrderStatus[] = ["PENDING", "PAID", "SHIPPED", "DELIVERED", "FAILED", "CANCELLED"];
 
       if (!status || !allowedStatuses.includes(status)) {
@@ -232,10 +242,21 @@ adminOrdersRouter.patch(
 
       if (!order) return res.status(404).json({ error: "Order not found" });
 
-      const updated = await prisma.order.update({
-        where: { id: req.params.id },
-        data: { status },
-      });
+      // Update order status and create log entry in a transaction
+      const [updated] = await prisma.$transaction([
+        prisma.order.update({
+          where: { id: req.params.id },
+          data: { status },
+        }),
+        prisma.orderLog.create({
+          data: {
+            orderId: req.params.id,
+            status,
+            message: message || null,
+            createdBy: req.user?.email || null,
+          },
+        }),
+      ]);
 
       res.json(updated);
     } catch (err: any) {
