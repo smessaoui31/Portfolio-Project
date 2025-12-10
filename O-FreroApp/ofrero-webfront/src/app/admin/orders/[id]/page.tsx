@@ -5,8 +5,17 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { apiAuthed } from "@/lib/api";
 import { showToast } from "@/lib/toast";
+import { ThermalPrinter } from "@/lib/thermal-printer";
 
 type OrderStatus = "PENDING" | "PAID" | "SHIPPED" | "DELIVERED" | "FAILED" | "CANCELLED";
+
+type OrderLog = {
+  id: string;
+  status: OrderStatus;
+  message: string | null;
+  createdBy: string | null;
+  createdAt: string;
+};
 
 type AdminOrderDetail = {
   id: string;
@@ -23,6 +32,7 @@ type AdminOrderDetail = {
     postalCode: string;
     phone: string;
   };
+  logs: OrderLog[];
 };
 
 export default function AdminOrderDetailPage() {
@@ -68,6 +78,17 @@ export default function AdminOrderDetailPage() {
       showToast("Erreur lors du changement de statut", "error");
     } finally {
       setIsChangingStatus(false);
+    }
+  };
+
+  const handlePrint = async () => {
+    if (!order) return;
+
+    try {
+      await ThermalPrinter.print(order);
+    } catch (error) {
+      console.error("Error printing:", error);
+      showToast("Erreur lors de l'impression", "error");
     }
   };
 
@@ -117,12 +138,21 @@ export default function AdminOrderDetailPage() {
           </Link>{" "}
           / <span className="text-neutral-300">Détail</span>
         </div>
-        <button
-          onClick={fetchOrder}
-          className="rounded-md border border-neutral-800 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800/60"
-        >
-          Actualiser
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handlePrint}
+            disabled={!order || loading}
+            className="rounded-md border border-neutral-800 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800/60 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Imprimer
+          </button>
+          <button
+            onClick={fetchOrder}
+            className="rounded-md border border-neutral-800 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800/60"
+          >
+            Actualiser
+          </button>
+        </div>
       </div>
 
       {/* Header */}
@@ -235,6 +265,49 @@ export default function AdminOrderDetailPage() {
                 </div>
               ) : (
                 <div className="text-neutral-400 text-sm">Aucun paiement enregistré.</div>
+              )}
+            </div>
+
+            {/* Historique */}
+            <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4">
+              <h3 className="text-white font-medium mb-3">Historique</h3>
+              {order.logs && order.logs.length > 0 ? (
+                <div className="relative">
+                  {/* Timeline line */}
+                  <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-neutral-800"></div>
+
+                  {/* Timeline items */}
+                  <div className="space-y-3">
+                    {order.logs.map((log, index) => (
+                      <div key={log.id} className="relative pl-6">
+                        {/* Dot */}
+                        <div className={`absolute left-0 top-1 w-4 h-4 rounded-full border-2 ${
+                          index === order.logs.length - 1
+                            ? "bg-emerald-500 border-emerald-500"
+                            : "bg-neutral-900 border-neutral-700"
+                        }`}></div>
+
+                        {/* Content */}
+                        <div className="text-sm">
+                          <div className="text-white font-medium">
+                            {statusLabel(log.status)}
+                          </div>
+                          {log.message && (
+                            <div className="text-neutral-400 text-xs mt-0.5">{log.message}</div>
+                          )}
+                          <div className="text-neutral-500 text-xs mt-1">
+                            {new Date(log.createdAt).toLocaleString("fr-FR")}
+                            {log.createdBy && (
+                              <span className="ml-1">• {log.createdBy}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-neutral-400 text-sm">Aucun historique disponible.</div>
               )}
             </div>
           </aside>
