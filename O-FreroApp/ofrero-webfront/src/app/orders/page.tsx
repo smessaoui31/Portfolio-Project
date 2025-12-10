@@ -14,7 +14,7 @@ type OrderItem = {
 
 type Order = {
   id: string;
-  status: "PENDING" | "PAID" | "FAILED" | "CANCELLED";
+  status: "PENDING" | "PAID" | "SHIPPED" | "DELIVERED" | "FAILED" | "CANCELLED";
   totalCents: number;
   createdAt: string;
   items?: OrderItem[];
@@ -43,6 +43,8 @@ function StatusChip({ status }: { status: Order["status"] }) {
   const map: Record<Order["status"], { text: string; cls: string }> = {
     PENDING:  { text: "En attente", cls: "bg-amber-500/10 text-amber-300 border-amber-500/30" },
     PAID:     { text: "Payée",      cls: "bg-emerald-500/10 text-emerald-300 border-emerald-500/30" },
+    SHIPPED:  { text: "Expédiée",   cls: "bg-sky-500/10 text-sky-300 border-sky-500/30" },
+    DELIVERED:{ text: "Livrée",     cls: "bg-green-500/10 text-green-300 border-green-500/30" },
     FAILED:   { text: "Échouée",    cls: "bg-rose-500/10 text-rose-300 border-rose-500/30" },
     CANCELLED:{ text: "Annulée",    cls: "bg-neutral-700/30 text-neutral-300 border-neutral-600/50" },
   };
