@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { OrderNotificationSound } from "./OrderNotificationSound";
 
 const links = [
   { href: "/admin", label: "Aperçu" },
@@ -17,8 +18,10 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const { email, logout } = useAuth();
 
   return (
-    <div className="grid min-h-[calc(100vh-4rem)] grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)]">
-      {/* Sidebar */}
+    <>
+      <OrderNotificationSound />
+      <div className="grid min-h-[calc(100vh-4rem)] grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)]">
+        {/* Sidebar */}
       <aside className="border-r border-neutral-800/80 bg-neutral-950">
         <div className="px-4 py-4">
           <Link href="/" className="block text-lg font-semibold text-white">
@@ -77,5 +80,6 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         <div className="mx-auto max-w-7xl px-4 py-6">{children}</div>
       </div>
     </div>
+    </>
   );
 }
