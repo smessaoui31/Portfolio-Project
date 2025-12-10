@@ -5,7 +5,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  
 }
 
 model User {
@@ -84,6 +84,7 @@ model Order {
 
   items     OrderItem[]
   payment   Payment?
+  logs      OrderLog[]
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 }
@@ -109,7 +110,7 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   FAILED
-  CANCELLED
+  CANCELLED 
 }
 
 
@@ -220,4 +221,16 @@ model Payment {
   status    String
   intentId  String   @unique
   createdAt DateTime @default(now())
+}
+
+model OrderLog {
+  id          String      @id @default(cuid())
+  orderId     String
+  order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status      OrderStatus
+  message     String?
+  createdBy   String?     // Email ou nom de l'admin ou alors du livreur qui a fait le changement
+  createdAt   DateTime    @default(now()) 
+
+  @@index([orderId])
 }
