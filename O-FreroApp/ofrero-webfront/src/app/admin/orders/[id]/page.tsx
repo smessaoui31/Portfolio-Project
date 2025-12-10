@@ -4,8 +4,9 @@ import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { apiAuthed } from "@/lib/api";
+import { showToast } from "@/lib/toast";
 
-type OrderStatus = "PENDING" | "PAID" | "FAILED" | "CANCELLED";
+type OrderStatus = "PENDING" | "PAID" | "SHIPPED" | "DELIVERED" | "FAILED" | "CANCELLED";
 
 type AdminOrderDetail = {
   id: string;
@@ -31,27 +32,80 @@ export default function AdminOrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState<AdminOrderDetail | null>(null);
   const [error, setError] = useState<string>("");
+  const [isChangingStatus, setIsChangingStatus] = useState(false);
+
+  const fetchOrder = async () => {
+    if (!id) return;
+    setLoading(true);
+    setError("");
+    try {
+      const data = await apiAuthed<AdminOrderDetail>(`/admin/orders/${id}`);
+      setOrder(data);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Erreur de chargement");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (!id) return;
-    (async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const data = await apiAuthed<AdminOrderDetail>(`/admin/orders/${id}`);
-        setOrder(data);
-      } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : "Erreur de chargement");
-      } finally {
-        setLoading(false);
-      }
-    })();
+    fetchOrder();
   }, [id]);
+
+  const handleStatusChange = async (newStatus: OrderStatus) => {
+    if (!order || isChangingStatus) return;
+
+    setIsChangingStatus(true);
+    try {
+      await apiAuthed(`/admin/orders/${order.id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: newStatus }),
+      });
+      showToast("Statut mis à jour", "success");
+      fetchOrder();
+    } catch (error) {
+      console.error("Error changing status:", error);
+      showToast("Erreur lors du changement de statut", "error");
+    } finally {
+      setIsChangingStatus(false);
+    }
+  };
 
   const totalFormatted = useMemo(
     () => (order ? (order.totalCents / 100).toFixed(2) + " €" : "—"),
     [order]
   );
+
+  const availableStatusTransitions = (currentStatus: string): OrderStatus[] => {
+    switch (currentStatus) {
+      case "PENDING":
+        return ["PAID", "CANCELLED"];
+      case "PAID":
+        return ["SHIPPED", "CANCELLED"];
+      case "SHIPPED":
+        return ["DELIVERED", "CANCELLED"];
+      case "DELIVERED":
+        return [];
+      case "FAILED":
+        return ["PENDING"];
+      case "CANCELLED":
+        return [];
+      default:
+        return [];
+    }
+  };
+
+  const statusLabel = (status: string): string => {
+    switch (status) {
+      case "PENDING": return "En attente";
+      case "PAID": return "Payée";
+      case "SHIPPED": return "Expédiée";
+      case "DELIVERED": return "Livrée";
+      case "FAILED": return "Échouée";
+      case "CANCELLED": return "Annulée";
+      default: return status;
+    }
+  };
 
   return (
     <main className="space-y-4">
@@ -64,7 +118,7 @@ export default function AdminOrderDetailPage() {
           / <span className="text-neutral-300">Détail</span>
         </div>
         <button
-          onClick={() => router.refresh()}
+          onClick={fetchOrder}
           className="rounded-md border border-neutral-800 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800/60"
         >
           Actualiser
@@ -80,17 +134,36 @@ export default function AdminOrderDetailPage() {
         ) : !order ? (
           <div className="text-neutral-400">Commande introuvable.</div>
         ) : (
-          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h1 className="text-xl font-semibold text-white">
-                {order.user?.fullName || "Client inconnu"}
-              </h1>
-              <div className="text-sm text-neutral-400">
-                #{order.id} • {new Date(order.createdAt).toLocaleString()} •{" "}
-                <span className="text-white font-medium">{totalFormatted}</span>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h1 className="text-xl font-semibold text-white">
+                  {order.user?.fullName || "Client inconnu"}
+                </h1>
+                <div className="text-sm text-neutral-400">
+                  #{order.id} • {new Date(order.createdAt).toLocaleString()} •{" "}
+                  <span className="text-white font-medium">{totalFormatted}</span>
+                </div>
               </div>
+              <StatusBadge status={order.status} />
             </div>
-            <StatusBadge status={order.status} />
+
+            {/* Status Change */}
+            {availableStatusTransitions(order.status).length > 0 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm text-neutral-400">Changer le statut :</span>
+                {availableStatusTransitions(order.status).map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => handleStatusChange(status)}
+                    disabled={isChangingStatus}
+                    className="px-3 py-1 text-sm rounded-md bg-neutral-800 text-white hover:bg-neutral-700 disabled:opacity-50 transition"
+                  >
+                    → {statusLabel(status)}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </header>
@@ -172,38 +245,21 @@ export default function AdminOrderDetailPage() {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const base =
-    "inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border transition";
+  const base = "inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border transition";
   switch (status) {
     case "PENDING":
-      return (
-        <span className={`${base} border-amber-500/40 bg-amber-500/10 text-amber-300`}>
-          En attente
-        </span>
-      );
+      return <span className={`${base} border-amber-500/40 bg-amber-500/10 text-amber-300`}>En attente</span>;
     case "PAID":
-      return (
-        <span className={`${base} border-emerald-500/40 bg-emerald-500/10 text-emerald-300`}>
-          Payée
-        </span>
-      );
+      return <span className={`${base} border-emerald-500/40 bg-emerald-500/10 text-emerald-300`}>Payée</span>;
+    case "SHIPPED":
+      return <span className={`${base} border-sky-500/40 bg-sky-500/10 text-sky-300`}>Expédiée</span>;
+    case "DELIVERED":
+      return <span className={`${base} border-green-500/40 bg-green-500/10 text-green-300`}>Livrée</span>;
     case "FAILED":
-      return (
-        <span className={`${base} border-red-500/40 bg-red-500/10 text-red-300`}>
-          Échouée
-        </span>
-      );
+      return <span className={`${base} border-red-500/40 bg-red-500/10 text-red-300`}>Échouée</span>;
     case "CANCELLED":
-      return (
-        <span className={`${base} border-neutral-700 bg-neutral-800 text-neutral-300`}>
-          Annulée
-        </span>
-      );
+      return <span className={`${base} border-neutral-700 bg-neutral-800 text-neutral-300`}>Annulée</span>;
     default:
-      return (
-        <span className={`${base} border-neutral-700 bg-neutral-800 text-neutral-300`}>
-          {status}
-        </span>
-      );
+      return <span className={`${base} border-neutral-700 bg-neutral-800 text-neutral-300`}>{status}</span>;
   }
 }

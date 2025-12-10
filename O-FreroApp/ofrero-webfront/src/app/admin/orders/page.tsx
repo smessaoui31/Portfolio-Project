@@ -1,13 +1,13 @@
 // src/app/admin/orders/page.tsx
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { apiAuthed } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 
-type OrderStatus = "PENDING" | "PAID" | "FAILED" | "CANCELLED";
+type OrderStatus = "PENDING" | "PAID" | "SHIPPED" | "DELIVERED" | "FAILED" | "CANCELLED";
 
 type AdminOrderRow = {
   id: string;
@@ -35,10 +35,13 @@ export default function AdminOrdersPage() {
 
   const page = Math.max(parseInt(sp.get("page") || "1", 10) || 1, 1);
   const status = (sp.get("status") || "") as "" | OrderStatus;
+  const initialQuery = sp.get("q") || "";
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<AdminOrdersResponse | null>(null);
   const [error, setError] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch
   useEffect(() => {
@@ -51,6 +54,7 @@ export default function AdminOrdersPage() {
         qs.set("page", String(page));
         qs.set("pageSize", String(PAGE_SIZE));
         if (status) qs.set("status", status);
+        if (sp.get("q")) qs.set("q", sp.get("q")!);
 
         const res = await apiAuthed<AdminOrdersResponse>(`/admin/orders?${qs.toString()}`);
         setData(res);
@@ -60,30 +64,58 @@ export default function AdminOrdersPage() {
         setLoading(false);
       }
     })();
-  }, [token, role, page, status]);
+  }, [token, role, page, status, sp]);
 
   const totalPages = useMemo(
     () => (data ? Math.max(Math.ceil(data.total / data.pageSize), 1) : 1),
     [data]
   );
 
-  function setParam(next: Partial<{ page: number; status: string }>) {
+  function setParam(next: Partial<{ page: number; status: string; q: string }>) {
     const qs = new URLSearchParams(sp.toString());
     if (next.page !== undefined) qs.set("page", String(next.page));
     if (next.status !== undefined) {
       if (next.status) qs.set("status", next.status);
       else qs.delete("status");
-      // revenir page 1 si on change le filtre
+      qs.set("page", "1");
+    }
+    if (next.q !== undefined) {
+      if (next.q) qs.set("q", next.q);
+      else qs.delete("q");
       qs.set("page", "1");
     }
     router.push(`?${qs.toString()}`);
   }
 
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    searchTimeoutRef.current = setTimeout(() => {
+      setParam({ q: value });
+    }, 400);
+  };
+
+  const handlePageInput = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const pageNum = parseInt(formData.get("pageNum") as string, 10);
+    if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= totalPages) {
+      setParam({ page: pageNum });
+    }
+  };
+
   return (
     <main className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-semibold text-white">Toutes les commandes</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder="Rechercher par client, email, numéro..."
+            className="rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-white outline-none focus:border-neutral-700 w-full sm:w-64"
+          />
           <select
             value={status}
             onChange={(e) => setParam({ status: e.target.value })}
@@ -93,6 +125,8 @@ export default function AdminOrdersPage() {
             <option value="">Tous les statuts</option>
             <option value="PENDING">En attente</option>
             <option value="PAID">Payée</option>
+            <option value="SHIPPED">Expédiée</option>
+            <option value="DELIVERED">Livrée</option>
             <option value="FAILED">Échouée</option>
             <option value="CANCELLED">Annulée</option>
           </select>
@@ -121,14 +155,10 @@ export default function AdminOrdersPage() {
         {!loading && data && data.items.length > 0 && (
           <ul className="divide-y divide-neutral-800">
             {data.items.map((o) => (
-              <li key={o.id} className="px-4 py-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <li key={o.id} className="px-4 py-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between hover:bg-neutral-800/30">
                 <div className="min-w-0">
-                  {/* Nom du client (ou fallback) */}
                   <div className="text-white text-sm truncate">
-                    {o.user?.fullName?.trim() ||
-                      // si jamais tu veux déduire prénom/nom plus tard :
-                      // [o.user?.firstName, o.user?.lastName].filter(Boolean).join(" ").trim() ||
-                      "Client inconnu"}
+                    {o.user?.fullName?.trim() || "Client inconnu"}
                   </div>
                   <div className="text-xs text-neutral-400 truncate">
                     {o.user?.email ?? "—"}
@@ -159,9 +189,9 @@ export default function AdminOrdersPage() {
           </ul>
         )}
 
-        {/* Pagination */}
+        {/* Enhanced Pagination */}
         {!loading && data && totalPages > 1 && (
-          <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-neutral-800">
+          <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-neutral-800 flex-wrap">
             <button
               className="rounded-md border border-neutral-800 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800/60 disabled:opacity-50"
               onClick={() => setParam({ page: Math.max(page - 1, 1) })}
@@ -169,9 +199,26 @@ export default function AdminOrdersPage() {
             >
               ← Précédent
             </button>
-            <div className="text-xs text-neutral-400">
-              Page {page} / {totalPages}
-            </div>
+
+            <form onSubmit={handlePageInput} className="flex items-center gap-2">
+              <span className="text-xs text-neutral-400">Page</span>
+              <input
+                type="number"
+                name="pageNum"
+                min="1"
+                max={totalPages}
+                defaultValue={page}
+                className="w-16 px-2 py-1 text-sm bg-neutral-800 border border-neutral-700 rounded text-white text-center"
+              />
+              <span className="text-xs text-neutral-400">/ {totalPages}</span>
+              <button
+                type="submit"
+                className="px-2 py-1 text-xs bg-neutral-800 text-white rounded hover:bg-neutral-700"
+              >
+                OK
+              </button>
+            </form>
+
             <button
               className="rounded-md border border-neutral-800 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800/60 disabled:opacity-50"
               onClick={() => setParam({ page: Math.min(page + 1, totalPages) })}
@@ -187,38 +234,21 @@ export default function AdminOrdersPage() {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const base =
-    "inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border transition";
+  const base = "inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border transition";
   switch (status) {
     case "PENDING":
-      return (
-        <span className={`${base} border-amber-500/40 bg-amber-500/10 text-amber-300`}>
-          En attente
-        </span>
-      );
+      return <span className={`${base} border-amber-500/40 bg-amber-500/10 text-amber-300`}>En attente</span>;
     case "PAID":
-      return (
-        <span className={`${base} border-emerald-500/40 bg-emerald-500/10 text-emerald-300`}>
-          Payée
-        </span>
-      );
+      return <span className={`${base} border-emerald-500/40 bg-emerald-500/10 text-emerald-300`}>Payée</span>;
+    case "SHIPPED":
+      return <span className={`${base} border-sky-500/40 bg-sky-500/10 text-sky-300`}>Expédiée</span>;
+    case "DELIVERED":
+      return <span className={`${base} border-green-500/40 bg-green-500/10 text-green-300`}>Livrée</span>;
     case "FAILED":
-      return (
-        <span className={`${base} border-red-500/40 bg-red-500/10 text-red-300`}>
-          Échouée
-        </span>
-      );
+      return <span className={`${base} border-red-500/40 bg-red-500/10 text-red-300`}>Échouée</span>;
     case "CANCELLED":
-      return (
-        <span className={`${base} border-neutral-700 bg-neutral-800 text-neutral-300`}>
-          Annulée
-        </span>
-      );
+      return <span className={`${base} border-neutral-700 bg-neutral-800 text-neutral-300`}>Annulée</span>;
     default:
-      return (
-        <span className={`${base} border-neutral-700 bg-neutral-800 text-neutral-300`}>
-          {status}
-        </span>
-      );
+      return <span className={`${base} border-neutral-700 bg-neutral-800 text-neutral-300`}>{status}</span>;
   }
 }
