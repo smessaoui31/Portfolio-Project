@@ -18,6 +18,8 @@ import { categoriesRouter } from "./routes/categories.routes";
 import { adminOrdersRouter } from "./routes/admin.orders.routes";
 import { adminProductsRouter } from "./routes/admin.products.routes";
 import { adminUsersRouter } from "./routes/admin.users.routes";
+import { adminCategoriesRouter } from "./routes/admin.categories.routes";
+import { adminAnalyticsRouter } from "./routes/admin.analytics.routes";
 import { supplementsRouter } from "./routes/supplements.routes";
 
 import bcrypt from "bcryptjs";
@@ -116,6 +118,8 @@ app.use("/orders", ordersRouter);
 app.use("/admin", adminOrdersRouter);
 app.use("/admin", adminProductsRouter);
 app.use("/admin", adminUsersRouter);
+app.use("/admin", adminCategoriesRouter);
+app.use("/admin", adminAnalyticsRouter);
 app.use("/admin", adminRouter);
 app.use("/addresses", addressRouter);
 app.use("/products", productsRouter);

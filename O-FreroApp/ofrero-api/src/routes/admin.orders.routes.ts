@@ -152,7 +152,7 @@ adminOrdersRouter.get(
 
 /**
  * GET /admin/orders/by-number/:orderNumber
- * Détail d’une commande via son numéro lisible (admin-only)
+ * Détail d'une commande via son numéro lisible (admin-only)
  */
 adminOrdersRouter.get(
   "/orders/by-number/:orderNumber",
@@ -171,7 +171,7 @@ adminOrdersRouter.get(
               id: true,
               productId: true,
               name: true,
-              quantity: true, 
+              quantity: true,
               unitPriceCents: true,
             },
             orderBy: { id: "asc" },
@@ -204,6 +204,42 @@ adminOrdersRouter.get(
       });
     } catch (err: any) {
       console.error("[admin/orders/by-number/:orderNumber] error:", err);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+);
+
+/**
+ * PATCH /admin/orders/:id/status
+ * Update order status (admin-only)
+ */
+adminOrdersRouter.patch(
+  "/orders/:id/status",
+  requireAuth,
+  requireAdmin,
+  async (req: AuthRequest, res) => {
+    try {
+      const { status } = req.body as { status: OrderStatus };
+      const allowedStatuses: OrderStatus[] = ["PENDING", "PAID", "SHIPPED", "DELIVERED", "FAILED", "CANCELLED"];
+
+      if (!status || !allowedStatuses.includes(status)) {
+        return res.status(400).json({ error: "Invalid status" });
+      }
+
+      const order = await prisma.order.findUnique({
+        where: { id: req.params.id },
+      });
+
+      if (!order) return res.status(404).json({ error: "Order not found" });
+
+      const updated = await prisma.order.update({
+        where: { id: req.params.id },
+        data: { status },
+      });
+
+      res.json(updated);
+    } catch (err: any) {
+      console.error("[admin/orders/:id/status] error:", err);
       res.status(500).json({ error: "Internal Server Error" });
     }
   }

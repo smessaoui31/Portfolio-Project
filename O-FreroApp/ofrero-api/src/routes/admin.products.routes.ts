@@ -29,8 +29,10 @@ const UpsertProductSchema = z.object({
   priceCents: z.number().int().min(0),
   categoryId: z.string().optional().nullable(),
   isFeatured: z.boolean().optional().default(false),
-  imageUrl: z.string().url().optional().nullable(),
-
+  imageURL: z.string().url().optional().nullable(),
+  stockQuantity: z.number().int().optional().nullable(),
+  isAvailable: z.boolean().optional().default(true),
+  discountPercent: z.number().int().min(0).max(100).optional().nullable(),
 });
 
 /* ---------- GET /admin/products ---------- */
@@ -149,5 +151,72 @@ adminProductsRouter.patch(
       data: { isFeatured: !product.isFeatured },
     });
     res.json(updated);
+  }
+);
+
+/* ---------- POST /admin/products/:id/duplicate ---------- */
+adminProductsRouter.post(
+  "/products/:id/duplicate",
+  requireAuth,
+  requireAdmin,
+  async (req: AuthRequest, res) => {
+    const product = await prisma.product.findUnique({ where: { id: req.params.id } });
+    if (!product) return res.status(404).json({ error: "Not found" });
+
+    const { id, createdAt, updatedAt, ...data } = product;
+    const duplicated = await prisma.product.create({
+      data: {
+        ...data,
+        name: `${data.name} (copie)`,
+        isFeatured: false,
+      },
+    });
+
+    res.status(201).json(duplicated);
+  }
+);
+
+/* ---------- POST /admin/products/bulk-delete ---------- */
+adminProductsRouter.post(
+  "/products/bulk-delete",
+  requireAuth,
+  requireAdmin,
+  async (req: AuthRequest, res) => {
+    const { ids } = req.body as { ids: string[] };
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: "Invalid body: ids must be a non-empty array" });
+    }
+
+    const result = await prisma.product.deleteMany({
+      where: { id: { in: ids } },
+    });
+
+    res.json({ ok: true, deletedCount: result.count });
+  }
+);
+
+/* ---------- PATCH /admin/products/bulk-update ---------- */
+adminProductsRouter.patch(
+  "/products/bulk-update",
+  requireAuth,
+  requireAdmin,
+  async (req: AuthRequest, res) => {
+    const { ids, data } = req.body as { ids: string[]; data: Partial<{ isFeatured: boolean; isAvailable: boolean; categoryId: string }> };
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: "Invalid body: ids must be a non-empty array" });
+    }
+
+    if (!data || Object.keys(data).length === 0) {
+      return res.status(400).json({ error: "Invalid body: data must contain at least one field" });
+    }
+
+    const result = await prisma.product.updateMany({
+      where: { id: { in: ids } },
+      data,
+    });
+
+    res.json({ ok: true, updatedCount: result.count });
   }
 );

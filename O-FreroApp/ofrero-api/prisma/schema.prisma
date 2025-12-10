@@ -28,9 +28,11 @@ enum Role {
 }
 
 model Category {
-  id        String    @id @default(cuid())
-  name      String    @unique
-  products  Product[]
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  displayOrder Int      @default(0)  // for drag & drop ordering
+  products    Product[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -46,6 +48,14 @@ model Product {
 
   isFeatured   Boolean    @default(false)
   imageURL     String?
+
+  // Stock management
+  stockQuantity Int?      // null = unlimited stock
+  isAvailable   Boolean   @default(true)
+
+  // Discount/Promotion
+  discountPercent Int?    @default(0)  // 0-100
+  discountedPriceCents Int?           // calculated price after discount
 
   // relations
   orderItems   OrderItem[]
@@ -96,6 +106,8 @@ model Address {
 enum OrderStatus {
   PENDING
   PAID
+  SHIPPED
+  DELIVERED
   FAILED
   CANCELLED
 }
