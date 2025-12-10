@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Category } from "@/types";
 
@@ -21,6 +21,7 @@ export default function FiltersBar({ categories }: Props) {
   const params = useSearchParams();
 
   const [q, setQ] = useState(params.get("q") ?? "");
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Trouver l'ID de la catégorie "Pizza" pour la sélectionner par défaut
   const pizzaCategory = categories.find(c => c.name.toLowerCase() === "pizza");
@@ -37,6 +38,30 @@ export default function FiltersBar({ categories }: Props) {
     }
   }, []);
 
+  // Recherche instantanée avec debounce
+  useEffect(() => {
+    // Nettoyer le timer précédent
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Ne pas déclencher la recherche si la valeur est la même que dans l'URL
+    if (q === (params.get("q") ?? "")) {
+      return;
+    }
+
+    // Debounce de 400ms
+    debounceTimerRef.current = setTimeout(() => {
+      router.push(buildUrl({ q: q || null }));
+    }, 400);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [q]);
+
   // construit l’URL /menu?... proprement
   const buildUrl = useMemo(() => {
     return (patch: Partial<Record<string, string | null>>) => {
@@ -51,29 +76,59 @@ export default function FiltersBar({ categories }: Props) {
     };
   }, [params]);
 
-  function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    router.push(buildUrl({ q }));
-  }
+  // Raccourci clavier pour focus sur la recherche
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "/" && document.activeElement?.tagName !== "INPUT") {
+        e.preventDefault();
+        document.getElementById("search-input")?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Compter les filtres actifs
+  const activeFiltersCount = [
+    q,
+    categoryId && categoryId !== defaultCategoryId,
+    sort,
+    featured,
+  ].filter(Boolean).length;
+
+  const clearAllFilters = () => {
+    setQ("");
+    router.push("/menu");
+  };
+
+  const getCategoryName = (id: string) => {
+    return categories.find(c => c.id === id)?.name || "";
+  };
 
   return (
-    <div className="mb-6 grid gap-3 md:grid-cols-[1fr_auto_auto_auto]">
-      {/* Recherche */}
-      <form onSubmit={onSubmit} className="flex gap-2">
+    <div className="mb-6 space-y-3">
+      {/* Barre de filtres principale */}
+      <div className="grid gap-3 md:grid-cols-[1fr_auto_auto_auto]">
+      {/* Recherche instantanée */}
+      <div className="relative">
         <input
+          id="search-input"
           type="text"
-          placeholder="Rechercher une pizza…"
+          placeholder="Rechercher une pizza… (appuyez sur /)"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/10"
+          className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 pr-10 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/10"
         />
-        <button
-          type="submit"
-          className="rounded-md bg-white px-4 py-2 text-sm font-medium text-black hover:opacity-90"
-        >
-          Rechercher
-        </button>
-      </form>
+        {q && (
+          <button
+            onClick={() => setQ("")}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition"
+            aria-label="Effacer la recherche"
+          >
+            ✕
+          </button>
+        )}
+      </div>
 
       {/* Catégories */}
       <select
@@ -111,6 +166,63 @@ export default function FiltersBar({ categories }: Props) {
       >
         La Sélection du Chef
       </button>
+      </div>
+
+      {/* Chips des filtres actifs */}
+      {activeFiltersCount > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-neutral-500">Filtres actifs:</span>
+
+          {q && (
+            <button
+              onClick={() => setQ("")}
+              className="inline-flex items-center gap-1.5 rounded-full bg-neutral-800/60 px-3 py-1 text-xs text-white hover:bg-neutral-800 transition"
+            >
+              Recherche: "{q}"
+              <span className="text-neutral-400">✕</span>
+            </button>
+          )}
+
+          {categoryId && categoryId !== defaultCategoryId && (
+            <button
+              onClick={() => router.push(buildUrl({ categoryId: null }))}
+              className="inline-flex items-center gap-1.5 rounded-full bg-neutral-800/60 px-3 py-1 text-xs text-white hover:bg-neutral-800 transition"
+            >
+              {getCategoryName(categoryId)}
+              <span className="text-neutral-400">✕</span>
+            </button>
+          )}
+
+          {sort && (
+            <button
+              onClick={() => router.push(buildUrl({ sort: null }))}
+              className="inline-flex items-center gap-1.5 rounded-full bg-neutral-800/60 px-3 py-1 text-xs text-white hover:bg-neutral-800 transition"
+            >
+              {sortOptions.find(o => o.value === sort)?.label}
+              <span className="text-neutral-400">✕</span>
+            </button>
+          )}
+
+          {featured && (
+            <button
+              onClick={() => router.push(buildUrl({ featured: null }))}
+              className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600/20 px-3 py-1 text-xs text-emerald-300 hover:bg-emerald-600/30 transition"
+            >
+              Sélection du Chef
+              <span className="text-emerald-400">✕</span>
+            </button>
+          )}
+
+          {activeFiltersCount > 1 && (
+            <button
+              onClick={clearAllFilters}
+              className="text-xs text-neutral-400 hover:text-white underline transition"
+            >
+              Tout effacer
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
