@@ -229,7 +229,7 @@ model OrderLog {
   order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
   status      OrderStatus
   message     String?
-  createdBy   String?     // Email ou nom de l'admin ou alors du livreur qui a fait le changement
+  createdBy   String?     // Email ou nom de l'admin ou alors du livreur qui fait le chgment
   createdAt   DateTime    @default(now()) 
 
   @@index([orderId])
