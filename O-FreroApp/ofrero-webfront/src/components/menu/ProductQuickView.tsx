@@ -6,7 +6,7 @@ import { X, Sparkles, Settings2 } from "lucide-react";
 import AddToCartButton from "@/components/theme/ui/AddToCartButton";
 import ProductCustomizeButton from "@/components/menu/ProductCustomizeButton";
 import type { Product } from "@/types";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 type ProductQuickViewProps = {
   product: Product | null;
@@ -24,6 +24,8 @@ export default function ProductQuickView({
   if (!product) return null;
 
   const isPizza = (product.category?.name ?? "").toLowerCase() === "pizza";
+  const [mouseY, setMouseY] = useState(0);
+  const [showParticles, setShowParticles] = useState(false);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -35,6 +37,35 @@ export default function ProductQuickView({
     return () => {
       document.body.style.overflow = 'unset';
     };
+  }, [isOpen]);
+
+  // Keyboard navigation (ESC to close)
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      window.addEventListener('keydown', handleEscape);
+    }
+
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
+
+  // Mouse move parallax effect
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const y = (e.clientY / window.innerHeight - 0.5) * 20;
+      setMouseY(y);
+    };
+
+    if (isOpen) {
+      window.addEventListener('mousemove', handleMouseMove);
+    }
+
+    return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [isOpen]);
 
   // Variants pour animations stagger
@@ -80,7 +111,7 @@ export default function ProductQuickView({
             className="fixed inset-0 z-50 bg-black/60"
           />
 
-          {/* Modal container avec spring physics */}
+          {/* Modal container avec spring physics + swipe to close */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 60 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -91,7 +122,15 @@ export default function ProductQuickView({
               damping: 30,
               mass: 0.8
             }}
-            className="fixed left-1/2 top-1/2 z-50 w-full max-w-3xl -translate-x-1/2 -translate-y-1/2 px-4"
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.7 }}
+            onDragEnd={(e, { offset, velocity }) => {
+              if (offset.y > 150 || velocity.y > 500) {
+                onClose();
+              }
+            }}
+            className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-3xl -translate-x-1/2 -translate-y-1/2 max-h-[90vh] overflow-y-auto md:w-full md:px-4"
           >
             <div className="overflow-hidden rounded-3xl border border-neutral-800/80 bg-neutral-900/95 shadow-2xl shadow-black/60 backdrop-blur-xl ring-1 ring-white/5"
             >
@@ -110,7 +149,7 @@ export default function ProductQuickView({
                 <X className="h-5 w-5" />
               </motion.button>
 
-              <div className="grid md:grid-cols-2 gap-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
                 {/* Image avec animation de reveal */}
                 <motion.div
                   initial={{ opacity: 0, x: -60 }}
@@ -123,6 +162,7 @@ export default function ProductQuickView({
                     initial={{ scale: 1.2 }}
                     animate={{ scale: 1 }}
                     transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                    style={{ y: mouseY }}
                     className="h-full w-full"
                   >
                     <Image
@@ -154,7 +194,7 @@ export default function ProductQuickView({
                   initial="hidden"
                   animate="visible"
                   exit="exit"
-                  className="flex flex-col p-6 md:p-8"
+                  className="flex flex-col p-4 sm:p-6 md:p-8"
                 >
                   <div className="flex-1 space-y-4">
                     {/* Header avec badges */}
@@ -166,7 +206,7 @@ export default function ProductQuickView({
                               {product.category.name}
                             </div>
                           )}
-                          <h2 className="text-2xl font-bold text-white md:text-3xl">
+                          <h2 className="text-xl font-bold text-white sm:text-2xl md:text-3xl">
                             {product.name}
                           </h2>
                         </div>
@@ -175,8 +215,39 @@ export default function ProductQuickView({
                             initial={{ rotate: -10, scale: 0 }}
                             animate={{ rotate: 0, scale: 1 }}
                             transition={{ delay: 0.4, type: "spring", stiffness: 400, damping: 15 }}
+                            className="relative"
+                            onHoverStart={() => setShowParticles(true)}
+                            onHoverEnd={() => setShowParticles(false)}
                           >
                             <Sparkles className="h-6 w-6 text-emerald-400" />
+
+                            {/* Particles effect */}
+                            <AnimatePresence>
+                              {showParticles && (
+                                <>
+                                  {[...Array(8)].map((_, i) => (
+                                    <motion.div
+                                      key={i}
+                                      initial={{ scale: 0, x: 0, y: 0, opacity: 1 }}
+                                      animate={{
+                                        scale: [0, 1, 0],
+                                        x: Math.cos((i * Math.PI * 2) / 8) * 30,
+                                        y: Math.sin((i * Math.PI * 2) / 8) * 30,
+                                        opacity: [1, 0.8, 0],
+                                      }}
+                                      exit={{ scale: 0, opacity: 0 }}
+                                      transition={{
+                                        duration: 1,
+                                        repeat: Infinity,
+                                        delay: i * 0.1,
+                                        ease: "easeOut"
+                                      }}
+                                      className="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-400"
+                                    />
+                                  ))}
+                                </>
+                              )}
+                            </AnimatePresence>
                           </motion.div>
                         )}
                       </div>
@@ -210,7 +281,7 @@ export default function ProductQuickView({
                   </div>
 
                   {/* Actions avec stagger */}
-                  <motion.div variants={itemVariants} className="space-y-3 pt-6">
+                  <motion.div variants={itemVariants} className="space-y-2 pt-4 sm:space-y-3 sm:pt-6">
                     <AddToCartButton productId={product.id} />
                     {isPizza && (
                       <ProductCustomizeButton
