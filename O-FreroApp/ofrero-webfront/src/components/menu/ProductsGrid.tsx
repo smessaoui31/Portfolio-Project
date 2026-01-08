@@ -142,7 +142,7 @@ export default function ProductsGrid() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between"
+          className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
         >
           <div className="text-sm text-neutral-400">
             <span className="text-white font-medium">{total}</span> {total > 1 ? "produits trouvés" : "produit trouvé"}
@@ -152,7 +152,7 @@ export default function ProductsGrid() {
           <div className="flex items-center gap-1 rounded-lg border border-neutral-800 bg-neutral-900/50 p-1">
             <button
               onClick={() => setViewMode('grid')}
-              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
+              className={`flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
                 viewMode === 'grid'
                   ? 'bg-neutral-800 text-white shadow-sm'
                   : 'text-neutral-400 hover:text-neutral-200'
@@ -160,11 +160,11 @@ export default function ProductsGrid() {
               aria-label="Vue grille"
             >
               <LayoutGrid className="h-4 w-4" />
-              <span className="hidden sm:inline">Grille</span>
+              <span className="sm:hidden md:inline">Grille</span>
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
+              className={`flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
                 viewMode === 'list'
                   ? 'bg-neutral-800 text-white shadow-sm'
                   : 'text-neutral-400 hover:text-neutral-200'
@@ -172,7 +172,7 @@ export default function ProductsGrid() {
               aria-label="Vue liste"
             >
               <List className="h-4 w-4" />
-              <span className="hidden sm:inline">Liste</span>
+              <span className="sm:hidden md:inline">Liste</span>
             </button>
           </div>
         </motion.div>
@@ -202,10 +202,10 @@ export default function ProductsGrid() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.03 }}
-                className="group flex gap-4 overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4 shadow-lg shadow-black/20 transition-all hover:border-neutral-700 hover:shadow-xl hover:shadow-white/5"
+                className="group flex flex-col sm:flex-row gap-3 sm:gap-4 overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900/60 p-3 sm:p-4 shadow-lg shadow-black/20 transition-all hover:border-neutral-700 hover:shadow-xl hover:shadow-white/5"
               >
                 {/* Image compacte */}
-                <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-xl bg-neutral-800/60">
+                <div className="relative h-48 sm:h-32 sm:w-32 w-full shrink-0 overflow-hidden rounded-xl bg-neutral-800/60">
                   <Image
                     src={getProductImage(p)}
                     alt={p.name}
@@ -224,9 +224,9 @@ export default function ProductsGrid() {
                 {/* Informations */}
                 <div className="flex flex-1 flex-col justify-between">
                   <div>
-                    <div className="flex items-start justify-between gap-3">
-                      <h2 className="text-lg font-semibold text-white">{p.name}</h2>
-                      <div className="text-xl font-bold text-white">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-3">
+                      <h2 className="text-base sm:text-lg font-semibold text-white">{p.name}</h2>
+                      <div className="text-lg sm:text-xl font-bold text-white whitespace-nowrap">
                         {(p.priceCents / 100).toFixed(2)} €
                       </div>
                     </div>
@@ -251,19 +251,24 @@ export default function ProductsGrid() {
                   </div>
 
                   {/* Actions en ligne */}
-                  <div className="mt-3 flex items-center gap-2">
-                    <div className="flex-1">
+                  <div className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <div className="flex-1 min-w-0">
                       <AddToCartButton productId={p.id} />
                     </div>
-                    {isPizza && (
-                      <ProductCustomizeButton productId={p.id} priceCents={p.priceCents} />
-                    )}
-                    <button
-                      onClick={() => setQuickViewProduct(p)}
-                      className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-2 text-neutral-400 transition hover:border-neutral-700 hover:text-white"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </button>
+                    <div className="flex gap-2">
+                      {isPizza && (
+                        <div className="flex-1 sm:flex-none">
+                          <ProductCustomizeButton productId={p.id} priceCents={p.priceCents} />
+                        </div>
+                      )}
+                      <button
+                        onClick={() => setQuickViewProduct(p)}
+                        className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-2 text-neutral-400 transition hover:border-neutral-700 hover:text-white"
+                        aria-label="Vue rapide"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </motion.article>
@@ -335,8 +340,8 @@ export default function ProductsGrid() {
               </div>
 
               {/* Informations du produit */}
-              <div className="flex flex-1 flex-col space-y-2 p-4">
-                <h2 className="line-clamp-1 text-base font-semibold text-white">
+              <div className="flex flex-1 flex-col space-y-2 p-3 sm:p-4">
+                <h2 className="line-clamp-1 text-sm sm:text-base font-semibold text-white">
                   {p.name}
                 </h2>
 
@@ -440,12 +445,15 @@ export default function ProductsGrid() {
       )}
 
       {/* Quick View Modal */}
-      <ProductQuickView
-        product={quickViewProduct}
-        isOpen={!!quickViewProduct}
-        onClose={() => setQuickViewProduct(null)}
-        getProductImage={getProductImage}
-      />
+      {quickViewProduct && (
+        <ProductQuickView
+          key={quickViewProduct.id}
+          product={quickViewProduct}
+          isOpen={true}
+          onClose={() => setQuickViewProduct(null)}
+          getProductImage={getProductImage}
+        />
+      )}
     </div>
   );
 
