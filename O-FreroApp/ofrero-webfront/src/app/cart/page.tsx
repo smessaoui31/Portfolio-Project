@@ -26,19 +26,19 @@ export default function CartPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-8">
+    <main className="mx-auto w-full max-w-5xl px-3 sm:px-4 py-4 sm:py-8">
       <motion.header
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-6 flex items-center justify-between gap-4"
+        className="mb-4 sm:mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4"
       >
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-800/60 ring-1 ring-neutral-700/50">
             <ShoppingCart className="h-5 w-5 text-neutral-400" />
           </div>
-          <h1 className="text-2xl font-semibold text-white">Votre panier</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold text-white">Votre panier</h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 self-end sm:self-auto">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -165,9 +165,9 @@ export default function CartPage() {
           </div>
         </motion.div>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-[1fr_320px]">
           {/* Liste d'articles */}
-          <section className="rounded-2xl border border-neutral-800 bg-neutral-900/50">
+          <section className="rounded-xl sm:rounded-2xl border border-neutral-800 bg-neutral-900/50">
             <AnimatePresence mode="popLayout">
               <ul className="divide-y divide-neutral-800">
                 {items.map((it) => (
@@ -178,11 +178,11 @@ export default function CartPage() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20, height: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="p-4"
+                    className="p-3 sm:p-4"
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0 flex-1">
-                        <div className="text-white font-medium truncate">{it.name}</div>
+                    <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+                      <div className="min-w-0 flex-1 w-full">
+                        <div className="text-white font-medium truncate text-sm sm:text-base">{it.name}</div>
                         <div className="mt-1 text-sm text-neutral-400">
                           {(it.unitPriceCents / 100).toFixed(2)} € / unité
                         </div>
@@ -206,14 +206,14 @@ export default function CartPage() {
                         )}
                       </div>
 
-                      <div className="shrink-0 text-right space-y-3">
+                      <div className="shrink-0 w-full sm:w-auto flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-3 sm:space-y-3">
                         {/* Prix total pour cet item */}
-                        <div className="text-white font-semibold text-lg">
+                        <div className="text-white font-semibold text-base sm:text-lg order-2 sm:order-1">
                           {((it.unitPriceCents * it.quantity) / 100).toFixed(2)} €
                         </div>
 
                         {/* Contrôles de quantité modernisés */}
-                        <div className="inline-flex items-center gap-0.5 rounded-lg border border-neutral-700 bg-neutral-900/80 p-0.5">
+                        <div className="inline-flex items-center gap-0.5 rounded-lg border border-neutral-700 bg-neutral-900/80 p-0.5 order-1 sm:order-2">
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.95 }}
@@ -269,10 +269,10 @@ export default function CartPage() {
                               setRemovingId(null);
                             }
                           }}
-                          className="group flex w-full items-center justify-center gap-1.5 rounded-lg border border-neutral-800 bg-neutral-900/50 px-3 py-2 text-xs font-medium text-neutral-300 transition-all hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="group flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-lg border border-neutral-800 bg-neutral-900/50 px-3 py-2 text-xs font-medium text-neutral-300 transition-all hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50 order-3"
                         >
                           <Trash2 className="h-3.5 w-3.5 transition-transform group-hover:scale-110" />
-                          Retirer
+                          <span className="sm:inline">Retirer</span>
                         </motion.button>
                       </div>
                     </div>
@@ -287,7 +287,7 @@ export default function CartPage() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-5 h-fit sticky top-20"
+            className="rounded-xl sm:rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4 sm:p-5 h-fit lg:sticky lg:top-20"
           >
             <div className="space-y-4">
               {/* Résumé */}
