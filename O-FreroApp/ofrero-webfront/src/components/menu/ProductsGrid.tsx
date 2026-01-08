@@ -8,7 +8,7 @@ import type { Paginated, Product } from "@/types";
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Eye } from "lucide-react";
+import { Eye, LayoutGrid, List, Settings2, Search } from "lucide-react";
 
 const PAGE_SIZE_FALLBACK = 9;
 
@@ -69,6 +69,7 @@ export default function ProductsGrid() {
   const [loading, setLoading] = useState(true);
   const gridRef = useRef<HTMLDivElement>(null);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const page = parseInt(params.get("page") ?? "1", 10) || 1;
   const q = params.get("q") ?? "";
@@ -136,19 +137,52 @@ export default function ProductsGrid() {
 
   return (
     <div className="space-y-6" ref={gridRef}>
-      {/* Compteur de résultats */}
+      {/* Barre d'outils avec compteur et toggle view */}
       {!loading && total > 0 && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-sm text-neutral-400"
+          className="flex items-center justify-between"
         >
-          <span className="text-white font-medium">{total}</span> {total > 1 ? "produits trouvés" : "produit trouvé"}
+          <div className="text-sm text-neutral-400">
+            <span className="text-white font-medium">{total}</span> {total > 1 ? "produits trouvés" : "produit trouvé"}
+          </div>
+
+          {/* Toggle Grid/List View */}
+          <div className="flex items-center gap-1 rounded-lg border border-neutral-800 bg-neutral-900/50 p-1">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
+                viewMode === 'grid'
+                  ? 'bg-neutral-800 text-white shadow-sm'
+                  : 'text-neutral-400 hover:text-neutral-200'
+              }`}
+              aria-label="Vue grille"
+            >
+              <LayoutGrid className="h-4 w-4" />
+              <span className="hidden sm:inline">Grille</span>
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
+                viewMode === 'list'
+                  ? 'bg-neutral-800 text-white shadow-sm'
+                  : 'text-neutral-400 hover:text-neutral-200'
+              }`}
+              aria-label="Vue liste"
+            >
+              <List className="h-4 w-4" />
+              <span className="hidden sm:inline">Liste</span>
+            </button>
+          </div>
         </motion.div>
       )}
 
-      {/* Grille */}
-      <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Grille ou Liste responsive */}
+      <section className={viewMode === 'grid'
+        ? "grid grid-cols-1 gap-4 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 md:gap-6"
+        : "flex flex-col gap-4"
+      }>
         {loading ? (
           // Afficher les skeletons pendant le chargement
           Array.from({ length: pageSize }).map((_, i) => (
@@ -159,13 +193,92 @@ export default function ProductsGrid() {
           <>
         {products.map((p, index) => {
           const isPizza = (p.category?.name ?? "").toLowerCase() === "pizza";
+
+          // Mode Liste
+          if (viewMode === 'list') {
+            return (
+              <motion.article
+                key={p.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.03 }}
+                className="group flex gap-4 overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4 shadow-lg shadow-black/20 transition-all hover:border-neutral-700 hover:shadow-xl hover:shadow-white/5"
+              >
+                {/* Image compacte */}
+                <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-xl bg-neutral-800/60">
+                  <Image
+                    src={getProductImage(p)}
+                    alt={p.name}
+                    fill
+                    sizes="128px"
+                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    loading="lazy"
+                  />
+                  {p.isFeatured && (
+                    <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-md border border-emerald-500/40 bg-emerald-500/20 px-2 py-0.5 text-xs font-semibold text-emerald-200 backdrop-blur-md">
+                      <span className="text-emerald-300">⭐</span>
+                    </span>
+                  )}
+                </div>
+
+                {/* Informations */}
+                <div className="flex flex-1 flex-col justify-between">
+                  <div>
+                    <div className="flex items-start justify-between gap-3">
+                      <h2 className="text-lg font-semibold text-white">{p.name}</h2>
+                      <div className="text-xl font-bold text-white">
+                        {(p.priceCents / 100).toFixed(2)} €
+                      </div>
+                    </div>
+                    {p.description && (
+                      <p className="mt-1 line-clamp-2 text-sm text-neutral-400">
+                        {p.description}
+                      </p>
+                    )}
+                    <div className="mt-2 flex items-center gap-2">
+                      {p.category && (
+                        <span className="inline-flex items-center rounded-md border border-neutral-700/60 bg-neutral-900/80 px-2 py-0.5 text-xs font-medium uppercase tracking-wider text-neutral-300">
+                          {p.category.name}
+                        </span>
+                      )}
+                      {isPizza && (
+                        <span className="inline-flex items-center gap-1 rounded-md border border-neutral-700/60 bg-neutral-900/80 px-2 py-0.5 text-xs text-neutral-400">
+                          <Settings2 className="h-3 w-3" />
+                          Personnalisable
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions en ligne */}
+                  <div className="mt-3 flex items-center gap-2">
+                    <div className="flex-1">
+                      <AddToCartButton productId={p.id} />
+                    </div>
+                    {isPizza && (
+                      <ProductCustomizeButton productId={p.id} priceCents={p.priceCents} />
+                    )}
+                    <button
+                      onClick={() => setQuickViewProduct(p)}
+                      className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-2 text-neutral-400 transition hover:border-neutral-700 hover:text-white"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </motion.article>
+            );
+          }
+
+          // Mode Grille
           return (
             <motion.article
               key={p.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.05 }}
-              className="bg-neutral-900/60 rounded-2xl border border-neutral-800 overflow-hidden hover:border-neutral-700 transition"
+              whileHover={{ y: -8, scale: 1.02 }}
+              className="group relative flex flex-col overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900/60 shadow-lg shadow-black/20 transition-all hover:border-neutral-700 hover:shadow-2xl hover:shadow-white/5"
             >
               {/* Image produit avec effet zoom */}
               <div className="relative aspect-square overflow-hidden bg-neutral-800/60 group/image">
@@ -173,51 +286,76 @@ export default function ProductsGrid() {
                   src={getProductImage(p)}
                   alt={p.name}
                   fill
-                  sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw"
-                  className="object-cover transition-transform duration-500 group-hover/image:scale-105"
+                  sizes="(min-width:1280px) 25vw, (min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw"
+                  className="object-cover transition-transform duration-500 group-hover/image:scale-110"
                   loading="lazy"
                   placeholder="blur"
                   blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iIzI2MjYyNiIvPjwvc3ZnPg=="
                 />
+
+                {/* Badges empilés en haut à gauche */}
+                <div className="absolute left-3 top-3 flex flex-col gap-2">
+                  {p.isFeatured && (
+                    <motion.span
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.2 + index * 0.05 }}
+                      className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-500/20 px-2.5 py-1 text-xs font-semibold text-emerald-200 shadow-lg backdrop-blur-md"
+                    >
+                      <span className="text-emerald-300">⭐</span>
+                      Chef
+                    </motion.span>
+                  )}
+                  {p.category && (
+                    <span className="inline-flex items-center rounded-lg border border-neutral-700/60 bg-neutral-900/80 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-neutral-300 shadow-lg backdrop-blur-md">
+                      {p.category.name}
+                    </span>
+                  )}
+                </div>
+
                 {/* Quick view button */}
                 <button
                   onClick={() => setQuickViewProduct(p)}
-                  className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover/image:opacity-100 transition-opacity duration-300"
+                  className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity duration-300 group-hover/image:opacity-100"
                 >
-                  <span className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-black hover:bg-neutral-100 transition">
+                  <span className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-black shadow-xl transition hover:bg-neutral-100">
                     <Eye className="h-4 w-4" />
                     Vue rapide
                   </span>
                 </button>
-                <div className="pointer-events-none absolute bottom-3 left-3 rounded-full border border-white/20 bg-black/50 px-3 py-1 text-sm text-white backdrop-blur-sm">
-                  {(p.priceCents / 100).toFixed(2)} €
+
+                {/* Prix repositionné en bas */}
+                <div className="pointer-events-none absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pt-8">
+                  <div className="flex items-end justify-between">
+                    <div className="text-2xl font-bold text-white">
+                      {(p.priceCents / 100).toFixed(2)} €
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* Informations du produit */}
-              <div className="p-5 space-y-2">
-                <div className="flex items-start justify-between gap-3">
-                  <h2 className="text-lg font-semibold text-white">{p.name}</h2>
-                </div>
+              <div className="flex flex-1 flex-col space-y-2 p-4">
+                <h2 className="line-clamp-1 text-base font-semibold text-white">
+                  {p.name}
+                </h2>
 
                 {p.description && (
-                  <p className="text-sm text-neutral-400 line-clamp-2">{p.description}</p>
+                  <p className="line-clamp-2 flex-1 text-sm leading-relaxed text-neutral-400">
+                    {p.description}
+                  </p>
                 )}
 
-                {p.category && (
-                  <span className="inline-block mt-1 text-[11px] uppercase tracking-wide text-neutral-500">
-                    {p.category.name}
-                  </span>
+                {/* Indicateur de personnalisation */}
+                {isPizza && (
+                  <div className="flex items-center gap-1 text-xs text-neutral-500">
+                    <Settings2 className="h-3 w-3" />
+                    <span>Personnalisable</span>
+                  </div>
                 )}
 
-                {p.isFeatured && (
-                  <span className="ml-2 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 text-[10px]">
-                    ⭐ Sélection
-                  </span>
-                )}
-
-                {/* Boutons d’action */}
-                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {/* Boutons d'action */}
+                <div className="mt-auto grid grid-cols-1 gap-2">
                   <AddToCartButton productId={p.id} />
                   {isPizza && (
                     <ProductCustomizeButton productId={p.id} priceCents={p.priceCents} />
@@ -229,18 +367,58 @@ export default function ProductsGrid() {
         })}
 
           {products.length === 0 && (
-            <div className="col-span-full text-center py-12">
-              <p className="text-neutral-400 text-lg mb-4">Aucun produit trouvé</p>
-              <button
-                onClick={() => {
-                  const params = new URLSearchParams();
-                  router.push(`/menu?${params.toString()}`);
-                }}
-                className="text-sm text-white underline hover:text-neutral-300"
-              >
-                Réinitialiser les filtres
-              </button>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="col-span-full mx-auto max-w-md"
+            >
+              <div className="rounded-3xl border border-neutral-800 bg-gradient-to-br from-neutral-900/80 to-neutral-900/40 p-8 text-center backdrop-blur-sm">
+                {/* Icône */}
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+                  className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-neutral-800/60 ring-4 ring-neutral-800/30"
+                >
+                  <Search className="h-10 w-10 text-neutral-500" strokeWidth={1.5} />
+                </motion.div>
+
+                {/* Message */}
+                <motion.h3
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="mb-2 text-xl font-bold text-white"
+                >
+                  Aucun produit trouvé
+                </motion.h3>
+
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="mb-6 text-sm text-neutral-400"
+                >
+                  Essayez de modifier vos filtres ou de réinitialiser la recherche
+                </motion.p>
+
+                {/* Bouton */}
+                <motion.button
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    const params = new URLSearchParams();
+                    router.push(`/menu?${params.toString()}`);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-lg bg-white px-6 py-2.5 text-sm font-semibold text-black shadow-lg shadow-white/10 transition-all hover:shadow-xl hover:shadow-white/20"
+                >
+                  Réinitialiser les filtres
+                </motion.button>
+              </div>
+            </motion.div>
           )}
           </>
         )}
