@@ -9,12 +9,13 @@ import { Button } from "@/components/theme/ui/button"; // Shadcn UI
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 
-function NavLink({ href, label }: { href: string; label: string }) {
+function NavLink({ href, label, onClick }: { href: string; label: string; onClick?: () => void }) {
   const pathname = usePathname();
   const active = pathname === href;
   return (
     <Link
       href={href}
+      onClick={onClick}
       className={`px-3 py-2 text-sm rounded-md transition
         ${active
           ? "text-white bg-neutral-800"
@@ -187,14 +188,15 @@ export default function Navbar() {
       >
         {open && (
           <div className="flex flex-col gap-1">
-            <NavLink href="/" label="Accueil" />
-            <NavLink href="/menu" label="Menu" />
-            <NavLink href="/about" label="À propos" />
-            <NavLink href="/contact" label="Contact" />
+            <NavLink href="/" label="Accueil" onClick={() => setOpen(false)} />
+            <NavLink href="/menu" label="Menu" onClick={() => setOpen(false)} />
+            <NavLink href="/about" label="À propos" onClick={() => setOpen(false)} />
+            <NavLink href="/contact" label="Contact" onClick={() => setOpen(false)} />
 
             {token && (
               <Link
                 href="/orders"
+                onClick={() => setOpen(false)}
                 className="mt-2 rounded-md border border-neutral-800 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800/60"
               >
                 Mes commandes
@@ -204,6 +206,7 @@ export default function Navbar() {
             {role === "ADMIN" && (
               <Link
                 href="/admin"
+                onClick={() => setOpen(false)}
                 className="mt-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-300 hover:bg-amber-500/15 transition"
               >
                 Admin
