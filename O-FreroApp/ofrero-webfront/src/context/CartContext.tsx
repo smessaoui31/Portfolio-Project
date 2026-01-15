@@ -2,8 +2,17 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { apiAuthed } from "@/lib/api";
+import { apiAuthed, api } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import {
+  getGuestCart,
+  addToGuestCart,
+  updateGuestCartItem,
+  removeFromGuestCart,
+  clearGuestCart,
+  getGuestCartTotal,
+  type GuestCartItem,
+} from "@/lib/guestCart";
 
 export type CookingLevel = "NORMAL" | "WELL_DONE" | "EXTRA_CRISPY";
 
@@ -33,6 +42,7 @@ export type CartView = {
 type AddOptions = {
   cooking?: CookingLevel;
   supplementIds?: string[];
+  productName?: string; // Pour le panier invité
 };
 
 type CartContextType = {
@@ -41,6 +51,7 @@ type CartContextType = {
   totalCents: number;
   loading: boolean;
   error: string | null;
+  isGuest: boolean;
 
   reload: () => Promise<void>;
   add: (productId: string, quantity?: number, opts?: AddOptions) => Promise<void>;
@@ -55,6 +66,7 @@ const CartContext = createContext<CartContextType>({
   totalCents: 0,
   loading: false,
   error: null,
+  isGuest: true,
   reload: async () => {},
   add: async () => {},
   update: async () => {},
@@ -65,14 +77,29 @@ const CartContext = createContext<CartContextType>({
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const { token } = useAuth();
   const [cart, setCart] = useState<CartView | null>(null);
+  const [guestCartItems, setGuestCartItems] = useState<GuestCartItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setErr] = useState<string | null>(null);
 
+  const isGuest = !token;
+
+  // Charger le panier invité au démarrage
+  useEffect(() => {
+    if (!token) {
+      const guestCart = getGuestCart();
+      setGuestCartItems(guestCart.items);
+    }
+  }, [token]);
+
   const reload = useCallback(async () => {
     if (!token) {
-      setCart({ id: null as any, items: [], totalCents: 0 });
+      // Mode invité: charger depuis localStorage
+      const guestCart = getGuestCart();
+      setGuestCartItems(guestCart.items);
       return;
     }
+
+    // Mode authentifié: charger depuis l'API
     setLoading(true);
     setErr(null);
     try {
@@ -86,13 +113,43 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [token]);
 
   useEffect(() => {
-    if (token) reload();
-    else setCart({ id: null as any, items: [], totalCents: 0 });
-  }, [token, reload]);
+    reload();
+  }, [reload]);
 
   const add = useCallback(
     async (productId: string, quantity = 1, opts?: AddOptions) => {
-      if (!token) throw new Error("Non authentifié");
+      if (!token) {
+        // Mode invité: ajouter au localStorage
+        if (!opts?.productName) {
+          throw new Error("Product name required for guest cart");
+        }
+
+        try {
+          // Récupérer le prix du produit depuis l'API publique
+          const product = await api<any>(`/products/${productId}`);
+          const unitPriceCents = product.priceCents || 0;
+
+          const updatedCart = addToGuestCart(
+            productId,
+            opts.productName,
+            unitPriceCents,
+            quantity,
+            opts.cooking,
+            opts.supplementIds?.map((id) => ({
+              id,
+              name: "Supplément", // Pourrait être amélioré
+              priceCents: 100, // Prix par défaut, à améliorer
+            }))
+          );
+          setGuestCartItems(updatedCart.items);
+        } catch (e: any) {
+          setErr(e?.message || "Erreur lors de l'ajout au panier");
+          throw e;
+        }
+        return;
+      }
+
+      // Mode authentifié: utiliser l'API
       setLoading(true);
       setErr(null);
       try {
@@ -108,7 +165,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         });
         setCart(data);
       } catch (e: any) {
-        setErr(e?.message || "Erreur lors de l’ajout au panier");
+        setErr(e?.message || "Erreur lors de l'ajout au panier");
         throw e;
       } finally {
         setLoading(false);
@@ -119,7 +176,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const update = useCallback(
     async (itemId: string, quantity: number) => {
-      if (!token) return;
+      if (!token) {
+        // Mode invité: itemId est l'index dans le tableau
+        const index = parseInt(itemId, 10);
+        const updatedCart = updateGuestCartItem(index, quantity);
+        setGuestCartItems(updatedCart.items);
+        return;
+      }
+
+      // Mode authentifié
       setLoading(true);
       setErr(null);
       try {
@@ -139,7 +204,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const remove = useCallback(
     async (itemId: string) => {
-      if (!token) return;
+      if (!token) {
+        // Mode invité: itemId est l'index dans le tableau
+        const index = parseInt(itemId, 10);
+        const updatedCart = removeFromGuestCart(index);
+        setGuestCartItems(updatedCart.items);
+        return;
+      }
+
+      // Mode authentifié
       setLoading(true);
       setErr(null);
       try {
@@ -157,8 +230,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   );
 
   const clear = useCallback(async () => {
-    // Option simple: supprimer chaque item (sinon faire un endpoint /cart/clear)
-    if (!token || !cart) return;
+    if (!token) {
+      // Mode invité
+      clearGuestCart();
+      setGuestCartItems([]);
+      return;
+    }
+
+    // Mode authentifié
+    if (!cart) return;
     setLoading(true);
     setErr(null);
     try {
@@ -173,20 +253,49 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [token, cart, reload]);
 
+  // Convertir les items invités au format CartItemView
+  const normalizedItems: CartItemView[] = useMemo(() => {
+    if (!token) {
+      return guestCartItems.map((item, index) => ({
+        id: index.toString(),
+        productId: item.productId,
+        name: item.name,
+        unitPriceCents: item.unitPriceCents,
+        quantity: item.quantity,
+        cooking: item.cooking as CookingLevel | undefined,
+        supplements: item.supplements?.map((sup) => ({
+          id: sup.id,
+          supplementId: sup.id,
+          name: sup.name,
+          unitPriceCents: sup.priceCents,
+        })),
+      }));
+    }
+    return cart?.items ?? [];
+  }, [token, guestCartItems, cart?.items]);
+
+  const totalCents = useMemo(() => {
+    if (!token) {
+      return getGuestCartTotal();
+    }
+    return cart?.totalCents ?? 0;
+  }, [token, cart?.totalCents, guestCartItems]);
+
   const value = useMemo<CartContextType>(
     () => ({
       id: cart?.id ?? null,
-      items: cart?.items ?? [],
-      totalCents: cart?.totalCents ?? 0,
+      items: normalizedItems,
+      totalCents,
       loading,
       error: error,
+      isGuest,
       reload,
       add,
       update,
       remove,
       clear,
     }),
-    [cart?.id, cart?.items, cart?.totalCents, loading, error, reload, add, update, remove, clear]
+    [cart?.id, normalizedItems, totalCents, loading, error, isGuest, reload, add, update, remove, clear]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
