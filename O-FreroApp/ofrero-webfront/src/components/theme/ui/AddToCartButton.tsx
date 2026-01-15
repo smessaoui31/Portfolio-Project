@@ -14,6 +14,7 @@ type AddToCartButtonProps = {
   quantity?: number;
   className?: string;
   productImage?: string;
+  productName?: string;
 };
 
 export default function AddToCartButton({
@@ -21,9 +22,10 @@ export default function AddToCartButton({
   quantity = 1,
   className = "",
   productImage,
+  productName,
 }: AddToCartButtonProps) {
   const { token } = useAuth();
-  const { add } = useCart();
+  const { add, isGuest } = useCart();
   const [loading, setLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -36,12 +38,6 @@ export default function AddToCartButton({
   const [confettiPosition, setConfettiPosition] = useState<{ x: number; y: number } | null>(null);
 
   async function handleAdd() {
-    if (!token) {
-      toast.error("Veuillez vous connecter pour ajouter au panier", {
-        duration: 3000,
-      });
-      return;
-    }
     try {
       setLoading(true);
 
@@ -66,7 +62,7 @@ export default function AddToCartButton({
         }
       }
 
-      await add(productId, quantity);
+      await add(productId, quantity, { productName });
 
       // Haptic feedback
       if ("vibrate" in navigator) {

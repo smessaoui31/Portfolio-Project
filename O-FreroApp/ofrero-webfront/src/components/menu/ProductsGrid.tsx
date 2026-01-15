@@ -253,7 +253,7 @@ export default function ProductsGrid() {
                   {/* Actions en ligne */}
                   <div className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                     <div className="flex-1 min-w-0">
-                      <AddToCartButton productId={p.id} productImage={getProductImage(p)} />
+                      <AddToCartButton productId={p.id} productImage={getProductImage(p)} productName={p.name} />
                     </div>
                     <div className="flex gap-2">
                       {isPizza && (
@@ -361,7 +361,7 @@ export default function ProductsGrid() {
 
                 {/* Boutons d'action */}
                 <div className="mt-auto grid grid-cols-1 gap-2">
-                  <AddToCartButton productId={p.id} productImage={getProductImage(p)} />
+                  <AddToCartButton productId={p.id} productImage={getProductImage(p)} productName={p.name} />
                   {isPizza && (
                     <ProductCustomizeButton productId={p.id} priceCents={p.priceCents} />
                   )}
