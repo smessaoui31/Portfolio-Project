@@ -10,6 +10,7 @@ import { stripe } from "../lib/stripe";
 
 import {
   createOrderFromCartPrisma,
+  createGuestOrderPrisma,
   findOrderByPaymentIntentPrisma,
   setOrderStatusPrisma,
   upsertPaymentPrisma,
@@ -97,17 +98,10 @@ checkoutRouter.post("/start", requireAuth, async (req: AuthRequest, res: Respons
     }
   }
 
-  // 3) Prépare items pour la création de commande
-  const cartItems = cart.items.map((it) => ({
-    productId: it.productId,
-    quantity: it.quantity,
-  }));
-
-  // 4) Crée l’Order + Items (transaction) et calcule total côté serveur
-  //    ⚠️ createOrderFromCartPrisma doit désormais générer un orderNumber unique côté serveur.
+  // 3) Crée l'Order + Items (transaction) et calcule total côté serveur
+  //    createOrderFromCartPrisma lit directement le panier depuis la DB et génère un orderNumber unique
   const { order, totalCents } = await createOrderFromCartPrisma({
     userId: req.user!.id,
-    cartItems,
     address: addressSnapshot,
   });
 
@@ -141,6 +135,78 @@ checkoutRouter.post("/start", requireAuth, async (req: AuthRequest, res: Respons
     clientSecret: paymentIntent.client_secret,
     paymentIntentId: paymentIntent.id,
   });
+});
+
+/* ----------------------- 1b) GUEST CHECKOUT --------------------------- */
+
+const GuestItemSchema = z.object({
+  productId: z.string().cuid(),
+  quantity: z.number().int().min(1),
+  cooking: z.string().optional(),
+  supplements: z.array(z.string().cuid()).optional(),
+});
+
+const GuestInfoSchema = z.object({
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  email: z.string().email(),
+  phone: z.string().min(6),
+  address: z.string().min(5),
+});
+
+const GuestCheckoutSchema = z.object({
+  items: z.array(GuestItemSchema).min(1),
+  guestInfo: GuestInfoSchema,
+});
+
+checkoutRouter.post("/guest", async (req: Request, res: Response) => {
+  const parsed = GuestCheckoutSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid body", details: parsed.error.flatten() });
+  }
+
+  const { items, guestInfo } = parsed.data;
+
+  try {
+    // 1) Créer la commande invité
+    const { order, totalCents } = await createGuestOrderPrisma({
+      items,
+      guestInfo,
+    });
+
+    // 2) Créer un PaymentIntent Stripe
+    const paymentIntent = await stripe.paymentIntents.create(
+      {
+        amount: totalCents,
+        currency: "eur",
+        metadata: {
+          order_id: order.id,
+          order_number: order.orderNumber ?? "",
+          guest_email: guestInfo.email,
+          guest_name: `${guestInfo.firstName} ${guestInfo.lastName}`,
+        },
+        receipt_email: guestInfo.email,
+        automatic_payment_methods: { enabled: true },
+      },
+      { idempotencyKey: `order_${order.id}` }
+    );
+
+    // 3) Lier le PaymentIntent à la commande
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { stripePaymentIntentId: paymentIntent.id },
+    });
+
+    return res.status(200).json({
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id,
+    });
+  } catch (err: any) {
+    console.error("[checkout/guest] Error:", err);
+    return res.status(500).json({ error: err?.message || "Internal server error" });
+  }
 });
 
 /* ------------------------ 2) WEBHOOK STRIPE (RAW) ------------------------ */

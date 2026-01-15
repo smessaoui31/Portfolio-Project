@@ -8,7 +8,7 @@ export const supplementsRouter = Router();
 /** Public: liste des suppléments disponibles (tous) */
 supplementsRouter.get("/", async (_req, res) => {
   const data = await prisma.supplement.findMany({
-    where: { isAvailable: true },
+    where: { isActive: true },
     orderBy: { name: "asc" },
   });
   res.json(data);
@@ -18,7 +18,7 @@ supplementsRouter.get("/", async (_req, res) => {
 supplementsRouter.get("/product/:productId", async (req, res) => {
   const productId = req.params.productId;
   const links = await prisma.productSupplement.findMany({
-    where: { productId, supplement: { isAvailable: true } },
+    where: { productId, supplement: { isActive: true } },
     include: { supplement: true },
     orderBy: { supplement: { name: "asc" } },
   });
@@ -28,7 +28,7 @@ supplementsRouter.get("/product/:productId", async (req, res) => {
     id: l.supplementId,
     name: l.supplement.name,
     priceCents: l.overridePriceCents ?? l.supplement.priceCents,
-    isAvailable: l.supplement.isAvailable,
+    isActive: l.supplement.isActive,
   }));
 
   res.json(items);
@@ -38,7 +38,7 @@ supplementsRouter.get("/product/:productId", async (req, res) => {
 const UpsertSchema = z.object({
   name: z.string().min(2),
   priceCents: z.number().int().min(0),
-  isAvailable: z.boolean().optional().default(true),
+  isActive: z.boolean().optional().default(true),
 });
 
 supplementsRouter.post("/", requireAuth, requireAdmin, async (req, res) => {

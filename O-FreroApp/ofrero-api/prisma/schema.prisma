@@ -68,12 +68,17 @@ model Product {
 
 model Order {
   id                    String      @id @default(cuid())
-  userId                String
-  user                  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId                String?
+  user                  User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
   status                OrderStatus @default(PENDING)
   totalCents            Int         @default(0)
   stripePaymentIntentId String?     @unique
   orderNumber           String?     @unique
+
+  // Guest information (if userId is null)
+  guestEmail     String?
+  guestFirstName String?
+  guestLastName  String?
 
   // Snapshot adresse
   shippingLine1       String
@@ -87,6 +92,9 @@ model Order {
   logs      OrderLog[]
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([guestEmail])
 }
 
 model Address {
@@ -110,7 +118,7 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   FAILED
-  CANCELLED 
+  CANCELLED
 }
 
 
@@ -168,7 +176,9 @@ model CartItem {
 
   supplements CartItemSupplement[]
 
-  @@unique([cartId, productId, cooking], name: "cartId_productId_cooking")
+  @@unique([cartId, productId, cooking])
+  @@index([cartId])
+  @@index([productId])
 }
 
 model CartItemSupplement {
