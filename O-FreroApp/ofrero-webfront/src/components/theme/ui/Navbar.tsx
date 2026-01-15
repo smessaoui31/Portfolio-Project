@@ -8,6 +8,7 @@ import { Lock, Unlock } from "lucide-react";
 import { Button } from "@/components/theme/ui/button"; // Shadcn UI
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
+import { motion, useScroll, useTransform } from "framer-motion";
 
 function NavLink({ href, label, onClick }: { href: string; label: string; onClick?: () => void }) {
   const pathname = usePathname();
@@ -32,6 +33,11 @@ export default function Navbar() {
   const { token, role, email, logout } = useAuth();
   const cartCtx = useCart();
 
+  // Parallax effect for logo
+  const { scrollY } = useScroll();
+  const logoRotate = useTransform(scrollY, [0, 500], [0, 360]);
+  const logoScale = useTransform(scrollY, [0, 100], [1, 0.9]);
+
   const count =
     typeof (cartCtx as any)?.count === "number"
       ? (cartCtx as any).count
@@ -45,33 +51,41 @@ export default function Navbar() {
   const plural = safeCount > 1 ? "s" : "";
 
   const badgeRef = useRef<HTMLSpanElement | null>(null);
+  const [prevCount, setPrevCount] = useState(safeCount);
+
   useEffect(() => {
     if (!badgeRef.current) return;
-    badgeRef.current.classList.remove("badge-bump");
-    badgeRef.current.offsetWidth;
-    badgeRef.current.classList.add("badge-bump");
-  }, [safeCount]);
+    if (safeCount > prevCount) {
+      badgeRef.current.classList.remove("badge-bump");
+      badgeRef.current.offsetWidth;
+      badgeRef.current.classList.add("badge-bump");
+    }
+    setPrevCount(safeCount);
+  }, [safeCount, prevCount]);
 
   return (
     <header className="sticky top-0 z-40 border-b border-neutral-800/80 bg-black/70 backdrop-blur">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 w-full">
-        {/* Logo */}
+        {/* Logo with parallax */}
         <Link
           href="/"
           className="flex items-center gap-3 transition-transform hover:scale-[1.03] active:scale-100 min-w-0"
         >
-          <div className="relative h-12 w-12 rounded-xl border border-neutral-800 bg-gradient-to-br from-neutral-900 to-neutral-950 p-2">
+          <motion.div
+            style={{ rotate: logoRotate, scale: logoScale }}
+            className="relative h-12 w-12 rounded-xl border border-neutral-800 bg-linear-to-br from-neutral-900 to-neutral-950 p-2"
+          >
             <Image
               src="/ofrero-pizza-logo.png"
-              alt="O’Frero Pizza"
+              alt="O'Frero Pizza"
               fill
               className="object-contain"
               sizes="(min-width:1024px) 4rem, (min-width:768px) 3.5rem, 3rem"
               priority
             />
-          </div>
-          <span className="text-lg md:text-xl font-semibold bg-gradient-to-r from-neutral-100 to-neutral-400 bg-clip-text text-transparent truncate">
-            O’Frero Pizza
+          </motion.div>
+          <span className="text-lg md:text-xl font-semibold bg-linear-to-r from-neutral-100 to-neutral-400 bg-clip-text text-transparent truncate">
+            O'Frero Pizza
           </span>
         </Link>
 
@@ -154,16 +168,20 @@ export default function Navbar() {
           {/* Panier */}
           <Link
             href="/cart"
-            className="relative rounded-md border border-neutral-800 px-3 py-2 text-sm text-white hover:bg-neutral-800/60"
+            className="relative rounded-md border border-neutral-800 px-3 py-2 text-sm text-white hover:bg-neutral-800/60 transition-all"
             aria-label={`Panier (${safeCount} article${plural})`}
           >
             Panier
-            <span
+            <motion.span
               ref={badgeRef}
-              className="ml-2 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-white/10 px-1 text-xs text-white"
+              key={safeCount}
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 500, damping: 15 }}
+              className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-white/10 px-1 text-xs text-white"
             >
               {safeCount}
-            </span>
+            </motion.span>
           </Link>
 
           {/* Menu mobile */}
