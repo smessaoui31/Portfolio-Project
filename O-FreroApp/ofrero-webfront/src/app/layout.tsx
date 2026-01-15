@@ -10,6 +10,7 @@ import PageTransition from "@/components/theme/ui/PageTransition";
 import NextTopLoader from "nextjs-toploader";
 import ToasterProvider from "@/components/theme/ui/ToasterProvider";
 import Footer from "@/components/theme/ui/Footer";
+import FloatingCartButton from "@/components/theme/ui/FloatingCartButton";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -40,6 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <CartProvider>
               <Navbar />
               <PageTransition>{children}</PageTransition>
+              <FloatingCartButton />
               <Footer />
             </CartProvider>
           </AuthProvider>
