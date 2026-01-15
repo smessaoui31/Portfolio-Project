@@ -253,7 +253,7 @@ export default function ProductsGrid() {
                   {/* Actions en ligne */}
                   <div className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                     <div className="flex-1 min-w-0">
-                      <AddToCartButton productId={p.id} />
+                      <AddToCartButton productId={p.id} productImage={getProductImage(p)} />
                     </div>
                     <div className="flex gap-2">
                       {isPizza && (
@@ -283,7 +283,7 @@ export default function ProductsGrid() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.05 }}
               whileHover={{ y: -8, scale: 1.02 }}
-              className="group relative flex flex-col overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900/60 shadow-lg shadow-black/20 transition-all hover:border-neutral-700 hover:shadow-2xl hover:shadow-white/5"
+              className="product-card-glow group relative flex flex-col overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900/60 shadow-lg shadow-black/20 transition-all hover:border-neutral-700 hover:shadow-2xl hover:shadow-white/5"
             >
               {/* Image produit avec effet zoom */}
               <div className="relative aspect-square overflow-hidden bg-neutral-800/60 group/image">
@@ -361,7 +361,7 @@ export default function ProductsGrid() {
 
                 {/* Boutons d'action */}
                 <div className="mt-auto grid grid-cols-1 gap-2">
-                  <AddToCartButton productId={p.id} />
+                  <AddToCartButton productId={p.id} productImage={getProductImage(p)} />
                   {isPizza && (
                     <ProductCustomizeButton productId={p.id} priceCents={p.priceCents} />
                   )}
