@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireAdmin, AuthRequest } from "../middleware/auth";
+import { paramStr } from "../lib/http";
 
 export const adminCategoriesRouter = Router();
 
@@ -37,7 +38,7 @@ adminCategoriesRouter.get(
   requireAdmin,
   async (req: AuthRequest, res) => {
     const category = await prisma.category.findUnique({
-      where: { id: req.params.id },
+      where: { id: paramStr(req.params.id) },
       include: {
         _count: {
           select: { products: true },
@@ -75,7 +76,7 @@ adminCategoriesRouter.put(
       return res.status(400).json({ error: "Invalid body", details: parsed.error.flatten() });
 
     const updated = await prisma.category.update({
-      where: { id: req.params.id },
+      where: { id: paramStr(req.params.id) },
       data: parsed.data,
     });
     res.json(updated);
@@ -90,7 +91,7 @@ adminCategoriesRouter.delete(
   async (req: AuthRequest, res) => {
     // Check if category has products
     const category = await prisma.category.findUnique({
-      where: { id: req.params.id },
+      where: { id: paramStr(req.params.id) },
       include: { _count: { select: { products: true } } },
     });
 
@@ -103,7 +104,7 @@ adminCategoriesRouter.delete(
       });
     }
 
-    await prisma.category.delete({ where: { id: req.params.id } });
+    await prisma.category.delete({ where: { id: paramStr(req.params.id) } });
     res.json({ ok: true });
   }
 );

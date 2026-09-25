@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { requireAuth, AuthRequest } from "../middleware/auth";
+import { paramStr } from "../lib/http";
 
 export const addressRouter = Router();
 
@@ -45,7 +46,7 @@ addressRouter.patch("/:id", requireAuth, async (req: AuthRequest, res) => {
   const parsed = AddressInput.partial().safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Invalid body", details: parsed.error.flatten() });
 
-  const addr = await prisma.address.findFirst({ where: { id: req.params.id, userId: req.user!.id } });
+  const addr = await prisma.address.findFirst({ where: { id: paramStr(req.params.id), userId: req.user!.id } });
   if (!addr) return res.status(404).json({ error: "Address not found" });
 
   const { isDefault, ...data } = parsed.data;
@@ -65,7 +66,7 @@ addressRouter.patch("/:id", requireAuth, async (req: AuthRequest, res) => {
 
 // PATCH /addresses/:id/default – bascule cette adresse en défaut
 addressRouter.patch("/:id/default", requireAuth, async (req: AuthRequest, res) => {
-  const addr = await prisma.address.findFirst({ where: { id: req.params.id, userId: req.user!.id } });
+  const addr = await prisma.address.findFirst({ where: { id: paramStr(req.params.id), userId: req.user!.id } });
   if (!addr) return res.status(404).json({ error: "Address not found" });
 
   const updated = await prisma.$transaction(async (tx) => {
@@ -78,7 +79,7 @@ addressRouter.patch("/:id/default", requireAuth, async (req: AuthRequest, res) =
 
 // DELETE /addresses/:id – suppression
 addressRouter.delete("/:id", requireAuth, async (req: AuthRequest, res) => {
-  const addr = await prisma.address.findFirst({ where: { id: req.params.id, userId: req.user!.id } });
+  const addr = await prisma.address.findFirst({ where: { id: paramStr(req.params.id), userId: req.user!.id } });
   if (!addr) return res.status(404).json({ error: "Address not found" });
 
   await prisma.address.delete({ where: { id: addr.id } });

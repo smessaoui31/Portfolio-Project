@@ -8,6 +8,7 @@ node_modules/
 # TypeScript build output
 dist/
 build/
+*.tsbuildinfo
 
 # Logs
 logs/
@@ -47,8 +48,7 @@ coverage/
 openapi/*.yaml
 openapi/*.yml
 
-# Optional lockfiles (if not committed)
-package-lock.json
+# Ce projet utilise npm — les lockfiles d'autres gestionnaires ne doivent pas être commités
 yarn.lock
 pnpm-lock.yaml
 
@@ -56,64 +56,6 @@ pnpm-lock.yaml
 Dockerfile
 docker-compose.yml
 *.tar
-
-# Node
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
-# Build outputs
-.next/
-out/
-dist/
-build/
-coverage/
-
-# Environment variables
-.env
-.env.*.local
-.env.local
-.env.production
-.env.development
-.env.test
-
-# OS / Editor junk
-.DS_Store
-Thumbs.db
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# Logs
-*.log
-logs/
-*.pid
-*.seed
-*.pid.lock
-
-# Typescript
-*.tsbuildinfo
-
-# Optional lock files (choose one package manager)
-package-lock.json
-pnpm-lock.yaml
-yarn.lock
-
-# Prisma (if backend is in same repo)
-prisma/*.db
-prisma/migrations/
-prisma/dev.db
-
-# Cache
-.cache/
-.next/cache/
-tailwindcss-cache/
-turbo/
-vercel/
-eslintcache/
 
 # Misc
 *.tgz

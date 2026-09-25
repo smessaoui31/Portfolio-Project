@@ -34,11 +34,13 @@ const openapiDocument = YAML.load(path.resolve(process.cwd(), "openapi/openapi.y
 
 const app = express();
 
-/** Logger minimal */
-app.use((req, _res, next) => {
-  console.log(`>> ${req.method} ${req.url}`);
-  next();
-});
+/** Logger minimal (dev uniquement) */
+if (process.env.NODE_ENV !== "production") {
+  app.use((req, _res, next) => {
+    console.log(`>> ${req.method} ${req.url}`);
+    next();
+  });
+}
 
 /**
  * Stripe webhook : RAW body UNIQUEMENT et AVANT express.json()

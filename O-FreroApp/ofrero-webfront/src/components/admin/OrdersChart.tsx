@@ -32,7 +32,10 @@ export function OrdersChart({ data }: OrdersChartProps) {
               borderRadius: "8px",
               color: "#fff",
             }}
-            formatter={(value: number) => [value, "Commandes"]}
+            formatter={(value) => {
+              const num = typeof value === "number" ? value : Number(value ?? 0);
+              return [num, "Commandes"];
+            }}
             labelStyle={{ color: "#a3a3a3" }}
           />
           <Area type="monotone" dataKey="count" stroke="#3b82f6" fillOpacity={1} fill="url(#colorOrders)" />

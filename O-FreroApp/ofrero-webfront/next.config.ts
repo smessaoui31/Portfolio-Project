@@ -1,9 +1,16 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   eslint: {
     // Ignore ESLint errors during build
     ignoreDuringBuilds: true,
+  },
+
+  // Cette app a son propre lockfile ; évite que Turbopack ne remonte par erreur
+  // au lockfile du monorepo racine (juste un wrapper `concurrently`, pas un vrai workspace).
+  turbopack: {
+    root: path.join(__dirname),
   },
 
   // Image optimization configuration

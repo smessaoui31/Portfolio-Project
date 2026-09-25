@@ -3,6 +3,7 @@ import { Router } from "express";
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireAdmin, AuthRequest } from "../middleware/auth";
 import type { Prisma, OrderStatus } from "@prisma/client";
+import { paramStr } from "../lib/http";
 
 export const adminOrdersRouter = Router();
 
@@ -101,7 +102,7 @@ adminOrdersRouter.get(
   requireAdmin,
   async (req: AuthRequest, res) => {
     try {
-      const id = req.params.id;
+      const id = paramStr(req.params.id);
 
       const order = await prisma.order.findUnique({
         where: { id },
@@ -170,7 +171,7 @@ adminOrdersRouter.get(
   requireAdmin,
   async (req: AuthRequest, res) => {
     try {
-      const on = req.params.orderNumber;
+      const on = paramStr(req.params.orderNumber);
 
       const order = await prisma.order.findFirst({
         where: { orderNumber: on },
@@ -237,7 +238,7 @@ adminOrdersRouter.patch(
       }
 
       const order = await prisma.order.findUnique({
-        where: { id: req.params.id },
+        where: { id: paramStr(req.params.id) },
       });
 
       if (!order) return res.status(404).json({ error: "Order not found" });
@@ -245,12 +246,12 @@ adminOrdersRouter.patch(
       // Update order status and create log entry in a transaction
       const [updated] = await prisma.$transaction([
         prisma.order.update({
-          where: { id: req.params.id },
+          where: { id: paramStr(req.params.id) },
           data: { status },
         }),
         prisma.orderLog.create({
           data: {
-            orderId: req.params.id,
+            orderId: paramStr(req.params.id),
             status,
             message: message || null,
             createdBy: req.user?.email || null,

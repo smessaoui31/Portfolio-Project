@@ -26,7 +26,10 @@ export function RevenueChart({ data }: RevenueChartProps) {
               borderRadius: "8px",
               color: "#fff",
             }}
-            formatter={(value: number) => [`${value.toFixed(2)}€`, "Revenus"]}
+            formatter={(value) => {
+              const num = typeof value === "number" ? value : Number(value ?? 0);
+              return [`${num.toFixed(2)}€`, "Revenus"];
+            }}
             labelStyle={{ color: "#a3a3a3" }}
           />
           <Line type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={2} dot={{ fill: "#10b981" }} />

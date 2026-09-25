@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireAdmin } from "../middleware/auth";
+import { paramStr } from "../lib/http";
 
 export const productsRouter = Router();
 
@@ -79,7 +80,7 @@ productsRouter.get("/featured", async (req, res) => {
 /* --------------------------- GET /products/:id ---------------------------- */
 productsRouter.get("/:id", async (req, res) => {
   const product = await prisma.product.findUnique({
-    where: { id: req.params.id },
+    where: { id: paramStr(req.params.id) },
     include: { category: { select: { id: true, name: true } } },
   });
   if (!product) return res.status(404).json({ error: "Not found" });
@@ -114,10 +115,10 @@ productsRouter.get("/by-category/:categoryId", async (req, res) => {
   const { skip, take, page, pageSize } = parsePagination(req.query);
   const orderBy = parseSort(req.query);
 
-  const cat = await prisma.category.findUnique({ where: { id: req.params.categoryId } });
+  const cat = await prisma.category.findUnique({ where: { id: paramStr(req.params.categoryId) } });
   if (!cat) return res.status(404).json({ error: "Category not found" });
 
-  const where: Prisma.ProductWhereInput = { categoryId: req.params.categoryId };
+  const where: Prisma.ProductWhereInput = { categoryId: paramStr(req.params.categoryId) };
 
   const [items, total] = await Promise.all([
     prisma.product.findMany({
@@ -141,11 +142,11 @@ productsRouter.patch("/:id/feature", requireAuth, requireAdmin, async (req, res)
   if (!parsed.success)
     return res.status(400).json({ error: "Invalid body", details: parsed.error.flatten() });
 
-  const exists = await prisma.product.findUnique({ where: { id: req.params.id } });
+  const exists = await prisma.product.findUnique({ where: { id: paramStr(req.params.id) } });
   if (!exists) return res.status(404).json({ error: "Not found" });
 
   const updated = await prisma.product.update({
-    where: { id: req.params.id },
+    where: { id: paramStr(req.params.id) },
     data: { isFeatured: parsed.data.isFeatured },
     include: { category: { select: { id: true, name: true } } },
   });

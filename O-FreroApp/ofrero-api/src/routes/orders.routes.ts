@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireAdmin, AuthRequest } from "../middleware/auth";
+import { paramStr } from "../lib/http";
 
 export const ordersRouter = Router();
 
@@ -23,7 +24,7 @@ ordersRouter.get("/", requireAuth, async (req: AuthRequest, res) => {
  */
 ordersRouter.get("/:id", requireAuth, async (req: AuthRequest, res) => {
   const order = await prisma.order.findFirst({
-    where: { id: req.params.id, userId: req.user!.id },
+    where: { id: paramStr(req.params.id), userId: req.user!.id },
     include: { items: true, payment: true },
   });
   if (!order) return res.status(404).json({ error: "Order not found" });
@@ -49,7 +50,7 @@ ordersRouter.get("/admin", requireAuth, requireAdmin, async (_req, res) => {
 // Détail d'une commande de l'utilisateur connecté via son id 
 ordersRouter.get("/:id", requireAuth, async (req: AuthRequest, res) => {
   const order = await prisma.order.findFirst({
-    where: { id: req.params.id, userId: req.user!.id },
+    where: { id: paramStr(req.params.id), userId: req.user!.id },
     include: {
       items: {
         select: {

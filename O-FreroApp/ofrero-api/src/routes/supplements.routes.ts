@@ -2,6 +2,7 @@ import { Router } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
 import { requireAuth, requireAdmin } from "../middleware/auth";
+import { paramStr } from "../lib/http";
 
 export const supplementsRouter = Router();
 
@@ -16,7 +17,7 @@ supplementsRouter.get("/", async (_req, res) => {
 
 /** Public: suppléments disponibles pour un produit */
 supplementsRouter.get("/product/:productId", async (req, res) => {
-  const productId = req.params.productId;
+  const productId = paramStr(req.params.productId);
   const links = await prisma.productSupplement.findMany({
     where: { productId, supplement: { isActive: true } },
     include: { supplement: true },
@@ -54,14 +55,14 @@ supplementsRouter.put("/:id", requireAuth, requireAdmin, async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: "Invalid body", details: parsed.error.flatten() });
 
   const updated = await prisma.supplement.update({
-    where: { id: req.params.id },
+    where: { id: paramStr(req.params.id) },
     data: parsed.data,
   });
   res.json(updated);
 });
 
 supplementsRouter.delete("/:id", requireAuth, requireAdmin, async (req, res) => {
-  await prisma.supplement.delete({ where: { id: req.params.id } });
+  await prisma.supplement.delete({ where: { id: paramStr(req.params.id) } });
   res.json({ ok: true });
 });
 
@@ -72,7 +73,7 @@ const LinkSchema = z.object({
 });
 
 supplementsRouter.post("/product/:productId/link", requireAuth, requireAdmin, async (req, res) => {
-  const productId = req.params.productId;
+  const productId = paramStr(req.params.productId);
   const parsed = LinkSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Invalid body", details: parsed.error.flatten() });
 
@@ -87,7 +88,7 @@ supplementsRouter.post("/product/:productId/link", requireAuth, requireAdmin, as
 
 supplementsRouter.delete("/product/:productId/unlink/:supplementId", requireAuth, requireAdmin, async (req, res) => {
   await prisma.productSupplement.delete({
-    where: { productId_supplementId: { productId: req.params.productId, supplementId: req.params.supplementId } },
+    where: { productId_supplementId: { productId: paramStr(req.params.productId), supplementId: paramStr(req.params.supplementId) } },
   });
   res.json({ ok: true });
 });

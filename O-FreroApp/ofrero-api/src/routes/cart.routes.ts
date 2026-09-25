@@ -2,6 +2,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { requireAuth, AuthRequest } from "../middleware/auth";
+import { paramStr } from "../lib/http";
 import {
   getCartWithTotalPrisma,
   addItemToCartPrisma,
@@ -78,7 +79,7 @@ cartRouter.patch("/items/:itemId", requireAuth, async (req: AuthRequest, res) =>
   try {
     const cart = await updateCartItemPrisma(
       req.user!.id,
-      req.params.itemId,
+      paramStr(req.params.itemId),
       parsed.data.quantity
     );
     res.json(cart);
@@ -111,7 +112,7 @@ cartRouter.patch(
     try {
       const cart = await updateCartItemCookingPrisma(
         req.user!.id,
-        req.params.itemId,
+        paramStr(req.params.itemId),
         parsed.data.cooking
       );
       res.json(cart);
@@ -143,7 +144,7 @@ cartRouter.post(
     try {
       const cart = await addSupplementToCartItemPrisma(
         req.user!.id,
-        req.params.itemId,
+        paramStr(req.params.itemId),
         parsed.data.supplementId
       );
       res.status(201).json(cart);
@@ -172,10 +173,10 @@ cartRouter.delete(
     try {
       const cart = await removeSupplementFromCartItemPrisma(
         req.user!.id,
-        req.params.itemId,
-        req.params.supplementId
+        paramStr(req.params.itemId),
+        paramStr(req.params.supplementId)
       );
-      res.json({ removed: req.params.supplementId, cart });
+      res.json({ removed: paramStr(req.params.supplementId), cart });
     } catch (e: any) {
       const msg = String(e?.message || "");
       if (msg.includes("Item not found")) {
@@ -207,7 +208,7 @@ cartRouter.put(
     try {
       const cart = await setCartItemSupplementsPrisma(
         req.user!.id,
-        req.params.itemId,
+        paramStr(req.params.itemId),
         parsed.data.supplementIds
       );
       res.json(cart);
@@ -228,8 +229,8 @@ cartRouter.put(
 /** DELETE /cart/items/:itemId — supprime un article */
 cartRouter.delete("/items/:itemId", requireAuth, async (req: AuthRequest, res) => {
   try {
-    const cart = await removeCartItemPrisma(req.user!.id, req.params.itemId);
-    res.json({ deleted: req.params.itemId, cart });
+    const cart = await removeCartItemPrisma(req.user!.id, paramStr(req.params.itemId));
+    res.json({ deleted: paramStr(req.params.itemId), cart });
   } catch (e: any) {
     const msg = String(e?.message || "");
     if (msg.includes("Item not found")) {

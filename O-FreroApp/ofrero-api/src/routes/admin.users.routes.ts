@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { Prisma, Role } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireAdmin, AuthRequest } from "../middleware/auth";
+import { paramStr } from "../lib/http";
 
 export const adminUsersRouter = Router();
 
@@ -92,7 +93,7 @@ adminUsersRouter.get(
   requireAdmin,
   async (req: AuthRequest, res) => {
     const user = await prisma.user.findUnique({
-      where: { id: req.params.id },
+      where: { id: paramStr(req.params.id) },
       select: {
         id: true,
         email: true,
@@ -137,12 +138,12 @@ adminUsersRouter.patch(
     if (!parsed.success) return res.status(400).json({ error: "Invalid body" });
 
     // éviter de te retirer l'accès à toi-même par accident
-    if (req.user!.id === req.params.id && parsed.data.role !== "ADMIN") {
+    if (req.user!.id === paramStr(req.params.id) && parsed.data.role !== "ADMIN") {
       return res.status(400).json({ error: "You cannot downgrade your own role." });
     }
 
     const updated = await prisma.user.update({
-      where: { id: req.params.id },
+      where: { id: paramStr(req.params.id) },
       data: { role: parsed.data.role },
       select: { id: true, email: true, fullName: true, role: true, createdAt: true },
     });
@@ -156,10 +157,10 @@ adminUsersRouter.delete(
   requireAuth,
   requireAdmin,
   async (req: AuthRequest, res) => {
-    if (req.user!.id === req.params.id) {
+    if (req.user!.id === paramStr(req.params.id)) {
       return res.status(400).json({ error: "You cannot delete your own account." });
     }
-    await prisma.user.delete({ where: { id: req.params.id } });
+    await prisma.user.delete({ where: { id: paramStr(req.params.id) } });
     res.json({ ok: true });
   }
 );

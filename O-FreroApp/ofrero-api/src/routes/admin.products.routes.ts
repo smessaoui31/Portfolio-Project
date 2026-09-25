@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireAdmin, AuthRequest } from "../middleware/auth";
+import { paramStr } from "../lib/http";
 
 export const adminProductsRouter = Router();
 
@@ -76,7 +77,7 @@ adminProductsRouter.get(
   requireAdmin,
   async (req: AuthRequest, res) => {
     const product = await prisma.product.findUnique({
-      where: { id: req.params.id },
+      where: { id: paramStr(req.params.id) },
       include: { category: { select: { id: true, name: true } } },
     });
     if (!product) return res.status(404).json({ error: "Not found" });
@@ -120,7 +121,7 @@ adminProductsRouter.put(
     }
 
     const updated = await prisma.product.update({
-      where: { id: req.params.id },
+      where: { id: paramStr(req.params.id) },
       data: parsed.data,
     });
     res.json(updated);
@@ -133,7 +134,7 @@ adminProductsRouter.delete(
   requireAuth,
   requireAdmin,
   async (req: AuthRequest, res) => {
-    await prisma.product.delete({ where: { id: req.params.id } });
+    await prisma.product.delete({ where: { id: paramStr(req.params.id) } });
     res.json({ ok: true });
   }
 );
@@ -144,10 +145,10 @@ adminProductsRouter.patch(
   requireAuth,
   requireAdmin,
   async (req: AuthRequest, res) => {
-    const product = await prisma.product.findUnique({ where: { id: req.params.id } });
+    const product = await prisma.product.findUnique({ where: { id: paramStr(req.params.id) } });
     if (!product) return res.status(404).json({ error: "Not found" });
     const updated = await prisma.product.update({
-      where: { id: req.params.id },
+      where: { id: paramStr(req.params.id) },
       data: { isFeatured: !product.isFeatured },
     });
     res.json(updated);
@@ -160,7 +161,7 @@ adminProductsRouter.post(
   requireAuth,
   requireAdmin,
   async (req: AuthRequest, res) => {
-    const product = await prisma.product.findUnique({ where: { id: req.params.id } });
+    const product = await prisma.product.findUnique({ where: { id: paramStr(req.params.id) } });
     if (!product) return res.status(404).json({ error: "Not found" });
 
     const { id, createdAt, updatedAt, ...data } = product;
