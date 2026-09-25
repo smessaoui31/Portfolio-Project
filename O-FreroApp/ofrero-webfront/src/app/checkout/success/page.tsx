@@ -1,10 +1,13 @@
 // src/app/checkout/success/page.tsx
 "use client";
 
-import { useEffect, useMemo, useState, Suspense } from "react";
+import { useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { apiAuthed } from "@/lib/api";
+import { api, apiAuthed } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
+import ConfettiEffect from "@/components/theme/ui/ConfettiEffect";
 
 type OrderItem = {
   id: string;
@@ -40,6 +43,8 @@ type OrderDetail = {
 function SuccessContent() {
   const search = useSearchParams();
   const orderId = search.get("orderId") || "";
+  const { token } = useAuth();
+  const { isGuest, clear: clearCart } = useCart();
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,6 +59,16 @@ function SuccessContent() {
     return () => clearTimeout(t);
   }, []);
 
+  // Confetti déclenché depuis le médaillon, une fois le paiement confirmé
+  const medallionRef = useRef<HTMLDivElement>(null);
+  const [confettiPos, setConfettiPos] = useState<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    if (!(order?.status === "PAID" && ready) || !medallionRef.current) return;
+    const rect = medallionRef.current.getBoundingClientRect();
+    setConfettiPos({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+  }, [order?.status, ready]);
+
   useEffect(() => {
     if (!orderId) {
       setErr("Identifiant de commande manquant.");
@@ -62,15 +77,26 @@ function SuccessContent() {
     }
     (async () => {
       try {
-        const data = await apiAuthed<OrderDetail>(`/checkout/orders/${orderId}`);
+        // Utiliser apiAuthed si connecté, sinon api (pour les invités)
+        const data = token
+          ? await apiAuthed<OrderDetail>(`/checkout/orders/${orderId}`)
+          : await api<OrderDetail>(`/checkout/orders/${orderId}`);
         setOrder(data);
+
+        // La commande a bien été créée : on vide le panier invité (le panier
+        // authentifié, lui, est déjà vidé côté serveur dès /checkout/start).
+        if (isGuest) {
+          clearCart().catch(() => {});
+        }
       } catch (e: unknown) {
         setErr(e instanceof Error ? e.message : "Impossible de charger la commande.");
       } finally {
         setLoading(false);
       }
     })();
-  }, [orderId]);
+    // ne doit se relancer que si la commande ou la session change, pas à chaque re-render du panier
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderId, token]);
 
   const isPaid = order?.status === "PAID";
   const itemsCount = useMemo(
@@ -132,11 +158,11 @@ function SuccessContent() {
         }`}
       >
         {/* Confetti minimal (subtil) */}
-        <ConfettiSoft active={isPaid && ready} />
+        <ConfettiEffect position={confettiPos} count={12} onComplete={() => setConfettiPos(null)} />
 
         <div className="flex items-start gap-5">
           {/* Médaillon animé */}
-          <div className="relative">
+          <div className="relative" ref={medallionRef}>
             <div
               className={`absolute inset-0 rounded-xl ${
                 isPaid && ready ? "pulse-halo" : ""
@@ -150,7 +176,7 @@ function SuccessContent() {
 
           <div className="min-w-0">
             <h1 className="text-2xl font-semibold text-white">
-              {isPaid ? "Paiement confirmé ✅" : "Commande reçue"}
+              {isPaid ? "Paiement confirmé" : "Commande reçue"}
             </h1>
             <p className="mt-1 text-sm text-neutral-400">
               Merci pour votre commande — elle a bien été {isPaid ? "payée et validée" : "enregistrée"}.
@@ -326,67 +352,6 @@ function AnimatedCheck({ active }: { active: boolean }) {
         }
       `}</style>
     </>
-  );
-}
-
-function ConfettiSoft({ active }: { active: boolean }) {
-  if (!active) return null;
-  // Confetti très minimaliste pour rester premium et léger
-  return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-      <span className="confetti c1" />
-      <span className="confetti c2" />
-      <span className="confetti c3" />
-      <span className="confetti c4" />
-      <style jsx>{`
-        .confetti {
-          position: absolute;
-          top: -8px;
-          width: 6px;
-          height: 10px;
-          opacity: 0;
-          border-radius: 2px;
-          animation: fall 900ms ease-out forwards;
-        }
-        .c1 {
-          left: 12%;
-          background: rgba(16, 185, 129, 0.9);
-          transform: rotate(12deg);
-          animation-delay: 80ms;
-        }
-        .c2 {
-          left: 24%;
-          background: rgba(99, 102, 241, 0.9);
-          transform: rotate(-8deg);
-          animation-delay: 120ms;
-        }
-        .c3 {
-          left: 68%;
-          background: rgba(236, 72, 153, 0.9);
-          transform: rotate(18deg);
-          animation-delay: 160ms;
-        }
-        .c4 {
-          left: 82%;
-          background: rgba(250, 204, 21, 0.9);
-          transform: rotate(-16deg);
-          animation-delay: 200ms;
-        }
-        @keyframes fall {
-          0% {
-            opacity: 0;
-            transform: translateY(-6px) scale(0.9) rotate(var(--rot, 0deg));
-          }
-          20% {
-            opacity: 1;
-          }
-          100% {
-            opacity: 0;
-            transform: translateY(32px) scale(1) rotate(calc(var(--rot, 0deg) + 40deg));
-          }
-        }
-      `}</style>
-    </div>
   );
 }
 

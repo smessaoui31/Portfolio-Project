@@ -42,6 +42,7 @@ export type CartView = {
 type AddOptions = {
   cooking?: CookingLevel;
   supplementIds?: string[];
+  supplements?: { id: string; name: string; priceCents: number }[]; // détail complet (nom/prix), utilisé pour le panier invité
   productName?: string; // Pour le panier invité
 };
 
@@ -135,11 +136,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             unitPriceCents,
             quantity,
             opts.cooking,
-            opts.supplementIds?.map((id) => ({
-              id,
-              name: "Supplément", // Pourrait être amélioré
-              priceCents: 100, // Prix par défaut, à améliorer
-            }))
+            opts.supplements
           );
           setGuestCartItems(updatedCart.items);
         } catch (e: any) {

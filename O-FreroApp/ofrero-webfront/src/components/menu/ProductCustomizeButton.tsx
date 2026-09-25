@@ -2,6 +2,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X } from "lucide-react";
+import { toast } from "sonner";
 import { useCart } from "@/context/CartContext";
 
 type CookingLevel = "NORMAL" | "WELL_DONE" | "EXTRA_CRISPY";
@@ -21,10 +24,12 @@ async function fetchProductSupplements(productId: string): Promise<ProductSupple
 
 export default function ProductCustomizeButton({
   productId,
+  productName,
   priceCents,
   className = "",
 }: {
   productId: string;
+  productName: string;
   priceCents: number;
   className?: string;
 }) {
@@ -59,20 +64,55 @@ export default function ProductCustomizeButton({
     })();
   }, [open, productId]);
 
+  // Verrouille le scroll de la page et permet de fermer avec Échap, comme les autres modals de l'app.
+  useEffect(() => {
+    if (!open) return;
+    document.body.style.overflow = "hidden";
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
   const total = useMemo(() => {
     const base = priceCents * qty;
     const extras = supplements.reduce((sum, s) => (checked[s.supplementId] ? sum + s.priceCents : sum), 0);
     return base + extras * qty; // suppléments comptés par unité
   }, [priceCents, qty, supplements, checked]);
 
-  const supplementIds = useMemo(
-    () => supplements.filter((s) => checked[s.supplementId]).map((s) => s.supplementId),
+  const selectedSupplements = useMemo(
+    () => supplements.filter((s) => checked[s.supplementId]),
     [supplements, checked]
   );
 
   async function handleAdd() {
-    await add(productId, qty, { cooking, supplementIds });
-    setOpen(false);
+    try {
+      await add(productId, qty, {
+        cooking,
+        productName,
+        supplementIds: selectedSupplements.map((s) => s.supplementId),
+        supplements: selectedSupplements.map((s) => ({
+          id: s.supplementId,
+          name: s.name,
+          priceCents: s.priceCents,
+        })),
+      });
+      setOpen(false);
+      toast.success("Produit ajouté au panier", {
+        description: `Quantité : ${qty}`,
+        duration: 2500,
+        className: "!bg-emerald-500/10 !border-emerald-500/40 !text-emerald-200",
+      });
+    } catch (e: any) {
+      toast.error("Erreur", {
+        description: e?.message || "Erreur lors de l'ajout au panier.",
+        duration: 3000,
+      });
+    }
   }
 
   return (
@@ -84,21 +124,33 @@ export default function ProductCustomizeButton({
         Personnaliser
       </button>
 
-      {!open ? null : (
-        <div
-          className="fixed inset-0 z-[100] grid place-items-center bg-black/60 p-4"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="w-full max-w-md rounded-2xl border border-neutral-800 bg-neutral-950 text-neutral-100 shadow-xl">
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setOpen(false)}
+            className="fixed inset-0 z-[100] grid place-items-center bg-black/60 p-4"
+            role="dialog"
+            aria-modal="true"
+          >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.97, y: 8 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-2xl border border-neutral-800 bg-neutral-950 text-neutral-100 shadow-xl"
+          >
             <div className="border-b border-neutral-800 px-5 py-3 flex items-center justify-between">
               <h3 className="text-base font-semibold">Personnaliser</h3>
               <button
-                className="rounded-md px-2 py-1 text-neutral-400 hover:bg-neutral-800/60"
+                className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-800/60"
                 onClick={() => setOpen(false)}
                 aria-label="Fermer"
               >
-                ✕
+                <X className="h-4 w-4" />
               </button>
             </div>
 
@@ -110,6 +162,7 @@ export default function ProductCustomizeButton({
                   <button
                     disabled={qty <= 1}
                     onClick={() => setQty((q) => Math.max(1, q - 1))}
+                    aria-label="Diminuer la quantité"
                     className={`px-3 py-1 text-sm ${
                       qty <= 1 ? "cursor-not-allowed text-neutral-600" : "text-neutral-200 hover:bg-neutral-800/60"
                     }`}
@@ -119,6 +172,7 @@ export default function ProductCustomizeButton({
                   <span className="px-4 py-1 text-sm tabular-nums">{qty}</span>
                   <button
                     onClick={() => setQty((q) => q + 1)}
+                    aria-label="Augmenter la quantité"
                     className="px-3 py-1 text-sm text-neutral-200 hover:bg-neutral-800/60"
                   >
                     +
@@ -200,9 +254,10 @@ export default function ProductCustomizeButton({
                 {loading ? "Ajout…" : "Ajouter au panier"}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

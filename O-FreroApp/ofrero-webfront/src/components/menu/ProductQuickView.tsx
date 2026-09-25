@@ -282,10 +282,11 @@ export default function ProductQuickView({
 
                   {/* Actions avec stagger */}
                   <motion.div variants={itemVariants} className="space-y-2 pt-4 sm:space-y-3 sm:pt-6">
-                    <AddToCartButton productId={product.id} />
+                    <AddToCartButton productId={product.id} productName={product.name} />
                     {isPizza && (
                       <ProductCustomizeButton
                         productId={product.id}
+                        productName={product.name}
                         priceCents={product.priceCents}
                       />
                     )}

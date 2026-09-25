@@ -58,29 +58,33 @@ export default function CheckoutPage() {
   async function startGuestCheckout(info: GuestInfo) {
     setError("");
 
-    if (isEmpty) return setError("Votre panier est vide.");
+    if (isEmpty) {
+      return setError("Votre panier est vide.");
+    }
 
     try {
       setSubmitting(true);
 
+      const payload = {
+        items: items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          cooking: item.cooking,
+          supplements: item.supplements?.map((sup) => sup.supplementId),
+        })),
+        guestInfo: {
+          firstName: info.firstName,
+          lastName: info.lastName,
+          email: info.email,
+          phone: info.phone,
+          address: info.address,
+        },
+      };
+
       // Pour les invités, on utilise un endpoint différent qui crée une commande sans authentification
       const data = await api<StartCheckoutResponse>("/checkout/guest", {
         method: "POST",
-        body: JSON.stringify({
-          items: items.map((item) => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            cooking: item.cooking,
-            supplements: item.supplements?.map((sup) => sup.supplementId),
-          })),
-          guestInfo: {
-            firstName: info.firstName,
-            lastName: info.lastName,
-            email: info.email,
-            phone: info.phone,
-            address: info.address,
-          },
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!data?.clientSecret || !data?.orderId) {
@@ -108,9 +112,7 @@ export default function CheckoutPage() {
       } catch {}
     } catch (err: any) {
       console.error("[checkout] guest start error:", err);
-      setError(
-        err?.message || "Erreur lors du démarrage du paiement. L'endpoint /checkout/guest n'existe peut-être pas encore sur le backend."
-      );
+      setError(err?.message || "Erreur lors du démarrage du paiement.");
     } finally {
       setSubmitting(false);
     }
@@ -190,8 +192,20 @@ export default function CheckoutPage() {
 
   if (loading) {
     return (
-      <main className="min-h-[60vh] grid place-items-center text-neutral-400">
-        Chargement du panier…
+      <main className="px-4 py-8">
+        <div className="mx-auto grid w-full max-w-7xl gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+          <section className="justify-self-center w-full max-w-xl rounded-2xl border border-neutral-800 bg-neutral-900/50 p-5">
+            <div className="h-6 w-48 skeleton rounded mb-3" />
+            <div className="h-4 w-32 skeleton rounded mb-6" />
+            <div className="h-10 w-full skeleton rounded mb-3" />
+            <div className="h-10 w-full skeleton rounded" />
+          </section>
+          <aside className="justify-self-center lg:justify-self-stretch w-full max-w-xl lg:max-w-none rounded-2xl border border-neutral-800 bg-neutral-900/50 p-5">
+            <div className="h-5 w-32 skeleton rounded mb-4" />
+            <div className="h-4 w-full skeleton rounded mb-2" />
+            <div className="h-4 w-2/3 skeleton rounded" />
+          </aside>
+        </div>
       </main>
     );
   }
