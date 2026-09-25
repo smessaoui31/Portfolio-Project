@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { OrderNotificationSound } from "./OrderNotificationSound";
+import AdminHeader from "./AdminHeader";
 
 const links = [
   { href: "/admin", label: "Aperçu" },
@@ -61,18 +62,10 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
       {/* Main */}
       <div className="min-w-0">
-        {/* Topbar simple */}
+        {/* Topbar */}
         <div className="sticky top-16 z-10 border-b border-neutral-800/80 bg-neutral-950/70 backdrop-blur">
-          <div className="mx-auto flex h-12 max-w-7xl items-center justify-between px-4">
-            <div className="text-sm text-neutral-400">
-              Tableau de bord — administration
-            </div>
-            <Link
-              href="/"
-              className="rounded-md border border-neutral-800 px-3 py-1.5 text-sm text-neutral-300 hover:bg-neutral-800/60"
-            >
-              Retour au site
-            </Link>
+          <div className="mx-auto max-w-7xl px-4 py-3">
+            <AdminHeader />
           </div>
         </div>
 

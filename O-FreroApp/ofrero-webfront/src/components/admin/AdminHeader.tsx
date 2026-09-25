@@ -83,10 +83,10 @@ export default function AdminHeader() {
             onChange={(e) => handleSearchChange(e.target.value)}
             onFocus={() => searchResults && setShowResults(true)}
             placeholder="Rechercher (commandes, clients, produits, catégories…)"
-            className="w-full rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-white outline-none focus:border-neutral-700"
+            className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground outline-none focus:border-ring"
           />
           {isSearching && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
               Recherche...
             </div>
           )}
@@ -94,19 +94,19 @@ export default function AdminHeader() {
 
         {/* Search Results Dropdown */}
         {showResults && searchResults && totalResults > 0 && (
-          <div className="absolute top-full mt-2 w-full bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+          <div className="absolute top-full mt-2 w-full bg-card border border-border rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
             {/* Products */}
             {searchResults.products.length > 0 && (
-              <div className="p-2 border-b border-neutral-800">
-                <div className="px-2 py-1 text-xs font-medium text-neutral-400 uppercase">Produits</div>
+              <div className="p-2 border-b border-border">
+                <div className="px-2 py-1 text-xs font-medium text-muted-foreground uppercase">Produits</div>
                 {searchResults.products.map((product) => (
                   <button
                     key={product.id}
                     onClick={() => navigateAndClose(`/admin/products/${product.id}`)}
-                    className="w-full text-left px-3 py-2 rounded hover:bg-neutral-800 transition"
+                    className="w-full text-left px-3 py-2 rounded hover:bg-accent transition"
                   >
-                    <div className="text-sm text-white">{product.name}</div>
-                    <div className="text-xs text-neutral-400">
+                    <div className="text-sm text-foreground">{product.name}</div>
+                    <div className="text-xs text-muted-foreground">
                       {product.category?.name} • {(product.priceCents / 100).toFixed(2)} €
                     </div>
                   </button>
@@ -116,16 +116,16 @@ export default function AdminHeader() {
 
             {/* Orders */}
             {searchResults.orders.length > 0 && (
-              <div className="p-2 border-b border-neutral-800">
-                <div className="px-2 py-1 text-xs font-medium text-neutral-400 uppercase">Commandes</div>
+              <div className="p-2 border-b border-border">
+                <div className="px-2 py-1 text-xs font-medium text-muted-foreground uppercase">Commandes</div>
                 {searchResults.orders.map((order) => (
                   <button
                     key={order.id}
                     onClick={() => navigateAndClose(`/admin/orders/${order.id}`)}
-                    className="w-full text-left px-3 py-2 rounded hover:bg-neutral-800 transition"
+                    className="w-full text-left px-3 py-2 rounded hover:bg-accent transition"
                   >
-                    <div className="text-sm text-white">#{order.orderNumber || order.id.slice(0, 8)}</div>
-                    <div className="text-xs text-neutral-400">
+                    <div className="text-sm text-foreground">#{order.orderNumber || order.id.slice(0, 8)}</div>
+                    <div className="text-xs text-muted-foreground">
                       {order.user?.fullName} • {order.user?.email}
                     </div>
                   </button>
@@ -135,15 +135,15 @@ export default function AdminHeader() {
 
             {/* Users */}
             {searchResults.users.length > 0 && (
-              <div className="p-2 border-b border-neutral-800">
-                <div className="px-2 py-1 text-xs font-medium text-neutral-400 uppercase">Utilisateurs</div>
+              <div className="p-2 border-b border-border">
+                <div className="px-2 py-1 text-xs font-medium text-muted-foreground uppercase">Utilisateurs</div>
                 {searchResults.users.map((user) => (
                   <button
                     key={user.id}
                     onClick={() => navigateAndClose(`/admin/users/${user.id}`)}
-                    className="w-full text-left px-3 py-2 rounded hover:bg-neutral-800 transition"
+                    className="w-full text-left px-3 py-2 rounded hover:bg-accent transition"
                   >
-                    <div className="text-sm text-white flex items-center gap-2">
+                    <div className="text-sm text-foreground flex items-center gap-2">
                       {user.fullName}
                       {user.role === "ADMIN" && (
                         <span className="text-xs px-1.5 py-0.5 bg-emerald-500/10 text-emerald-300 rounded">
@@ -151,7 +151,7 @@ export default function AdminHeader() {
                         </span>
                       )}
                     </div>
-                    <div className="text-xs text-neutral-400">{user.email}</div>
+                    <div className="text-xs text-muted-foreground">{user.email}</div>
                   </button>
                 ))}
               </div>
@@ -160,14 +160,14 @@ export default function AdminHeader() {
             {/* Categories */}
             {searchResults.categories.length > 0 && (
               <div className="p-2">
-                <div className="px-2 py-1 text-xs font-medium text-neutral-400 uppercase">Catégories</div>
+                <div className="px-2 py-1 text-xs font-medium text-muted-foreground uppercase">Catégories</div>
                 {searchResults.categories.map((category) => (
                   <button
                     key={category.id}
                     onClick={() => navigateAndClose(`/admin/categories`)}
-                    className="w-full text-left px-3 py-2 rounded hover:bg-neutral-800 transition"
+                    className="w-full text-left px-3 py-2 rounded hover:bg-accent transition"
                   >
-                    <div className="text-sm text-white">{category.name}</div>
+                    <div className="text-sm text-foreground">{category.name}</div>
                   </button>
                 ))}
               </div>
@@ -176,7 +176,7 @@ export default function AdminHeader() {
         )}
 
         {showResults && searchResults && totalResults === 0 && searchQuery.length >= 2 && (
-          <div className="absolute top-full mt-2 w-full bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl z-50 p-4 text-center text-sm text-neutral-400">
+          <div className="absolute top-full mt-2 w-full bg-card border border-border rounded-lg shadow-xl z-50 p-4 text-center text-sm text-muted-foreground">
             Aucun résultat trouvé
           </div>
         )}
@@ -185,8 +185,14 @@ export default function AdminHeader() {
       {/* Actions */}
       <div className="flex items-center gap-2">
         <Link
+          href="/"
+          className="hidden sm:inline-block rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+        >
+          Retour au site
+        </Link>
+        <Link
           href="/me"
-          className="rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-neutral-300 hover:text-white hover:bg-neutral-800/70"
+          className="rounded-md border border-border bg-card px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/70"
           title={email ?? undefined}
         >
           {email ?? "Compte"}
