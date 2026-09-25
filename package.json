@@ -1,4 +1,18 @@
 {
+  "name": "ofrero-monorepo",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "concurrently --kill-others-on-fail \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "cd O-FreroApp/ofrero-api && npm run dev:5050",
+    "dev:web": "cd O-FreroApp/ofrero-webfront && npm run dev",
+    "dev:full": "concurrently --kill-others-on-fail \"npm run dev:api:full\" \"npm run dev:web\"",
+    "dev:api:full": "cd O-FreroApp/ofrero-api && npm run dev:full"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
   "dependencies": {
     "@stripe/react-stripe-js": "^5.2.0",
     "@stripe/stripe-js": "^8.1.0"
