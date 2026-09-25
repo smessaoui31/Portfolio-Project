@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { X } from "lucide-react";
 import type { Category } from "@/types";
 
 type Props = {
@@ -125,7 +126,7 @@ export default function FiltersBar({ categories }: Props) {
             className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition"
             aria-label="Effacer la recherche"
           >
-            ✕
+            <X className="h-4 w-4" />
           </button>
         )}
       </div>
@@ -179,7 +180,7 @@ export default function FiltersBar({ categories }: Props) {
               className="inline-flex items-center gap-1.5 rounded-full bg-neutral-800/60 px-3 py-1 text-xs text-white hover:bg-neutral-800 transition"
             >
               Recherche: "{q}"
-              <span className="text-neutral-400">✕</span>
+              <X className="h-3 w-3 text-neutral-400" />
             </button>
           )}
 
@@ -189,7 +190,7 @@ export default function FiltersBar({ categories }: Props) {
               className="inline-flex items-center gap-1.5 rounded-full bg-neutral-800/60 px-3 py-1 text-xs text-white hover:bg-neutral-800 transition"
             >
               {getCategoryName(categoryId)}
-              <span className="text-neutral-400">✕</span>
+              <X className="h-3 w-3 text-neutral-400" />
             </button>
           )}
 
@@ -199,7 +200,7 @@ export default function FiltersBar({ categories }: Props) {
               className="inline-flex items-center gap-1.5 rounded-full bg-neutral-800/60 px-3 py-1 text-xs text-white hover:bg-neutral-800 transition"
             >
               {sortOptions.find(o => o.value === sort)?.label}
-              <span className="text-neutral-400">✕</span>
+              <X className="h-3 w-3 text-neutral-400" />
             </button>
           )}
 
@@ -209,7 +210,7 @@ export default function FiltersBar({ categories }: Props) {
               className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600/20 px-3 py-1 text-xs text-emerald-300 hover:bg-emerald-600/30 transition"
             >
               Sélection du Chef
-              <span className="text-emerald-400">✕</span>
+              <X className="h-3 w-3 text-emerald-400" />
             </button>
           )}
 

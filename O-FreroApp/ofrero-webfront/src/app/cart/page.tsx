@@ -19,8 +19,25 @@ export default function CartPage() {
 
   if (loading && !id) {
     return (
-      <main className="min-h-[60vh] grid place-items-center text-neutral-400">
-        Chargement du panier…
+      <main className="mx-auto w-full max-w-5xl px-3 sm:px-4 py-4 sm:py-8">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="h-10 w-10 skeleton rounded-xl" />
+          <div className="h-7 w-40 skeleton rounded" />
+        </div>
+        <div className="space-y-3">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4">
+              <div className="flex items-center gap-4">
+                <div className="h-16 w-16 skeleton rounded-xl shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-1/3 skeleton rounded" />
+                  <div className="h-3 w-1/4 skeleton rounded" />
+                </div>
+                <div className="h-4 w-16 skeleton rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
       </main>
     );
   }
