@@ -50,7 +50,7 @@ export default function BottomSheet({ isOpen, onClose, title, children }: Bottom
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-background/60 backdrop-blur-sm"
           />
 
           {/* Bottom Sheet */}
@@ -67,20 +67,20 @@ export default function BottomSheet({ isOpen, onClose, title, children }: Bottom
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0, bottom: 0.5 }}
             onDragEnd={handleDragEnd}
-            className="fixed bottom-0 left-0 right-0 z-50 max-h-[90vh] rounded-t-3xl border-t border-neutral-700 bg-neutral-900 shadow-2xl"
+            className="fixed bottom-0 left-0 right-0 z-50 max-h-[90vh] rounded-t-3xl border-t border-border bg-card shadow-2xl"
           >
             {/* Drag handle */}
             <div className="flex justify-center py-3">
-              <div className="h-1.5 w-12 rounded-full bg-neutral-700" />
+              <div className="h-1.5 w-12 rounded-full bg-secondary" />
             </div>
 
             {/* Header */}
             {title && (
-              <div className="flex items-center justify-between border-b border-neutral-800 px-6 pb-4">
-                <h2 className="text-xl font-semibold text-white">{title}</h2>
+              <div className="flex items-center justify-between border-b border-border px-6 pb-4">
+                <h2 className="text-xl font-semibold text-foreground">{title}</h2>
                 <button
                   onClick={onClose}
-                  className="rounded-full p-2 text-neutral-400 transition hover:bg-neutral-800 hover:text-white"
+                  className="rounded-full p-2 text-muted-foreground transition hover:bg-accent hover:text-foreground"
                   aria-label="Fermer"
                 >
                   <X className="h-5 w-5" />

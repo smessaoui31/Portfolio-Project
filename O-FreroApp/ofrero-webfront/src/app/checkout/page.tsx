@@ -194,13 +194,13 @@ export default function CheckoutPage() {
     return (
       <main className="px-4 py-8">
         <div className="mx-auto grid w-full max-w-7xl gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-          <section className="justify-self-center w-full max-w-xl rounded-2xl border border-neutral-800 bg-neutral-900/50 p-5">
+          <section className="justify-self-center w-full max-w-xl rounded-2xl border border-border bg-card/50 p-5">
             <div className="h-6 w-48 skeleton rounded mb-3" />
             <div className="h-4 w-32 skeleton rounded mb-6" />
             <div className="h-10 w-full skeleton rounded mb-3" />
             <div className="h-10 w-full skeleton rounded" />
           </section>
-          <aside className="justify-self-center lg:justify-self-stretch w-full max-w-xl lg:max-w-none rounded-2xl border border-neutral-800 bg-neutral-900/50 p-5">
+          <aside className="justify-self-center lg:justify-self-stretch w-full max-w-xl lg:max-w-none rounded-2xl border border-border bg-card/50 p-5">
             <div className="h-5 w-32 skeleton rounded mb-4" />
             <div className="h-4 w-full skeleton rounded mb-2" />
             <div className="h-4 w-2/3 skeleton rounded" />
@@ -214,16 +214,16 @@ export default function CheckoutPage() {
     <main className="px-4 py-8">
       <div className="mx-auto grid w-full max-w-7xl gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
         {/* Colonne paiement */}
-        <section className="justify-self-center w-full max-w-xl rounded-2xl border border-neutral-800 bg-neutral-900/50 p-5">
-          <h1 className="text-xl font-semibold text-white">Finaliser la commande</h1>
-          <p className="mt-1 text-sm text-neutral-400">
+        <section className="justify-self-center w-full max-w-xl rounded-2xl border border-border bg-card/50 p-5">
+          <h1 className="text-xl font-semibold text-foreground">Finaliser la commande</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Total à payer :{" "}
-            <span className="font-medium text-white">{(totalCents / 100).toFixed(2)} €</span>
+            <span className="font-medium text-foreground">{(totalCents / 100).toFixed(2)} €</span>
           </p>
 
           {orderNumber && (
-            <div className="mt-2 text-sm text-neutral-300">
-              N° de commande : <span className="font-medium text-white">#{orderNumber}</span>
+            <div className="mt-2 text-sm text-foreground">
+              N° de commande : <span className="font-medium text-foreground">#{orderNumber}</span>
             </div>
           )}
 
@@ -262,7 +262,7 @@ export default function CheckoutPage() {
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                           onClick={() => setShowGuestForm(true)}
-                          className="flex items-center justify-center gap-2 rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-3 text-sm font-medium text-white transition hover:border-neutral-600"
+                          className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition hover:border-border"
                         >
                           <UserPlus className="h-4 w-4" />
                           Commander en invité
@@ -290,7 +290,7 @@ export default function CheckoutPage() {
                       <GuestCheckoutForm onSubmit={handleGuestInfo} loading={submitting} />
                       <button
                         onClick={() => setShowGuestForm(false)}
-                        className="mt-4 text-sm text-neutral-400 underline-offset-4 hover:text-white hover:underline"
+                        className="mt-4 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
                       >
                         ← Retour
                       </button>
@@ -303,43 +303,43 @@ export default function CheckoutPage() {
               {!isGuest && (
                 <form onSubmit={handleStartCheckout} className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-sm text-neutral-300">Adresse</label>
+                    <label className="text-sm text-foreground">Adresse</label>
                     <input
                       value={addressLine}
                       onChange={(e) => setAddressLine(e.target.value)}
                       placeholder="12 rue de la République"
-                      className="w-full min-w-0 rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-white outline-none focus:border-neutral-700"
+                      className="w-full min-w-0 rounded-md border border-border bg-card px-3 py-2 text-foreground outline-none focus:border-border"
                     />
                   </div>
 
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="space-y-2 min-w-0">
-                      <label className="text-sm text-neutral-300">Ville</label>
+                      <label className="text-sm text-foreground">Ville</label>
                       <input
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
                         placeholder="Paris"
-                        className="w-full min-w-0 rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-white outline-none focus:border-neutral-700"
+                        className="w-full min-w-0 rounded-md border border-border bg-card px-3 py-2 text-foreground outline-none focus:border-border"
                       />
                     </div>
                     <div className="space-y-2 min-w-0">
-                      <label className="text-sm text-neutral-300">Code postal</label>
+                      <label className="text-sm text-foreground">Code postal</label>
                       <input
                         value={postalCode}
                         onChange={(e) => setPostalCode(e.target.value)}
                         placeholder="75001"
-                        className="w-full min-w-0 rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-white outline-none focus:border-neutral-700"
+                        className="w-full min-w-0 rounded-md border border-border bg-card px-3 py-2 text-foreground outline-none focus:border-border"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm text-neutral-300">Téléphone</label>
+                    <label className="text-sm text-foreground">Téléphone</label>
                     <input
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="+33 6 12 34 56 78"
-                      className="w-full min-w-0 rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-white outline-none focus:border-neutral-700"
+                      className="w-full min-w-0 rounded-md border border-border bg-card px-3 py-2 text-foreground outline-none focus:border-border"
                     />
                   </div>
 
@@ -373,7 +373,7 @@ export default function CheckoutPage() {
           <div className="mt-6 text-center">
             <Link
               href="/menu"
-              className="text-sm text-neutral-400 underline-offset-4 hover:text-white hover:underline"
+              className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
             >
               ← Retour au menu
             </Link>
@@ -381,32 +381,32 @@ export default function CheckoutPage() {
         </section>
 
         {/* Colonne panier */}
-        <aside className="justify-self-center lg:justify-self-stretch w-full max-w-xl lg:max-w-none rounded-2xl border border-neutral-800 bg-neutral-900/50 p-5">
-          <h2 className="text-white font-medium mb-3">Votre panier</h2>
+        <aside className="justify-self-center lg:justify-self-stretch w-full max-w-xl lg:max-w-none rounded-2xl border border-border bg-card/50 p-5">
+          <h2 className="text-foreground font-medium mb-3">Votre panier</h2>
 
           {isEmpty ? (
-            <p className="text-neutral-400 text-sm">Panier vide.</p>
+            <p className="text-muted-foreground text-sm">Panier vide.</p>
           ) : (
             <>
-              <ul className="divide-y divide-neutral-800">
+              <ul className="divide-y divide-border">
                 {items.map((item) => (
                   <li key={item.id} className="py-3 flex items-start justify-between gap-4">
                     <div className="min-w-0">
-                      <div className="truncate text-sm text-white">{item.name}</div>
-                      <div className="text-xs text-neutral-400">
+                      <div className="truncate text-sm text-foreground">{item.name}</div>
+                      <div className="text-xs text-muted-foreground">
                         {(item.unitPriceCents / 100).toFixed(2)} € × {item.quantity}
                       </div>
                     </div>
-                    <div className="text-sm text-white font-medium">
+                    <div className="text-sm text-foreground font-medium">
                       {((item.unitPriceCents * item.quantity) / 100).toFixed(2)} €
                     </div>
                   </li>
                 ))}
               </ul>
 
-              <div className="mt-4 flex items-center justify-between border-t border-neutral-800 pt-3">
-                <span className="text-neutral-400 text-sm">Total</span>
-                <span className="text-white font-semibold">
+              <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
+                <span className="text-muted-foreground text-sm">Total</span>
+                <span className="text-foreground font-semibold">
                   {(totalCents / 100).toFixed(2)} €
                 </span>
               </div>

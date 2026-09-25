@@ -91,44 +91,44 @@ export default function ProductForm({ mode, initial, onSaved }: Props) {
       )}
 
       <div className="space-y-2">
-        <label className="text-sm text-neutral-300">Nom</label>
+        <label className="text-sm text-foreground">Nom</label>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Ex: Pizza Margherita"
-          className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-white outline-none focus:border-neutral-700"
+          className="w-full rounded-md border border-border bg-card px-3 py-2 text-foreground outline-none focus:border-border"
         />
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm text-neutral-300">Description</label>
+        <label className="text-sm text-foreground">Description</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Tomate, mozzarella, basilic…"
           rows={3}
-          className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-white outline-none focus:border-neutral-700"
+          className="w-full rounded-md border border-border bg-card px-3 py-2 text-foreground outline-none focus:border-border"
         />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="space-y-2">
-          <label className="text-sm text-neutral-300">Prix (€)</label>
+          <label className="text-sm text-foreground">Prix (€)</label>
           <input
             inputMode="decimal"
             value={priceEuros}
             onChange={(e) => setPriceEuros(e.target.value)}
             placeholder="9.50"
-            className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-white outline-none focus:border-neutral-700"
+            className="w-full rounded-md border border-border bg-card px-3 py-2 text-foreground outline-none focus:border-border"
           />
         </div>
 
         <div className="space-y-2 sm:col-span-2">
-          <label className="text-sm text-neutral-300">Catégorie</label>
+          <label className="text-sm text-foreground">Catégorie</label>
           <select
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
-            className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-white outline-none focus:border-neutral-700"
+            className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-border"
           >
             <option value="">— Aucune —</option>
             {cats.map((c) => (
@@ -140,12 +140,12 @@ export default function ProductForm({ mode, initial, onSaved }: Props) {
         </div>
       </div>
 
-      <label className="inline-flex items-center gap-2 text-sm text-neutral-200">
+      <label className="inline-flex items-center gap-2 text-sm text-foreground">
         <input
           type="checkbox"
           checked={isFeatured}
           onChange={(e) => setIsFeatured(e.target.checked)}
-          className="h-4 w-4 rounded border-neutral-700 bg-neutral-900"
+          className="h-4 w-4 rounded border-border bg-card"
         />
         Mettre “À la une”
       </label>
@@ -153,7 +153,7 @@ export default function ProductForm({ mode, initial, onSaved }: Props) {
       <div className="pt-2 flex items-center justify-end gap-3">
         <a
           href="/admin/products"
-          className="rounded-md border border-neutral-700 px-3 py-2 text-sm text-white hover:bg-neutral-800/70"
+          className="rounded-md border border-border px-3 py-2 text-sm text-foreground hover:bg-accent/70"
         >
           Annuler
         </a>

@@ -108,19 +108,19 @@ export default function AdminOrdersPage() {
   return (
     <main className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-xl font-semibold text-white">Toutes les commandes</h1>
+        <h1 className="text-xl font-semibold text-foreground">Toutes les commandes</h1>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder="Rechercher par client, email, numéro..."
-            className="rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-white outline-none focus:border-neutral-700 w-full sm:w-64"
+            className="rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-border w-full sm:w-64"
           />
           <select
             value={status}
             onChange={(e) => setParam({ status: e.target.value })}
-            className="rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-white outline-none focus:border-neutral-700"
+            className="rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-border"
             aria-label="Filtrer par statut"
           >
             <option value="">Tous les statuts</option>
@@ -134,8 +134,8 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 overflow-hidden">
-        <div className="px-4 py-3 border-b border-neutral-800 text-neutral-300 text-sm">
+      <div className="rounded-2xl border border-border bg-card/50 overflow-hidden">
+        <div className="px-4 py-3 border-b border-border text-foreground text-sm">
           {loading
             ? "Chargement…"
             : data
@@ -150,22 +150,22 @@ export default function AdminOrdersPage() {
         )}
 
         {!loading && data && data.items.length === 0 && !error && (
-          <div className="p-6 text-neutral-400">Aucune commande à afficher.</div>
+          <div className="p-6 text-muted-foreground">Aucune commande à afficher.</div>
         )}
 
         {!loading && data && data.items.length > 0 && (
-          <ul className="divide-y divide-neutral-800">
+          <ul className="divide-y divide-border">
             {data.items.map((o) => (
-              <li key={o.id} className="px-4 py-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between hover:bg-neutral-800/30">
+              <li key={o.id} className="px-4 py-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between hover:bg-accent/30">
                 <div className="min-w-0">
-                  <div className="text-white text-sm truncate">
+                  <div className="text-foreground text-sm truncate">
                     {o.user?.fullName?.trim() || "Client inconnu"}
                   </div>
-                  <div className="text-xs text-neutral-400 truncate">
+                  <div className="text-xs text-muted-foreground truncate">
                     {o.user?.email ?? "—"}
                   </div>
 
-                  <div className="mt-1 text-xs text-neutral-500">
+                  <div className="mt-1 text-xs text-muted-foreground">
                     <span className="inline-block mr-2"># {o.id}</span>
                     <span className="inline-block">
                       {new Date(o.createdAt).toLocaleString()}
@@ -174,13 +174,13 @@ export default function AdminOrdersPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="text-sm text-white font-medium">
+                  <span className="text-sm text-foreground font-medium">
                     {(o.totalCents / 100).toFixed(2)} €
                   </span>
                   <OrderStatusBadge status={o.status} />
                   <Link
                     href={`/admin/orders/${o.id}`}
-                    className="text-sm text-neutral-300 hover:text-white underline underline-offset-4"
+                    className="text-sm text-foreground hover:text-foreground underline underline-offset-4"
                   >
                     Détails
                   </Link>
@@ -192,9 +192,9 @@ export default function AdminOrdersPage() {
 
         {/* Enhanced Pagination */}
         {!loading && data && totalPages > 1 && (
-          <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-neutral-800 flex-wrap">
+          <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-border flex-wrap">
             <button
-              className="rounded-md border border-neutral-800 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800/60 disabled:opacity-50"
+              className="rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-accent/60 disabled:opacity-50"
               onClick={() => setParam({ page: Math.max(page - 1, 1) })}
               disabled={page <= 1}
             >
@@ -202,26 +202,26 @@ export default function AdminOrdersPage() {
             </button>
 
             <form onSubmit={handlePageInput} className="flex items-center gap-2">
-              <span className="text-xs text-neutral-400">Page</span>
+              <span className="text-xs text-muted-foreground">Page</span>
               <input
                 type="number"
                 name="pageNum"
                 min="1"
                 max={totalPages}
                 defaultValue={page}
-                className="w-16 px-2 py-1 text-sm bg-neutral-800 border border-neutral-700 rounded text-white text-center"
+                className="w-16 px-2 py-1 text-sm bg-secondary border border-border rounded text-foreground text-center"
               />
-              <span className="text-xs text-neutral-400">/ {totalPages}</span>
+              <span className="text-xs text-muted-foreground">/ {totalPages}</span>
               <button
                 type="submit"
-                className="px-2 py-1 text-xs bg-neutral-800 text-white rounded hover:bg-neutral-700"
+                className="px-2 py-1 text-xs bg-secondary text-foreground rounded hover:bg-secondary"
               >
                 OK
               </button>
             </form>
 
             <button
-              className="rounded-md border border-neutral-800 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800/60 disabled:opacity-50"
+              className="rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-accent/60 disabled:opacity-50"
               onClick={() => setParam({ page: Math.min(page + 1, totalPages) })}
               disabled={page >= totalPages}
             >

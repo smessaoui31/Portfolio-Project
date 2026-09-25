@@ -107,7 +107,7 @@ function SuccessContent() {
   if (loading) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-16">
-        <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-8">
+        <div className="rounded-2xl border border-border bg-card/50 p-8">
           <div className="h-6 w-40 skeleton mb-4 rounded" />
           <div className="h-4 w-64 skeleton mb-2 rounded" />
           <div className="h-4 w-56 skeleton mb-6 rounded" />
@@ -121,7 +121,7 @@ function SuccessContent() {
     return (
       <main className="mx-auto max-w-3xl px-4 py-16">
         <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-8">
-          <h1 className="text-white text-xl font-semibold">Une erreur est survenue</h1>
+          <h1 className="text-foreground text-xl font-semibold">Une erreur est survenue</h1>
           <p className="mt-2 text-sm text-red-300">{err || "Commande introuvable."}</p>
           <div className="mt-6">
             <Link
@@ -153,7 +153,7 @@ function SuccessContent() {
     <main className="mx-auto max-w-4xl px-4 py-14">
       {/* Carte principale + animation entrée */}
       <section
-        className={`relative overflow-hidden rounded-2xl border border-neutral-800 bg-gradient-to-br from-neutral-900/60 to-neutral-950/30 p-6 transition-all duration-700 ${
+        className={`relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-neutral-900/60 to-neutral-950/30 p-6 transition-all duration-700 ${
           ready ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
         }`}
       >
@@ -175,10 +175,10 @@ function SuccessContent() {
           </div>
 
           <div className="min-w-0">
-            <h1 className="text-2xl font-semibold text-white">
+            <h1 className="text-2xl font-semibold text-foreground">
               {isPaid ? "Paiement confirmé" : "Commande reçue"}
             </h1>
-            <p className="mt-1 text-sm text-neutral-400">
+            <p className="mt-1 text-sm text-muted-foreground">
               Merci pour votre commande — elle a bien été {isPaid ? "payée et validée" : "enregistrée"}.
             </p>
           </div>
@@ -186,30 +186,30 @@ function SuccessContent() {
 
         {/* Carte de récapitulatif */}
         <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div className="col-span-2 rounded-lg border border-neutral-800 bg-neutral-900/40 p-4">
+          <div className="col-span-2 rounded-lg border border-border bg-card/40 p-4">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-xs text-neutral-400">Numéro de commande</div>
-                <div className="mt-1 font-medium text-white">#{shortId}</div>
+                <div className="text-xs text-muted-foreground">Numéro de commande</div>
+                <div className="mt-1 font-medium text-foreground">#{shortId}</div>
               </div>
 
               <div className="text-right">
-                <div className="text-xs text-neutral-400">Montant payé</div>
-                <div className="mt-1 text-xl font-semibold text-white">{formattedTotal} €</div>
+                <div className="text-xs text-muted-foreground">Montant payé</div>
+                <div className="mt-1 text-xl font-semibold text-foreground">{formattedTotal} €</div>
               </div>
             </div>
 
-            <div className="mt-3 flex items-center justify-between text-sm text-neutral-400">
+            <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground">
               <div>{itemsCount} article{itemsCount > 1 ? "s" : ""}</div>
               <div>{new Date(order.createdAt).toLocaleString("fr-FR")}</div>
             </div>
 
             <div className="mt-3 flex items-center gap-3 text-sm">
-              <div className="rounded-md bg-neutral-800/40 px-3 py-1 text-neutral-300">
+              <div className="rounded-md bg-secondary/40 px-3 py-1 text-foreground">
                 {paymentMethodLabel}
               </div>
               {order.payment?.intentId ? (
-                <div className="text-xs text-neutral-400">
+                <div className="text-xs text-muted-foreground">
                   Transaction : {truncate(order.payment.intentId)}
                 </div>
               ) : null}
@@ -217,57 +217,57 @@ function SuccessContent() {
           </div>
 
           {/* Livraison */}
-          <div className="rounded-lg border border-neutral-800 bg-neutral-900/40 p-4">
-            <div className="text-xs text-neutral-400">Livraison</div>
-            <div className="mt-1 text-sm text-white">
+          <div className="rounded-lg border border-border bg-card/40 p-4">
+            <div className="text-xs text-muted-foreground">Livraison</div>
+            <div className="mt-1 text-sm text-foreground">
               {order.shippingLine1}
               {order.shippingLine2 ? `, ${order.shippingLine2}` : ""}
             </div>
-            <div className="mt-1 text-xs text-neutral-400">
+            <div className="mt-1 text-xs text-muted-foreground">
               {order.shippingPostalCode} {order.shippingCity}
             </div>
-            <div className="mt-3 text-xs text-neutral-400">Téléphone</div>
-            <div className="mt-1 text-sm text-white">{order.shippingPhone}</div>
+            <div className="mt-3 text-xs text-muted-foreground">Téléphone</div>
+            <div className="mt-1 text-sm text-foreground">{order.shippingPhone}</div>
           </div>
         </div>
       </section>
 
       {/* Articles */}
       <section
-        className={`mt-6 rounded-2xl border border-neutral-800 bg-neutral-900/50 p-6 transition-all duration-700 delay-100 ${
+        className={`mt-6 rounded-2xl border border-border bg-card/50 p-6 transition-all duration-700 delay-100 ${
           ready ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
         }`}
       >
-        <h2 className="text-white font-medium mb-4">Résumé de votre commande</h2>
-        <ul className="divide-y divide-neutral-800">
+        <h2 className="text-foreground font-medium mb-4">Résumé de votre commande</h2>
+        <ul className="divide-y divide-border">
           {order.items.map((it) => (
             <li key={it.id} className="py-3 flex items-start justify-between gap-4">
               <div className="min-w-0">
-                <div className="text-sm text-white">{it.name}</div>
-                <div className="text-xs text-neutral-400">
+                <div className="text-sm text-foreground">{it.name}</div>
+                <div className="text-xs text-muted-foreground">
                   {(it.unitPriceCents / 100).toFixed(2)} € × {it.quantity}
                 </div>
               </div>
-              <div className="text-sm text-white font-medium">
+              <div className="text-sm text-foreground font-medium">
                 {((it.unitPriceCents * it.quantity) / 100).toFixed(2)} €
               </div>
             </li>
           ))}
         </ul>
 
-        <div className="mt-4 flex items-center justify-between border-t border-neutral-800 pt-3">
-          <span className="text-neutral-400 text-sm">Total</span>
-          <span className="text-white font-semibold">{formattedTotal} €</span>
+        <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
+          <span className="text-muted-foreground text-sm">Total</span>
+          <span className="text-foreground font-semibold">{formattedTotal} €</span>
         </div>
 
         <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-sm text-neutral-400">
+          <div className="text-sm text-muted-foreground">
             Un e-mail de confirmation a été envoyé à votre adresse.
           </div>
           <div className="flex gap-2">
             <Link
               href="/orders"
-              className="rounded-md border border-neutral-800 px-3 py-2 text-sm text-white hover:bg-neutral-800/60"
+              className="rounded-md border border-border px-3 py-2 text-sm text-foreground hover:bg-accent/60"
             >
               Mes commandes
             </Link>
@@ -305,7 +305,7 @@ export default function CheckoutSuccessPage() {
   return (
     <Suspense fallback={
       <main className="mx-auto max-w-3xl px-4 py-16">
-        <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-8">
+        <div className="rounded-2xl border border-border bg-card/50 p-8">
           <div className="h-6 w-40 skeleton mb-4 rounded" />
           <div className="h-4 w-64 skeleton mb-2 rounded" />
           <div className="h-4 w-56 skeleton mb-6 rounded" />

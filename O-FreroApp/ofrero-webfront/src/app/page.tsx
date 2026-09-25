@@ -6,7 +6,7 @@ export const revalidate = 0;
 
 export default function HomePage() {
   return (
-    <main className="relative h-screen overflow-hidden bg-neutral-950 text-neutral-100 flex flex-col">
+    <main className="relative h-screen overflow-hidden bg-background text-foreground flex flex-col">
       {/* Spotlight d'ambiance */}
       <Spotlight className="left-1/2 top-[-20%] -translate-x-1/2 opacity-60" fill="#fff" />
 
@@ -39,7 +39,7 @@ export default function HomePage() {
           <h1 className="bg-opacity-50 bg-gradient-to-b from-neutral-50 to-neutral-400 bg-clip-text text-center text-3xl font-bold text-transparent md:text-5xl lg:text-5xl">
             O'Frero Pizza
           </h1>
-          <p className="mx-auto mt-1 max-w-lg text-center text-sm font-normal text-neutral-300 md:text-base">
+          <p className="mx-auto mt-1 max-w-lg text-center text-sm font-normal text-foreground md:text-base">
             Une Pizzeria artisanale au feu de bois, tenue par deux frères passionnés de la pizza façon italienne.
           </p>
         </div>
@@ -55,7 +55,7 @@ export default function HomePage() {
 
           <a
             href="tel:+33615805147"
-            className="group relative inline-flex items-center justify-center rounded-md border border-neutral-700 bg-neutral-900/70 px-5 py-2.5 text-sm font-medium text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)] transition-all duration-300 hover:bg-neutral-800 hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-white/15"
+            className="group relative inline-flex items-center justify-center rounded-md border border-border bg-card/70 px-5 py-2.5 text-sm font-medium text-foreground shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)] transition-all duration-300 hover:bg-accent hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-white/15"
           >
             Appelez nous au 06 15 80 51 47
           </a>
@@ -94,7 +94,7 @@ export default function HomePage() {
       </section>
 
       {/* Footer intégré dans la page */}
-      <footer className="relative z-10 border-t border-neutral-800/80 py-3 text-center text-xs text-neutral-500">
+      <footer className="relative z-10 border-t border-border/80 py-3 text-center text-xs text-muted-foreground">
         © {new Date().getFullYear()} O'Frero Pizza — Fait par Messaoui Sofian
       </footer>
     </main>
@@ -103,9 +103,9 @@ export default function HomePage() {
 
 function InfoCard({ title, content }: { title: string; content: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-2.5">
-      <div className="text-xs uppercase tracking-wide text-neutral-400">{title}</div>
-      <div className="mt-0.5 text-sm text-neutral-200">{content}</div>
+    <div className="rounded-2xl border border-border bg-card/50 p-2.5">
+      <div className="text-xs uppercase tracking-wide text-muted-foreground">{title}</div>
+      <div className="mt-0.5 text-sm text-foreground">{content}</div>
     </div>
   );
 }

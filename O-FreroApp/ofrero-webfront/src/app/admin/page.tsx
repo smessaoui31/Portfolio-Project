@@ -107,7 +107,7 @@ export default function AdminDashboardHome() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-white">Tableau de bord</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Tableau de bord</h1>
 
         {/* Period Selector */}
         <div className="flex gap-2">
@@ -124,7 +124,7 @@ export default function AdminDashboardHome() {
               className={`px-3 py-1.5 text-sm rounded-md transition ${
                 period === p.value
                   ? "bg-white text-black font-medium"
-                  : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
+                  : "bg-secondary text-foreground hover:bg-secondary"
               }`}
             >
               {p.label}
@@ -143,23 +143,23 @@ export default function AdminDashboardHome() {
 
       {/* Charts */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4">
-          <h2 className="text-white text-lg font-medium mb-4">Évolution du chiffre d'affaires</h2>
+        <div className="rounded-2xl border border-border bg-card/50 p-4">
+          <h2 className="text-foreground text-lg font-medium mb-4">Évolution du chiffre d'affaires</h2>
           {analytics && analytics.revenueTimeline.length > 0 ? (
             <RevenueChart data={analytics.revenueTimeline} />
           ) : (
-            <div className="h-80 flex items-center justify-center text-neutral-400">
+            <div className="h-80 flex items-center justify-center text-muted-foreground">
               Aucune donnée disponible
             </div>
           )}
         </div>
 
-        <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4">
-          <h2 className="text-white text-lg font-medium mb-4">Évolution des commandes</h2>
+        <div className="rounded-2xl border border-border bg-card/50 p-4">
+          <h2 className="text-foreground text-lg font-medium mb-4">Évolution des commandes</h2>
           {analytics && analytics.ordersTimeline.length > 0 ? (
             <OrdersChart data={analytics.ordersTimeline} />
           ) : (
-            <div className="h-80 flex items-center justify-center text-neutral-400">
+            <div className="h-80 flex items-center justify-center text-muted-foreground">
               Aucune donnée disponible
             </div>
           )}
@@ -168,25 +168,25 @@ export default function AdminDashboardHome() {
 
       {/* Top Products */}
       {analytics && analytics.topProducts.length > 0 && (
-        <section className="rounded-2xl border border-neutral-800 bg-neutral-900/50 overflow-hidden">
-          <div className="px-4 py-3 border-b border-neutral-800">
-            <h2 className="text-white text-base font-medium">Top 10 produits</h2>
+        <section className="rounded-2xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-4 py-3 border-b border-border">
+            <h2 className="text-foreground text-base font-medium">Top 10 produits</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-neutral-800/50">
+              <thead className="bg-secondary/50">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-neutral-400">Produit</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-neutral-400">Quantité</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-neutral-400">Revenus</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Produit</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">Quantité</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">Revenus</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-800">
+              <tbody className="divide-y divide-border">
                 {analytics.topProducts.map((product) => (
-                  <tr key={product.productId} className="hover:bg-neutral-800/30">
-                    <td className="px-4 py-3 text-sm text-white">{product.name}</td>
-                    <td className="px-4 py-3 text-sm text-right text-neutral-300">{product.quantity}</td>
-                    <td className="px-4 py-3 text-sm text-right text-white font-medium">
+                  <tr key={product.productId} className="hover:bg-accent/30">
+                    <td className="px-4 py-3 text-sm text-foreground">{product.name}</td>
+                    <td className="px-4 py-3 text-sm text-right text-foreground">{product.quantity}</td>
+                    <td className="px-4 py-3 text-sm text-right text-foreground font-medium">
                       {(product.revenue / 100).toFixed(2)} €
                     </td>
                   </tr>
@@ -198,19 +198,19 @@ export default function AdminDashboardHome() {
       )}
 
       {/* Latest Orders */}
-      <section className="rounded-2xl border border-neutral-800 bg-neutral-900/50 overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800">
-          <h2 className="text-white text-base font-medium">Dernières commandes</h2>
+      <section className="rounded-2xl border border-border bg-card/50 overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <h2 className="text-foreground text-base font-medium">Dernières commandes</h2>
           <Link
             href="/admin/orders"
-            className="text-sm text-neutral-300 hover:text-white underline underline-offset-4"
+            className="text-sm text-foreground hover:text-foreground underline underline-offset-4"
           >
             Voir tout
           </Link>
         </div>
 
         {loading ? (
-          <ul className="divide-y divide-neutral-800">
+          <ul className="divide-y divide-border">
             {Array.from({ length: 6 }).map((_, i) => (
               <li key={i} className="px-4 py-3 flex items-center justify-between">
                 <div className="min-w-0">
@@ -228,9 +228,9 @@ export default function AdminDashboardHome() {
         ) : err ? (
           <div className="p-6 text-red-300">{err}</div>
         ) : orders.length === 0 ? (
-          <div className="p-6 text-neutral-400">Aucune commande.</div>
+          <div className="p-6 text-muted-foreground">Aucune commande.</div>
         ) : (
-          <ul className="divide-y divide-neutral-800">
+          <ul className="divide-y divide-border">
             {orders.slice(0, 12).map((o) => {
               const full =
                 o.user?.fullName ??
@@ -240,19 +240,19 @@ export default function AdminDashboardHome() {
               const email = o.user?.email ?? o.userEmail ?? "—";
 
               return (
-                <li key={o.id} className="px-4 py-3 flex items-center justify-between hover:bg-neutral-800/30">
+                <li key={o.id} className="px-4 py-3 flex items-center justify-between hover:bg-accent/30">
                   <div className="min-w-0">
-                    <div className="text-white text-sm truncate">{displayName}</div>
-                    <div className="text-xs text-neutral-400">{email}</div>
+                    <div className="text-foreground text-sm truncate">{displayName}</div>
+                    <div className="text-xs text-muted-foreground">{email}</div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <span className="text-sm text-white font-medium">
+                    <span className="text-sm text-foreground font-medium">
                       {(o.totalCents / 100).toFixed(2)} €
                     </span>
                     <OrderStatusBadge status={o.status} />
                     <Link
                       href={`/admin/orders/${o.id}`}
-                      className="text-sm text-neutral-300 hover:text-white underline underline-offset-4"
+                      className="text-sm text-foreground hover:text-foreground underline underline-offset-4"
                     >
                       Détails
                     </Link>
@@ -269,9 +269,9 @@ export default function AdminDashboardHome() {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4">
-      <div className="text-sm text-neutral-400">{label}</div>
-      <div className="mt-1 text-2xl font-semibold text-white">{value}</div>
+    <div className="rounded-2xl border border-border bg-card/50 p-4">
+      <div className="text-sm text-muted-foreground">{label}</div>
+      <div className="mt-1 text-2xl font-semibold text-foreground">{value}</div>
     </div>
   );
 }

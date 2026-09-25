@@ -54,11 +54,11 @@ export default function AdminProductEditPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-white">Éditer le produit</h1>
+        <h1 className="text-xl font-semibold text-foreground">Éditer le produit</h1>
         <div className="flex items-center gap-2">
           <Link
             href="/admin/products"
-            className="rounded-md border border-neutral-700 px-3 py-2 text-sm text-white hover:bg-neutral-800/70"
+            className="rounded-md border border-border px-3 py-2 text-sm text-foreground hover:bg-accent/70"
           >
             ← Retour
           </Link>
@@ -82,9 +82,9 @@ export default function AdminProductEditPage() {
         onConfirm={handleDelete}
       />
 
-      <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4">
+      <div className="rounded-2xl border border-border bg-card/50 p-4">
         {loading ? (
-          <div className="text-neutral-400">Chargement…</div>
+          <div className="text-muted-foreground">Chargement…</div>
         ) : err ? (
           <div className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
             {err}
@@ -92,7 +92,7 @@ export default function AdminProductEditPage() {
         ) : product ? (
           <ProductForm mode="edit" initial={product} onSaved={handleSaved} />
         ) : (
-          <div className="text-neutral-400">Produit introuvable.</div>
+          <div className="text-muted-foreground">Produit introuvable.</div>
         )}
       </div>
     </div>

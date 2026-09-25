@@ -108,7 +108,7 @@ export default function ProductQuickView({
             exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             onClick={onClose}
-            className="fixed inset-0 z-50 bg-black/60"
+            className="fixed inset-0 z-50 bg-background/60"
           />
 
           {/* Modal container avec spring physics + swipe to close */}
@@ -132,7 +132,7 @@ export default function ProductQuickView({
             }}
             className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-3xl -translate-x-1/2 -translate-y-1/2 max-h-[90vh] overflow-y-auto md:w-full md:px-4"
           >
-            <div className="overflow-hidden rounded-3xl border border-neutral-800/80 bg-neutral-900/95 shadow-2xl shadow-black/60 backdrop-blur-xl ring-1 ring-white/5"
+            <div className="overflow-hidden rounded-3xl border border-border/80 bg-card/95 shadow-2xl shadow-black/60 backdrop-blur-xl ring-1 ring-white/5"
             >
               {/* Close button avec animation */}
               <motion.button
@@ -143,7 +143,7 @@ export default function ProductQuickView({
                 whileHover={{ scale: 1.1, rotate: 90 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onClose}
-                className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-neutral-700/50 bg-neutral-900/90 text-white shadow-lg backdrop-blur-md transition-colors hover:bg-neutral-800"
+                className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-border/50 bg-card/90 text-foreground shadow-lg backdrop-blur-md transition-colors hover:bg-accent"
                 aria-label="Fermer"
               >
                 <X className="h-5 w-5" />
@@ -156,7 +156,7 @@ export default function ProductQuickView({
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -30 }}
                   transition={{ type: "spring", stiffness: 260, damping: 30 }}
-                  className="relative aspect-square md:aspect-auto md:min-h-[400px] overflow-hidden bg-neutral-800/60"
+                  className="relative aspect-square md:aspect-auto md:min-h-[400px] overflow-hidden bg-secondary/60"
                 >
                   <motion.div
                     initial={{ scale: 1.2 }}
@@ -179,7 +179,7 @@ export default function ProductQuickView({
                     initial={{ opacity: 0, y: 20, scale: 0.9 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ delay: 0.3, type: "spring", stiffness: 300, damping: 25 }}
-                    className="absolute bottom-4 left-4 rounded-full border border-white/20 bg-black/60 px-4 py-2 text-lg font-bold text-white shadow-xl backdrop-blur-md"
+                    className="absolute bottom-4 left-4 rounded-full border border-white/20 bg-background/60 px-4 py-2 text-lg font-bold text-foreground shadow-xl backdrop-blur-md"
                   >
                     {(product.priceCents / 100).toFixed(2)} €
                   </motion.div>
@@ -202,11 +202,11 @@ export default function ProductQuickView({
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1">
                           {product.category && (
-                            <div className="mb-2 inline-flex items-center rounded-lg border border-neutral-700/60 bg-neutral-800/60 px-2.5 py-1 text-xs font-medium uppercase tracking-wider text-neutral-300 backdrop-blur-sm">
+                            <div className="mb-2 inline-flex items-center rounded-lg border border-border/60 bg-secondary/60 px-2.5 py-1 text-xs font-medium uppercase tracking-wider text-foreground backdrop-blur-sm">
                               {product.category.name}
                             </div>
                           )}
-                          <h2 className="text-xl font-bold text-white sm:text-2xl md:text-3xl">
+                          <h2 className="text-xl font-bold text-foreground sm:text-2xl md:text-3xl">
                             {product.name}
                           </h2>
                         </div>
@@ -257,7 +257,7 @@ export default function ProductQuickView({
                     {product.description && (
                       <motion.p
                         variants={itemVariants}
-                        className="text-sm leading-relaxed text-neutral-300 md:text-base"
+                        className="text-sm leading-relaxed text-foreground md:text-base"
                       >
                         {product.description}
                       </motion.p>
@@ -272,7 +272,7 @@ export default function ProductQuickView({
                         </span>
                       )}
                       {isPizza && (
-                        <span className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-700/60 bg-neutral-800/60 px-3 py-1.5 text-sm text-neutral-400 backdrop-blur-sm">
+                        <span className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-secondary/60 px-3 py-1.5 text-sm text-muted-foreground backdrop-blur-sm">
                           <Settings2 className="h-4 w-4" />
                           Personnalisable
                         </span>

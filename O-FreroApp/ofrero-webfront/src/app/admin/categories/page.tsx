@@ -147,8 +147,8 @@ export default function AdminCategoriesPage() {
   if (loading) {
     return (
       <main className="space-y-4">
-        <h1 className="text-2xl font-semibold text-white">Catégories</h1>
-        <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-8 text-center text-neutral-400">
+        <h1 className="text-2xl font-semibold text-foreground">Catégories</h1>
+        <div className="rounded-2xl border border-border bg-card/50 p-8 text-center text-muted-foreground">
           Chargement...
         </div>
       </main>
@@ -158,7 +158,7 @@ export default function AdminCategoriesPage() {
   return (
     <main className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-white">Catégories</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Catégories</h1>
         <button
           onClick={() => {
             setIsCreating(true);
@@ -172,25 +172,25 @@ export default function AdminCategoriesPage() {
       </div>
 
       {isCreating && (
-        <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4">
-          <h2 className="text-lg font-medium text-white mb-4">Créer une catégorie</h2>
+        <div className="rounded-2xl border border-border bg-card/50 p-4">
+          <h2 className="text-lg font-medium text-foreground mb-4">Créer une catégorie</h2>
           <form onSubmit={handleCreate} className="space-y-4">
             <div>
-              <label className="block text-sm text-neutral-300 mb-1">Nom *</label>
+              <label className="block text-sm text-foreground mb-1">Nom *</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-md text-white"
+                className="w-full px-3 py-2 bg-secondary border border-border rounded-md text-foreground"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm text-neutral-300 mb-1">Description</label>
+              <label className="block text-sm text-foreground mb-1">Description</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-md text-white h-20"
+                className="w-full px-3 py-2 bg-secondary border border-border rounded-md text-foreground h-20"
               />
             </div>
             <div className="flex gap-2">
@@ -203,7 +203,7 @@ export default function AdminCategoriesPage() {
               <button
                 type="button"
                 onClick={cancelEdit}
-                className="px-4 py-2 bg-neutral-800 text-white rounded-md hover:bg-neutral-700 transition"
+                className="px-4 py-2 bg-secondary text-foreground rounded-md hover:bg-secondary transition"
               >
                 Annuler
               </button>
@@ -212,32 +212,32 @@ export default function AdminCategoriesPage() {
         </div>
       )}
 
-      <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 overflow-hidden">
+      <div className="rounded-2xl border border-border bg-card/50 overflow-hidden">
         {categories.length === 0 ? (
-          <div className="p-8 text-center text-neutral-400">
+          <div className="p-8 text-center text-muted-foreground">
             Aucune catégorie. Créez-en une pour commencer.
           </div>
         ) : (
-          <div className="divide-y divide-neutral-800">
+          <div className="divide-y divide-border">
             {categories.map((category, index) => (
               <div key={category.id} className="p-4">
                 {editingId === category.id ? (
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm text-neutral-300 mb-1">Nom *</label>
+                      <label className="block text-sm text-foreground mb-1">Nom *</label>
                       <input
                         type="text"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-md text-white"
+                        className="w-full px-3 py-2 bg-secondary border border-border rounded-md text-foreground"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm text-neutral-300 mb-1">Description</label>
+                      <label className="block text-sm text-foreground mb-1">Description</label>
                       <textarea
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-md text-white h-20"
+                        className="w-full px-3 py-2 bg-secondary border border-border rounded-md text-foreground h-20"
                       />
                     </div>
                     <div className="flex gap-2">
@@ -249,7 +249,7 @@ export default function AdminCategoriesPage() {
                       </button>
                       <button
                         onClick={cancelEdit}
-                        className="px-4 py-2 bg-neutral-800 text-white rounded-md hover:bg-neutral-700 transition"
+                        className="px-4 py-2 bg-secondary text-foreground rounded-md hover:bg-secondary transition"
                       >
                         Annuler
                       </button>
@@ -258,11 +258,11 @@ export default function AdminCategoriesPage() {
                 ) : (
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="text-lg font-medium text-white">{category.name}</h3>
+                      <h3 className="text-lg font-medium text-foreground">{category.name}</h3>
                       {category.description && (
-                        <p className="text-sm text-neutral-400 mt-1">{category.description}</p>
+                        <p className="text-sm text-muted-foreground mt-1">{category.description}</p>
                       )}
-                      <p className="text-xs text-neutral-500 mt-2">
+                      <p className="text-xs text-muted-foreground mt-2">
                         {category._count.products} produit(s)
                       </p>
                     </div>
@@ -270,7 +270,7 @@ export default function AdminCategoriesPage() {
                       <button
                         onClick={() => moveCategory(index, "up")}
                         disabled={index === 0}
-                        className="px-2 py-1 text-neutral-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="px-2 py-1 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
                         title="Monter"
                       >
                         ↑
@@ -278,14 +278,14 @@ export default function AdminCategoriesPage() {
                       <button
                         onClick={() => moveCategory(index, "down")}
                         disabled={index === categories.length - 1}
-                        className="px-2 py-1 text-neutral-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="px-2 py-1 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
                         title="Descendre"
                       >
                         ↓
                       </button>
                       <button
                         onClick={() => startEdit(category)}
-                        className="px-3 py-1 text-sm text-neutral-300 hover:text-white border border-neutral-700 rounded-md hover:border-neutral-600 transition"
+                        className="px-3 py-1 text-sm text-foreground hover:text-foreground border border-border rounded-md hover:border-border transition"
                       >
                         Modifier
                       </button>

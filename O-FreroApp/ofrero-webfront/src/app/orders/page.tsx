@@ -68,13 +68,13 @@ export default function OrdersPage() {
   if (loading) {
     return (
       <main className="mx-auto max-w-4xl px-4 py-10">
-        <h1 className="text-2xl font-semibold text-white">Mes commandes</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Mes commandes</h1>
         <div className="mt-6 space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="animate-pulse rounded-xl border border-neutral-800 bg-neutral-900/50 p-4">
-              <div className="h-4 w-1/3 bg-neutral-800 rounded" />
-              <div className="mt-3 h-3 w-2/3 bg-neutral-800 rounded" />
-              <div className="mt-3 h-3 w-1/4 bg-neutral-800 rounded" />
+            <div key={i} className="animate-pulse rounded-xl border border-border bg-card/50 p-4">
+              <div className="h-4 w-1/3 bg-secondary rounded" />
+              <div className="mt-3 h-3 w-2/3 bg-secondary rounded" />
+              <div className="mt-3 h-3 w-1/4 bg-secondary rounded" />
             </div>
           ))}
         </div>
@@ -85,8 +85,8 @@ export default function OrdersPage() {
   return (
     <main className="mx-auto max-w-4xl px-4 py-10">
       <div className="flex items-end justify-between gap-3">
-        <h1 className="text-2xl font-semibold text-white">Mes commandes</h1>
-        <Link href="/menu" className="text-sm text-neutral-300 hover:text-white underline-offset-4 hover:underline">
+        <h1 className="text-2xl font-semibold text-foreground">Mes commandes</h1>
+        <Link href="/menu" className="text-sm text-foreground hover:text-foreground underline-offset-4 hover:underline">
           ← Retour au menu
         </Link>
       </div>
@@ -98,8 +98,8 @@ export default function OrdersPage() {
       )}
 
       {isEmpty ? (
-        <div className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-900/50 p-6 text-center">
-          <p className="text-neutral-300">Vous n’avez pas encore de commande.</p>
+        <div className="mt-8 rounded-2xl border border-border bg-card/50 p-6 text-center">
+          <p className="text-foreground">Vous n’avez pas encore de commande.</p>
           <Link
             href="/menu"
             className="mt-4 inline-block rounded-md bg-white px-4 py-2 text-sm font-medium text-black hover:opacity-90"
@@ -112,24 +112,24 @@ export default function OrdersPage() {
           {orders!.map((o) => (
             <li
               key={o.id}
-              className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4"
+              className="rounded-2xl border border-border bg-card/50 p-4"
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-sm text-neutral-300 truncate">#{o.id}</span>
+                    <span className="font-mono text-sm text-foreground truncate">#{o.id}</span>
                     <OrderStatusBadge status={o.status} />
                   </div>
-                  <div className="mt-1 text-sm text-neutral-400">
-                    Passée le <span className="text-neutral-300">{formatDate(o.createdAt)}</span>
+                  <div className="mt-1 text-sm text-muted-foreground">
+                    Passée le <span className="text-foreground">{formatDate(o.createdAt)}</span>
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <div className="text-white font-semibold">{euro(o.totalCents)}</div>
+                  <div className="text-foreground font-semibold">{euro(o.totalCents)}</div>
                   <button
                     onClick={() => setOpenId(openId === o.id ? null : o.id)}
-                    className="mt-2 text-xs text-neutral-300 hover:text-white underline-offset-4 hover:underline"
+                    className="mt-2 text-xs text-foreground hover:text-foreground underline-offset-4 hover:underline"
                   >
                     {openId === o.id ? "Masquer le détail" : "Voir le détail"}
                   </button>
@@ -137,36 +137,36 @@ export default function OrdersPage() {
               </div>
 
               {openId === o.id && (
-                <div className="mt-4 border-t border-neutral-800 pt-3">
+                <div className="mt-4 border-t border-border pt-3">
                   {o.items && o.items.length > 0 ? (
-                    <ul className="divide-y divide-neutral-800">
+                    <ul className="divide-y divide-border">
                       {o.items.map((it) => (
                         <li key={it.id} className="py-3 flex items-start justify-between gap-4">
                           <div>
-                            <div className="text-sm text-white">{it.name}</div>
-                            <div className="text-xs text-neutral-400">
+                            <div className="text-sm text-foreground">{it.name}</div>
+                            <div className="text-xs text-muted-foreground">
                               {euro(it.unitPriceCents)} × {it.quantity}
                             </div>
                           </div>
-                          <div className="text-sm text-white font-medium">
+                          <div className="text-sm text-foreground font-medium">
                             {euro(it.unitPriceCents * it.quantity)}
                           </div>
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-sm text-neutral-400">Aucun article (commande vide).</p>
+                    <p className="text-sm text-muted-foreground">Aucun article (commande vide).</p>
                   )}
 
                   <div className="mt-3 flex items-center justify-between">
-                    <span className="text-sm text-neutral-400">Total</span>
-                    <span className="text-white font-semibold">{euro(o.totalCents)}</span>
+                    <span className="text-sm text-muted-foreground">Total</span>
+                    <span className="text-foreground font-semibold">{euro(o.totalCents)}</span>
                   </div>
 
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Link
                       href={`/checkout/success?orderId=${o.id}`}
-                      className="rounded-md border border-neutral-700 px-3 py-1.5 text-sm text-white hover:bg-neutral-800/60"
+                      className="rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-accent/60"
                     >
                       Détails paiement
                     </Link>

@@ -65,9 +65,9 @@ function RegisterForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full max-w-sm space-y-5 rounded-2xl border border-neutral-800 bg-neutral-900 p-8 shadow-md"
+      className="w-full max-w-sm space-y-5 rounded-2xl border border-border bg-card p-8 shadow-md"
     >
-      <h1 className="text-center text-2xl font-semibold text-white">Créer un compte</h1>
+      <h1 className="text-center text-2xl font-semibold text-foreground">Créer un compte</h1>
 
       {error && (
         <p className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-center text-sm text-red-300">
@@ -76,30 +76,30 @@ function RegisterForm() {
       )}
 
       <div className="space-y-2">
-        <label className="text-sm text-neutral-300">Nom complet</label>
+        <label className="text-sm text-foreground">Nom complet</label>
         <input
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           placeholder="Ex. Jean Dupont"
           autoComplete="name"
-          className="w-full rounded-md border border-neutral-800 bg-neutral-800 px-3 py-2 text-white outline-none focus:border-neutral-600"
+          className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-foreground outline-none focus:border-border"
         />
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm text-neutral-300">Email</label>
+        <label className="text-sm text-foreground">Email</label>
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="vous@exemple.fr"
           autoComplete="email"
-          className="w-full rounded-md border border-neutral-800 bg-neutral-800 px-3 py-2 text-white outline-none focus:border-neutral-600"
+          className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-foreground outline-none focus:border-border"
         />
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm text-neutral-300">Mot de passe</label>
+        <label className="text-sm text-foreground">Mot de passe</label>
         <div className="relative">
           <input
             type={showPwd ? "text" : "password"}
@@ -107,12 +107,12 @@ function RegisterForm() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
             autoComplete="new-password"
-            className="w-full rounded-md border border-neutral-800 bg-neutral-800 px-3 py-2 pr-10 text-white outline-none focus:border-neutral-600"
+            className="w-full rounded-md border border-border bg-secondary px-3 py-2 pr-10 text-foreground outline-none focus:border-border"
           />
           <button
             type="button"
             onClick={() => setShowPwd((v) => !v)}
-            className="absolute inset-y-0 right-2 my-auto rounded px-2 text-xs text-neutral-300 hover:text-white"
+            className="absolute inset-y-0 right-2 my-auto rounded px-2 text-xs text-foreground hover:text-foreground"
             aria-label={showPwd ? "Masquer le mot de passe" : "Afficher le mot de passe"}
           >
             {showPwd ? "Hide" : "Show"}
@@ -121,14 +121,14 @@ function RegisterForm() {
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm text-neutral-300">Confirmer le mot de passe</label>
+        <label className="text-sm text-foreground">Confirmer le mot de passe</label>
         <input
           type={showPwd ? "text" : "password"}
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
           placeholder="••••••••"
           autoComplete="new-password"
-          className="w-full rounded-md border border-neutral-800 bg-neutral-800 px-3 py-2 text-white outline-none focus:border-neutral-600"
+          className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-foreground outline-none focus:border-border"
         />
       </div>
 
@@ -144,13 +144,13 @@ function RegisterForm() {
         {submitting ? "Création en cours…" : "Créer mon compte"}
       </button>
 
-      <p className="text-center text-sm text-neutral-400">
+      <p className="text-center text-sm text-muted-foreground">
         Déjà un compte ?{" "}
         <Link
           href={`/login?returnTo=${encodeURIComponent(returnTo)}${
             email ? `&email=${encodeURIComponent(email)}` : ""
           }`}
-          className="underline underline-offset-4 hover:text-white"
+          className="underline underline-offset-4 hover:text-foreground"
         >
           Se connecter
         </Link>
@@ -161,9 +161,9 @@ function RegisterForm() {
 
 export default function RegisterPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-neutral-950 px-4">
+    <main className="flex min-h-screen items-center justify-center bg-background px-4">
       <Suspense fallback={
-        <div className="w-full max-w-sm space-y-5 rounded-2xl border border-neutral-800 bg-neutral-900 p-8 shadow-md">
+        <div className="w-full max-w-sm space-y-5 rounded-2xl border border-border bg-card p-8 shadow-md">
           <div className="h-8 w-48 mx-auto skeleton rounded" />
           <div className="space-y-4">
             <div className="h-20 w-full skeleton rounded" />

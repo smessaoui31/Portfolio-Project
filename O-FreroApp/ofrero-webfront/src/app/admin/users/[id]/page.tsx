@@ -64,22 +64,22 @@ export default function AdminUserDetailPage() {
   return (
     <main className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-white">User details</h1>
+        <h1 className="text-xl font-semibold text-foreground">User details</h1>
         <button
           onClick={() => router.back()}
-          className="rounded-md border border-neutral-700 px-3 py-1 text-sm text-neutral-300 hover:bg-neutral-800/70"
+          className="rounded-md border border-border px-3 py-1 text-sm text-foreground hover:bg-accent/70"
         >
           ← Back
         </button>
       </div>
 
-      <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4">
+      <div className="rounded-2xl border border-border bg-card/50 p-4">
         {loading ? (
-          <div className="text-neutral-400">Loading…</div>
+          <div className="text-muted-foreground">Loading…</div>
         ) : err ? (
           <div className="text-red-400 text-sm">{err}</div>
         ) : !user ? (
-          <div className="text-neutral-400">User not found.</div>
+          <div className="text-muted-foreground">User not found.</div>
         ) : (
           <>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -104,7 +104,7 @@ export default function AdminUserDetailPage() {
                 disabled={deleting}
                 className={`rounded-md border px-4 py-2 text-sm transition ${
                   deleting
-                    ? "cursor-not-allowed border-neutral-700 bg-neutral-800 text-neutral-400"
+                    ? "cursor-not-allowed border-border bg-secondary text-muted-foreground"
                     : "border-red-500/40 bg-red-500/10 text-red-300 hover:bg-red-500/20"
                 }`}
               >
@@ -131,8 +131,8 @@ export default function AdminUserDetailPage() {
 function Field({ label, value }: { label: string; value?: string | null }) {
   return (
     <div>
-      <div className="text-xs uppercase tracking-wide text-neutral-400">{label}</div>
-      <div className="text-sm text-white mt-0.5">{value ?? "—"}</div>
+      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="text-sm text-foreground mt-0.5">{value ?? "—"}</div>
     </div>
   );
 }

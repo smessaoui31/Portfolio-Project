@@ -19,7 +19,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
 
   if (!ready) {
     return (
-      <main className="min-h-[50vh] grid place-items-center text-neutral-400">
+      <main className="min-h-[50vh] grid place-items-center text-muted-foreground">
         Initialisation…
       </main>
     );

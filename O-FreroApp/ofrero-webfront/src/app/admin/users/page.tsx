@@ -71,16 +71,16 @@ export default function AdminUsersPage() {
   return (
     <main className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-white">Users</h1>
-        <div className="text-sm text-neutral-400">
+        <h1 className="text-xl font-semibold text-foreground">Users</h1>
+        <div className="text-sm text-muted-foreground">
           {loading ? "Loading…" : `${rows.length} / ${total}`}
           {err ? <span className="ml-2 text-red-400">— {err}</span> : null}
         </div>
       </div>
 
-      <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 overflow-hidden">
+      <div className="rounded-2xl border border-border bg-card/50 overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="border-b border-neutral-800 text-neutral-400">
+          <thead className="border-b border-border text-muted-foreground">
             <tr>
               <th className="px-4 py-2 text-left">Full name</th>
               <th className="px-4 py-2 text-left">Email</th>
@@ -89,39 +89,39 @@ export default function AdminUsersPage() {
               <th className="px-4 py-2 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-800">
+          <tbody className="divide-y divide-border">
             {loading ? (
               <tr>
-                <td className="px-4 py-4 text-neutral-400" colSpan={5}>Loading…</td>
+                <td className="px-4 py-4 text-muted-foreground" colSpan={5}>Loading…</td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td className="px-4 py-4 text-neutral-400" colSpan={5}>No users found.</td>
+                <td className="px-4 py-4 text-muted-foreground" colSpan={5}>No users found.</td>
               </tr>
             ) : (
               rows.map((u) => (
                 <tr key={u.id}>
-                  <td className="px-4 py-3 text-white">{u.fullName}</td>
-                  <td className="px-4 py-3 text-neutral-300">{u.email}</td>
+                  <td className="px-4 py-3 text-foreground">{u.fullName}</td>
+                  <td className="px-4 py-3 text-foreground">{u.email}</td>
                   <td className="px-4 py-3">
                     <span
                       className={`inline-flex rounded-full px-2 py-0.5 text-xs border ${
                         u.role === "ADMIN"
                           ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
-                          : "border-neutral-700 bg-neutral-800 text-neutral-300"
+                          : "border-border bg-secondary text-foreground"
                       }`}
                     >
                       {u.role}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-neutral-400">
+                  <td className="px-4 py-3 text-muted-foreground">
                     {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="inline-flex items-center gap-3">
                       <Link
                         href={`/admin/users/${u.id}`}
-                        className="text-neutral-300 hover:text-white underline underline-offset-4"
+                        className="text-foreground hover:text-foreground underline underline-offset-4"
                       >
                         Details
                       </Link>
@@ -130,7 +130,7 @@ export default function AdminUsersPage() {
                         disabled={busyId === u.id}
                         className={`rounded-md border px-3 py-1 text-xs transition ${
                           busyId === u.id
-                            ? "cursor-not-allowed border-neutral-700 bg-neutral-800 text-neutral-400"
+                            ? "cursor-not-allowed border-border bg-secondary text-muted-foreground"
                             : "border-red-500/40 bg-red-500/10 text-red-300 hover:bg-red-500/20"
                         }`}
                         title="Delete user"

@@ -57,7 +57,7 @@ export default function FloatingCartButton() {
         >
           <Link
             href="/cart"
-            className="group relative flex h-14 w-14 items-center justify-center rounded-full border border-neutral-700 bg-white shadow-2xl shadow-black/40 transition-all hover:scale-110 active:scale-95"
+            className="group relative flex h-14 w-14 items-center justify-center rounded-full border border-border bg-white shadow-2xl shadow-black/40 transition-all hover:scale-110 active:scale-95"
           >
             {/* Pulsing ring effect */}
             {shouldPulse && (
@@ -85,7 +85,7 @@ export default function FloatingCartButton() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 500, damping: 15 }}
-              className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white shadow-lg ring-2 ring-white"
+              className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-foreground shadow-lg ring-2 ring-white"
             >
               {count}
             </motion.span>

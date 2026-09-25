@@ -18,7 +18,7 @@ function ProductsGridSkeleton() {
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}
-          className="bg-neutral-900/60 rounded-2xl border border-neutral-800 h-96 animate-pulse"
+          className="bg-card/60 rounded-2xl border border-border h-96 animate-pulse"
         />
       ))}
     </div>

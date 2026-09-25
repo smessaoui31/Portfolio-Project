@@ -23,13 +23,13 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       <OrderNotificationSound />
       <div className="grid min-h-[calc(100vh-4rem)] grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)]">
         {/* Sidebar */}
-      <aside className="border-r border-neutral-800/80 bg-neutral-950">
+      <aside className="border-r border-border/80 bg-background">
         <div className="px-4 py-4">
-          <Link href="/" className="block text-lg font-semibold text-white">
+          <Link href="/" className="block text-lg font-semibold text-foreground">
             O’Frero Admin
           </Link>
-          <p className="mt-1 text-xs text-neutral-400">
-            Connecté en tant que <span className="text-neutral-300">{email}</span>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Connecté en tant que <span className="text-foreground">{email}</span>
           </p>
         </div>
 
@@ -41,7 +41,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                 key={l.href}
                 href={l.href}
                 className={`block rounded-md px-3 py-2 text-sm transition
-                  ${active ? "bg-neutral-800 text-white" : "text-neutral-300 hover:bg-neutral-800/60 hover:text-white"}
+                  ${active ? "bg-secondary text-foreground" : "text-foreground hover:bg-accent/60 hover:text-foreground"}
                 `}
               >
                 {l.label}
@@ -53,7 +53,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         <div className="mt-auto p-4">
           <button
             onClick={logout}
-            className="w-full rounded-md border border-neutral-700 bg-neutral-900/70 px-3 py-2 text-sm text-white hover:bg-neutral-800 transition"
+            className="w-full rounded-md border border-border bg-card/70 px-3 py-2 text-sm text-foreground hover:bg-accent transition"
           >
             Se déconnecter
           </button>
@@ -63,7 +63,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       {/* Main */}
       <div className="min-w-0">
         {/* Topbar */}
-        <div className="sticky top-16 z-10 border-b border-neutral-800/80 bg-neutral-950/70 backdrop-blur">
+        <div className="sticky top-16 z-10 border-b border-border/80 bg-background/70 backdrop-blur">
           <div className="mx-auto max-w-7xl px-4 py-3">
             <AdminHeader />
           </div>

@@ -83,8 +83,8 @@ export default function GuestCheckoutForm({ onSubmit, loading }: GuestCheckoutFo
       onSubmit={handleSubmit}
       className="space-y-5"
     >
-      <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-6">
-        <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
+      <div className="rounded-2xl border border-border bg-card/50 p-6">
+        <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground">
           <User className="h-5 w-5" />
           Informations personnelles
         </h3>
@@ -92,7 +92,7 @@ export default function GuestCheckoutForm({ onSubmit, loading }: GuestCheckoutFo
         <div className="space-y-4">
           {/* Prénom */}
           <div>
-            <label htmlFor="firstName" className="mb-1.5 block text-sm font-medium text-neutral-300">
+            <label htmlFor="firstName" className="mb-1.5 block text-sm font-medium text-foreground">
               Prénom <span className="text-red-500">*</span>
             </label>
             <input
@@ -101,8 +101,8 @@ export default function GuestCheckoutForm({ onSubmit, loading }: GuestCheckoutFo
               value={formData.firstName}
               onChange={(e) => handleChange("firstName", e.target.value)}
               className={`w-full rounded-lg border ${
-                errors.firstName ? "border-red-500" : "border-neutral-700"
-              } bg-neutral-900 px-4 py-2.5 text-white placeholder-neutral-500 focus:border-white focus:outline-none focus:ring-2 focus:ring-white/20`}
+                errors.firstName ? "border-red-500" : "border-border"
+              } bg-card px-4 py-2.5 text-foreground placeholder-neutral-500 focus:border-white focus:outline-none focus:ring-2 focus:ring-white/20`}
               placeholder="Jean"
               disabled={loading}
             />
@@ -113,7 +113,7 @@ export default function GuestCheckoutForm({ onSubmit, loading }: GuestCheckoutFo
 
           {/* Nom */}
           <div>
-            <label htmlFor="lastName" className="mb-1.5 block text-sm font-medium text-neutral-300">
+            <label htmlFor="lastName" className="mb-1.5 block text-sm font-medium text-foreground">
               Nom <span className="text-red-500">*</span>
             </label>
             <input
@@ -122,8 +122,8 @@ export default function GuestCheckoutForm({ onSubmit, loading }: GuestCheckoutFo
               value={formData.lastName}
               onChange={(e) => handleChange("lastName", e.target.value)}
               className={`w-full rounded-lg border ${
-                errors.lastName ? "border-red-500" : "border-neutral-700"
-              } bg-neutral-900 px-4 py-2.5 text-white placeholder-neutral-500 focus:border-white focus:outline-none focus:ring-2 focus:ring-white/20`}
+                errors.lastName ? "border-red-500" : "border-border"
+              } bg-card px-4 py-2.5 text-foreground placeholder-neutral-500 focus:border-white focus:outline-none focus:ring-2 focus:ring-white/20`}
               placeholder="Dupont"
               disabled={loading}
             />
@@ -134,8 +134,8 @@ export default function GuestCheckoutForm({ onSubmit, loading }: GuestCheckoutFo
         </div>
       </div>
 
-      <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-6">
-        <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
+      <div className="rounded-2xl border border-border bg-card/50 p-6">
+        <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground">
           <Mail className="h-5 w-5" />
           Contact
         </h3>
@@ -143,7 +143,7 @@ export default function GuestCheckoutForm({ onSubmit, loading }: GuestCheckoutFo
         <div className="space-y-4">
           {/* Email */}
           <div>
-            <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-neutral-300">
+            <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">
               Email <span className="text-red-500">*</span>
             </label>
             <input
@@ -152,8 +152,8 @@ export default function GuestCheckoutForm({ onSubmit, loading }: GuestCheckoutFo
               value={formData.email}
               onChange={(e) => handleChange("email", e.target.value)}
               className={`w-full rounded-lg border ${
-                errors.email ? "border-red-500" : "border-neutral-700"
-              } bg-neutral-900 px-4 py-2.5 text-white placeholder-neutral-500 focus:border-white focus:outline-none focus:ring-2 focus:ring-white/20`}
+                errors.email ? "border-red-500" : "border-border"
+              } bg-card px-4 py-2.5 text-foreground placeholder-neutral-500 focus:border-white focus:outline-none focus:ring-2 focus:ring-white/20`}
               placeholder="jean.dupont@example.com"
               disabled={loading}
             />
@@ -164,19 +164,19 @@ export default function GuestCheckoutForm({ onSubmit, loading }: GuestCheckoutFo
 
           {/* Téléphone */}
           <div>
-            <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-neutral-300">
+            <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-foreground">
               Téléphone <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <Phone className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-500" />
+              <Phone className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
               <input
                 id="phone"
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => handleChange("phone", e.target.value)}
                 className={`w-full rounded-lg border ${
-                  errors.phone ? "border-red-500" : "border-neutral-700"
-                } bg-neutral-900 py-2.5 pl-11 pr-4 text-white placeholder-neutral-500 focus:border-white focus:outline-none focus:ring-2 focus:ring-white/20`}
+                  errors.phone ? "border-red-500" : "border-border"
+                } bg-card py-2.5 pl-11 pr-4 text-foreground placeholder-neutral-500 focus:border-white focus:outline-none focus:ring-2 focus:ring-white/20`}
                 placeholder="06 12 34 56 78"
                 disabled={loading}
               />
@@ -188,15 +188,15 @@ export default function GuestCheckoutForm({ onSubmit, loading }: GuestCheckoutFo
         </div>
       </div>
 
-      <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-6">
-        <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
+      <div className="rounded-2xl border border-border bg-card/50 p-6">
+        <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground">
           <MapPin className="h-5 w-5" />
           Adresse de livraison
         </h3>
 
         {/* Adresse */}
         <div>
-          <label htmlFor="address" className="mb-1.5 block text-sm font-medium text-neutral-300">
+          <label htmlFor="address" className="mb-1.5 block text-sm font-medium text-foreground">
             Adresse complète <span className="text-red-500">*</span>
           </label>
           <textarea
@@ -205,8 +205,8 @@ export default function GuestCheckoutForm({ onSubmit, loading }: GuestCheckoutFo
             onChange={(e) => handleChange("address", e.target.value)}
             rows={3}
             className={`w-full rounded-lg border ${
-              errors.address ? "border-red-500" : "border-neutral-700"
-            } bg-neutral-900 px-4 py-2.5 text-white placeholder-neutral-500 focus:border-white focus:outline-none focus:ring-2 focus:ring-white/20`}
+              errors.address ? "border-red-500" : "border-border"
+            } bg-card px-4 py-2.5 text-foreground placeholder-neutral-500 focus:border-white focus:outline-none focus:ring-2 focus:ring-white/20`}
             placeholder="123 Rue de la Paix, 75001 Paris"
             disabled={loading}
           />
@@ -226,7 +226,7 @@ export default function GuestCheckoutForm({ onSubmit, loading }: GuestCheckoutFo
         {loading ? "Traitement en cours..." : "Continuer vers le paiement"}
       </motion.button>
 
-      <p className="text-center text-sm text-neutral-400">
+      <p className="text-center text-sm text-muted-foreground">
         Tous les champs marqués d'un <span className="text-red-500">*</span> sont obligatoires
       </p>
     </motion.form>

@@ -131,7 +131,7 @@ export default function ProductCustomizeButton({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setOpen(false)}
-            className="fixed inset-0 z-[100] grid place-items-center bg-black/60 p-4"
+            className="fixed inset-0 z-[100] grid place-items-center bg-background/60 p-4"
             role="dialog"
             aria-modal="true"
           >
@@ -141,12 +141,12 @@ export default function ProductCustomizeButton({
             exit={{ opacity: 0, scale: 0.97, y: 8 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-2xl border border-neutral-800 bg-neutral-950 text-neutral-100 shadow-xl"
+            className="w-full max-w-md rounded-2xl border border-border bg-background text-foreground shadow-xl"
           >
-            <div className="border-b border-neutral-800 px-5 py-3 flex items-center justify-between">
+            <div className="border-b border-border px-5 py-3 flex items-center justify-between">
               <h3 className="text-base font-semibold">Personnaliser</h3>
               <button
-                className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-800/60"
+                className="rounded-md p-1.5 text-muted-foreground hover:bg-accent/60"
                 onClick={() => setOpen(false)}
                 aria-label="Fermer"
               >
@@ -157,14 +157,14 @@ export default function ProductCustomizeButton({
             <div className="px-5 py-4 space-y-5">
               {/* Quantité */}
               <div className="space-y-2">
-                <div className="text-sm text-neutral-300">Quantité</div>
-                <div className="inline-flex items-center rounded-md border border-neutral-800">
+                <div className="text-sm text-foreground">Quantité</div>
+                <div className="inline-flex items-center rounded-md border border-border">
                   <button
                     disabled={qty <= 1}
                     onClick={() => setQty((q) => Math.max(1, q - 1))}
                     aria-label="Diminuer la quantité"
                     className={`px-3 py-1 text-sm ${
-                      qty <= 1 ? "cursor-not-allowed text-neutral-600" : "text-neutral-200 hover:bg-neutral-800/60"
+                      qty <= 1 ? "cursor-not-allowed text-muted-foreground" : "text-foreground hover:bg-accent/60"
                     }`}
                   >
                     −
@@ -173,7 +173,7 @@ export default function ProductCustomizeButton({
                   <button
                     onClick={() => setQty((q) => q + 1)}
                     aria-label="Augmenter la quantité"
-                    className="px-3 py-1 text-sm text-neutral-200 hover:bg-neutral-800/60"
+                    className="px-3 py-1 text-sm text-foreground hover:bg-accent/60"
                   >
                     +
                   </button>
@@ -182,7 +182,7 @@ export default function ProductCustomizeButton({
 
               {/* Cuisson */}
               <div className="space-y-2">
-                <div className="text-sm text-neutral-300">Cuisson</div>
+                <div className="text-sm text-foreground">Cuisson</div>
                 <div className="grid grid-cols-3 gap-2">
                   {(["NORMAL", "WELL_DONE", "EXTRA_CRISPY"] as CookingLevel[]).map((c) => (
                     <label
@@ -190,7 +190,7 @@ export default function ProductCustomizeButton({
                       className={`cursor-pointer rounded-md border px-3 py-2 text-center text-sm transition ${
                         cooking === c
                           ? "border-white/30 bg-white/10"
-                          : "border-neutral-800 bg-neutral-900/50 hover:bg-neutral-900"
+                          : "border-border bg-card/50 hover:bg-card"
                       }`}
                     >
                       <input
@@ -209,13 +209,13 @@ export default function ProductCustomizeButton({
 
               {/* Suppléments */}
               <div className="space-y-2">
-                <div className="text-sm text-neutral-300">Suppléments</div>
+                <div className="text-sm text-foreground">Suppléments</div>
                 {loadingSupp ? (
-                  <div className="text-sm text-neutral-400">Chargement…</div>
+                  <div className="text-sm text-muted-foreground">Chargement…</div>
                 ) : err ? (
                   <div className="text-sm text-red-300">{err}</div>
                 ) : supplements.length === 0 ? (
-                  <div className="text-sm text-neutral-500">Aucun supplément disponible.</div>
+                  <div className="text-sm text-muted-foreground">Aucun supplément disponible.</div>
                 ) : (
                   <ul className="space-y-2 max-h-44 overflow-auto pr-1">
                     {supplements.map((s) => (
@@ -229,9 +229,9 @@ export default function ProductCustomizeButton({
                               setChecked((prev) => ({ ...prev, [s.supplementId]: e.target.checked }))
                             }
                           />
-                          <span className="text-sm text-neutral-200">{s.name}</span>
+                          <span className="text-sm text-foreground">{s.name}</span>
                         </label>
-                        <span className="text-sm text-neutral-300">+ {(s.priceCents / 100).toFixed(2)} €</span>
+                        <span className="text-sm text-foreground">+ {(s.priceCents / 100).toFixed(2)} €</span>
                       </li>
                     ))}
                   </ul>
@@ -240,9 +240,9 @@ export default function ProductCustomizeButton({
             </div>
 
             {/* Footer */}
-            <div className="border-t border-neutral-800 px-5 py-4 flex items-center justify-between">
-              <div className="text-sm text-neutral-400">
-                Total : <span className="text-white font-semibold">{(total / 100).toFixed(2)} €</span>
+            <div className="border-t border-border px-5 py-4 flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Total : <span className="text-foreground font-semibold">{(total / 100).toFixed(2)} €</span>
               </div>
               <button
                 disabled={loading}

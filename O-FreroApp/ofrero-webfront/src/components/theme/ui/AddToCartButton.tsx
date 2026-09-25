@@ -108,7 +108,7 @@ export default function AddToCartButton({
           group w-full rounded-md py-2 text-sm font-medium
           transition-all duration-300 inline-flex items-center justify-center gap-2
           relative overflow-hidden
-          ${isSuccess ? "bg-emerald-600 text-white" : "bg-white text-black hover:bg-neutral-200"}
+          ${isSuccess ? "bg-emerald-600 text-foreground" : "bg-white text-black hover:bg-neutral-200"}
           ${loading ? "opacity-90 cursor-wait" : ""}
           ${className}
         `}

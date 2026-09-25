@@ -14,8 +14,8 @@ export default function AdminProductCreatePage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold text-white">Nouveau produit</h1>
-      <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4">
+      <h1 className="text-xl font-semibold text-foreground">Nouveau produit</h1>
+      <div className="rounded-2xl border border-border bg-card/50 p-4">
         <ProductForm mode="create" onSaved={handleSaved} />
       </div>
     </div>

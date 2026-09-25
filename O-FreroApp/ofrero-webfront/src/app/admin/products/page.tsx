@@ -126,7 +126,7 @@ export default function AdminProductsListPage() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-xl font-semibold text-white">Produits</h1>
+        <h1 className="text-xl font-semibold text-foreground">Produits</h1>
 
         <div className="flex items-center gap-2">
           <Link
@@ -145,16 +145,16 @@ export default function AdminProductsListPage() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Rechercher un produit…"
-            className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-white outline-none focus:border-neutral-700"
+            className="w-full rounded-md border border-border bg-card px-3 py-2 text-foreground outline-none focus:border-border"
           />
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="text-xs text-neutral-400">Trier par</label>
+          <label className="text-xs text-muted-foreground">Trier par</label>
           <select
             value={sortKey}
             onChange={(e) => setSortKey(e.target.value as SortKey)}
-            className="rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-white outline-none focus:border-neutral-700"
+            className="rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-border"
           >
             <option value="createdAt">Créé le</option>
             <option value="name">Nom</option>
@@ -163,7 +163,7 @@ export default function AdminProductsListPage() {
 
           <button
             onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
-            className="rounded-md border border-neutral-700 px-3 py-2 text-sm text-white hover:bg-neutral-800/70"
+            className="rounded-md border border-border px-3 py-2 text-sm text-foreground hover:bg-accent/70"
             aria-label={`Ordre ${sortDir}`}
             title={`Ordre ${sortDir}`}
           >
@@ -173,14 +173,14 @@ export default function AdminProductsListPage() {
       </div>
 
       {/* Tableau */}
-      <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 overflow-hidden">
-        <div className="border-b border-neutral-800 px-4 py-3 text-sm text-neutral-300">
+      <div className="rounded-2xl border border-border bg-card/50 overflow-hidden">
+        <div className="border-b border-border px-4 py-3 text-sm text-foreground">
           {loading ? "Chargement…" : `${filtered.length} / ${total} produit(s)`}
           {err && <span className="ml-2 text-red-400">— {err}</span>}
         </div>
 
         <table className="w-full text-sm">
-          <thead className="border-b border-neutral-800 text-neutral-400">
+          <thead className="border-b border-border text-muted-foreground">
             <tr>
               <th className="px-4 py-2 text-left">Nom</th>
               <th className="px-4 py-2 text-left">Catégorie</th>
@@ -189,34 +189,34 @@ export default function AdminProductsListPage() {
               <th className="px-4 py-2 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-800">
+          <tbody className="divide-y divide-border">
             {loading ? (
               <tr>
-                <td className="px-4 py-4 text-neutral-400" colSpan={5}>
+                <td className="px-4 py-4 text-muted-foreground" colSpan={5}>
                   Chargement…
                 </td>
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td className="px-4 py-4 text-neutral-400" colSpan={5}>
+                <td className="px-4 py-4 text-muted-foreground" colSpan={5}>
                   Aucun produit
                 </td>
               </tr>
             ) : (
               filtered.map((p) => (
                 <tr key={p.id}>
-                  <td className="px-4 py-3 text-white">
+                  <td className="px-4 py-3 text-foreground">
                     <div className="font-medium">{p.name}</div>
                     {p.description ? (
-                      <div className="text-xs text-neutral-400 line-clamp-2">
+                      <div className="text-xs text-muted-foreground line-clamp-2">
                         {p.description}
                       </div>
                     ) : null}
                   </td>
-                  <td className="px-4 py-3 text-neutral-300">
+                  <td className="px-4 py-3 text-foreground">
                     {p.category?.name ?? "—"}
                   </td>
-                  <td className="px-4 py-3 text-white">
+                  <td className="px-4 py-3 text-foreground">
                     {(p.priceCents / 100).toFixed(2)} €
                   </td>
                   <td className="px-4 py-3">
@@ -224,7 +224,7 @@ export default function AdminProductsListPage() {
                       className={`inline-flex rounded-full px-2 py-0.5 text-xs border ${
                         p.isFeatured
                           ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
-                          : "border-neutral-700 bg-neutral-800 text-neutral-300"
+                          : "border-border bg-secondary text-foreground"
                       }`}
                     >
                       {p.isFeatured ? "Oui" : "Non"}
@@ -235,7 +235,7 @@ export default function AdminProductsListPage() {
                       <button
                         onClick={() => toggleFeatured(p.id)}
                         disabled={togglingId === p.id}
-                        className="rounded-md border border-neutral-700 px-3 py-1.5 text-xs text-white hover:bg-neutral-800/70 disabled:opacity-60"
+                        className="rounded-md border border-border px-3 py-1.5 text-xs text-foreground hover:bg-accent/70 disabled:opacity-60"
                         title={p.isFeatured ? "Retirer de la une" : "Mettre à la une"}
                       >
                         {togglingId === p.id
@@ -247,7 +247,7 @@ export default function AdminProductsListPage() {
 
                       <Link
                         href={`/admin/products/${p.id}`}
-                        className="rounded-md border border-neutral-700 px-3 py-1.5 text-xs text-white hover:bg-neutral-800/70"
+                        className="rounded-md border border-border px-3 py-1.5 text-xs text-foreground hover:bg-accent/70"
                       >
                         Éditer
                       </Link>
@@ -268,7 +268,7 @@ export default function AdminProductsListPage() {
         </table>
       </div>
 
-      <p className="text-xs text-neutral-500">Total : {total}</p>
+      <p className="text-xs text-muted-foreground">Total : {total}</p>
 
       <ConfirmDialog
         open={!!confirmDeleteId}

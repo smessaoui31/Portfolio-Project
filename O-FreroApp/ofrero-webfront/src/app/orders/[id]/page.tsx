@@ -106,11 +106,11 @@ export default function OrderDetailPage() {
   if (loading) {
     return (
       <main className="mx-auto max-w-4xl px-4 py-10">
-        <div className="h-6 w-40 bg-neutral-800 rounded animate-pulse" />
-        <div className="mt-6 rounded-2xl border border-neutral-800 bg-neutral-900/50 p-6">
-          <div className="h-4 w-1/3 bg-neutral-800 rounded animate-pulse" />
-          <div className="mt-3 h-3 w-1/2 bg-neutral-800 rounded animate-pulse" />
-          <div className="mt-6 h-24 bg-neutral-900 rounded border border-neutral-800 animate-pulse" />
+        <div className="h-6 w-40 bg-secondary rounded animate-pulse" />
+        <div className="mt-6 rounded-2xl border border-border bg-card/50 p-6">
+          <div className="h-4 w-1/3 bg-secondary rounded animate-pulse" />
+          <div className="mt-3 h-3 w-1/2 bg-secondary rounded animate-pulse" />
+          <div className="mt-6 h-24 bg-card rounded border border-border animate-pulse" />
         </div>
       </main>
     );
@@ -122,7 +122,7 @@ export default function OrderDetailPage() {
         <div className="mb-4">
           <button
             onClick={() => router.back()}
-            className="text-sm text-neutral-300 hover:text-white underline-offset-4 hover:underline"
+            className="text-sm text-foreground hover:text-foreground underline-offset-4 hover:underline"
           >
             ← Retour
           </button>
@@ -141,18 +141,18 @@ export default function OrderDetailPage() {
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-white">
-            Commande <span className="font-mono text-base text-neutral-300">#{order.id}</span>
+          <h1 className="text-2xl font-semibold text-foreground">
+            Commande <span className="font-mono text-base text-foreground">#{order.id}</span>
           </h1>
-          <p className="mt-1 text-sm text-neutral-400">
-            Passée le <span className="text-neutral-200">{formatDate(order.createdAt)}</span>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Passée le <span className="text-foreground">{formatDate(order.createdAt)}</span>
           </p>
         </div>
         <div className="flex items-center gap-3">
           <OrderStatusBadge status={order.status} />
           <button
             onClick={handlePrint}
-            className="print:hidden rounded-md border border-neutral-700 bg-neutral-900/70 px-3 py-1.5 text-sm text-white hover:bg-neutral-800"
+            className="print:hidden rounded-md border border-border bg-card/70 px-3 py-1.5 text-sm text-foreground hover:bg-accent"
           >
             Imprimer
           </button>
@@ -162,21 +162,21 @@ export default function OrderDetailPage() {
       {/* Content */}
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-[1.2fr_0.8fr] print:grid-cols-2">
         {/* Colonne gauche: items */}
-        <section className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-5">
-          <h2 className="text-white font-medium">Articles</h2>
+        <section className="rounded-2xl border border-border bg-card/50 p-5">
+          <h2 className="text-foreground font-medium">Articles</h2>
           {order.items.length === 0 ? (
-            <p className="mt-3 text-sm text-neutral-400">Aucun article.</p>
+            <p className="mt-3 text-sm text-muted-foreground">Aucun article.</p>
           ) : (
-            <ul className="mt-3 divide-y divide-neutral-800">
+            <ul className="mt-3 divide-y divide-border">
               {order.items.map((it) => (
                 <li key={it.id} className="py-3 flex items-start justify-between gap-4">
                   <div>
-                    <div className="text-sm text-white">{it.name}</div>
-                    <div className="text-xs text-neutral-400">
+                    <div className="text-sm text-foreground">{it.name}</div>
+                    <div className="text-xs text-muted-foreground">
                       {euro(it.unitPriceCents)} × {it.quantity}
                     </div>
                   </div>
-                  <div className="text-sm text-white font-medium">
+                  <div className="text-sm text-foreground font-medium">
                     {euro(it.unitPriceCents * it.quantity)}
                   </div>
                 </li>
@@ -184,58 +184,58 @@ export default function OrderDetailPage() {
             </ul>
           )}
 
-          <div className="mt-4 border-t border-neutral-800 pt-3">
+          <div className="mt-4 border-t border-border pt-3">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-neutral-400">Sous-total</span>
-              <span className="text-white">{euro(itemsTotal)}</span>
+              <span className="text-muted-foreground">Sous-total</span>
+              <span className="text-foreground">{euro(itemsTotal)}</span>
             </div>
             <div className="mt-1 flex items-center justify-between text-sm">
-              <span className="text-neutral-400">Frais</span>
-              <span className="text-white">0,00 €</span>
+              <span className="text-muted-foreground">Frais</span>
+              <span className="text-foreground">0,00 €</span>
             </div>
             <div className="mt-2 flex items-center justify-between text-base">
-              <span className="text-neutral-300">Total</span>
-              <span className="text-white font-semibold">{euro(order.totalCents)}</span>
+              <span className="text-foreground">Total</span>
+              <span className="text-foreground font-semibold">{euro(order.totalCents)}</span>
             </div>
           </div>
         </section>
 
         {/* Colonne droite: adresse + paiement */}
-        <aside className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-5">
-          <h2 className="text-white font-medium">Livraison / Contact</h2>
-          <div className="mt-3 text-sm text-neutral-300">
-            <div className="text-neutral-200">{order.shippingLine1}</div>
+        <aside className="rounded-2xl border border-border bg-card/50 p-5">
+          <h2 className="text-foreground font-medium">Livraison / Contact</h2>
+          <div className="mt-3 text-sm text-foreground">
+            <div className="text-foreground">{order.shippingLine1}</div>
             {order.shippingLine2 && (
-              <div className="text-neutral-300">{order.shippingLine2}</div>
+              <div className="text-foreground">{order.shippingLine2}</div>
             )}
-            <div className="text-neutral-300">
+            <div className="text-foreground">
               {order.shippingPostalCode} {order.shippingCity}
             </div>
-            <div className="text-neutral-400 mt-1">Tél. {order.shippingPhone}</div>
+            <div className="text-muted-foreground mt-1">Tél. {order.shippingPhone}</div>
           </div>
 
-          <div className="mt-5 border-t border-neutral-800 pt-4">
-            <h3 className="text-white font-medium">Paiement</h3>
+          <div className="mt-5 border-t border-border pt-4">
+            <h3 className="text-foreground font-medium">Paiement</h3>
             {order.payment ? (
-              <div className="mt-2 text-sm text-neutral-300">
-                <div>Provider : <span className="text-neutral-200">{order.payment.provider}</span></div>
+              <div className="mt-2 text-sm text-foreground">
+                <div>Provider : <span className="text-foreground">{order.payment.provider}</span></div>
                 <div>
                   Statut :{" "}
-                  <span className="text-neutral-200">
+                  <span className="text-foreground">
                     {order.payment.status}
                   </span>
                 </div>
                 {order.payment.intentId && (
                   <div className="truncate">
                     Intent :{" "}
-                    <span className="font-mono text-neutral-400">
+                    <span className="font-mono text-muted-foreground">
                       {order.payment.intentId}
                     </span>
                   </div>
                 )}
               </div>
             ) : (
-              <p className="mt-2 text-sm text-neutral-400">
+              <p className="mt-2 text-sm text-muted-foreground">
                 Paiement non renseigné.
               </p>
             )}
@@ -244,7 +244,7 @@ export default function OrderDetailPage() {
           <div className="mt-6 flex flex-wrap gap-2 print:hidden">
             <Link
               href="/orders"
-              className="rounded-md border border-neutral-700 px-3 py-1.5 text-sm text-white hover:bg-neutral-800/60"
+              className="rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-accent/60"
             >
               ← Mes commandes
             </Link>
