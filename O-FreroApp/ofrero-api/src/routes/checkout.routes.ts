@@ -4,9 +4,10 @@ import Stripe from "stripe";
 import { z } from "zod";
 import type { CartView } from "../services/cart.prisma.service";
 
-import { requireAuth, AuthRequest } from "../middleware/auth";
+import { requireAuth, AuthRequest, verifyAuthToken } from "../middleware/auth";
 import { prisma } from "../lib/prisma";
 import { stripe } from "../lib/stripe";
+import { paramStr } from "../lib/http";
 
 import {
   createOrderFromCartPrisma,
@@ -267,13 +268,33 @@ export async function checkoutWebhookHandler(req: Request, res: Response) {
 }
 
 /* -------------------------- 3) GET /orders/:id --------------------------- */
-/** Lecture par ID (toujours utile pour nos liens internes) */
-checkoutRouter.get("/orders/:id", requireAuth, async (req: AuthRequest, res: Response) => {
+/** Lecture par ID - accessible pour les commandes invités et authentifiés */
+checkoutRouter.get("/orders/:id", async (req: Request, res: Response) => {
   const order = await prisma.order.findFirst({
-    where: { id: req.params.id, userId: req.user!.id },
+    where: { id: paramStr(req.params.id) },
     include: { items: true, payment: true },
   });
+
   if (!order) return res.status(404).json({ error: "Order not found" });
+
+  // Commande invité (pas de userId) : consultable sans authentification.
+  if (!order.userId) {
+    return res.json(order);
+  }
+
+  // Commande d'un utilisateur : un JWT valide correspondant au propriétaire est requis.
+  const authHeader = req.headers.authorization;
+  const user = authHeader?.startsWith("Bearer ")
+    ? verifyAuthToken(authHeader.slice("Bearer ".length))
+    : null;
+
+  if (!user) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+  if (user.id !== order.userId) {
+    return res.status(403).json({ error: "Not authorized to view this order" });
+  }
+
   return res.json(order);
 });
 
@@ -284,7 +305,7 @@ checkoutRouter.get(
   requireAuth,
   async (req: AuthRequest, res: Response) => {
     const order = await prisma.order.findFirst({
-      where: { orderNumber: req.params.orderNumber, userId: req.user!.id },
+      where: { orderNumber: paramStr(req.params.orderNumber), userId: req.user!.id },
       include: { items: true, payment: true },
     });
     if (!order) return res.status(404).json({ error: "Order not found" });

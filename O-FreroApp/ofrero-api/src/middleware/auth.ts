@@ -9,18 +9,25 @@ export interface AuthRequest extends Request {
   user?: AuthUser;
 }
 
+/** Vérifie un JWT et retourne l'utilisateur associé, ou null si absent/invalide/expiré. */
+export function verifyAuthToken(token: string): AuthUser | null {
+  try {
+    const payload = jwt.verify(token, JWT_SECRET) as { sub: string; email: string; role?: string };
+    return { id: payload.sub, email: payload.email, role: (payload.role as any) ?? "USER" };
+  } catch {
+    return null;
+  }
+}
+
 export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
   const h = req.headers.authorization;
   if (!h?.startsWith("Bearer ")) return res.status(401).json({ error: "Unauthorized" });
 
-  try {
-    const token = h.slice("Bearer ".length);
-    const payload = jwt.verify(token, JWT_SECRET) as { sub: string; email: string; role?: string };
-    req.user = { id: payload.sub, email: payload.email, role: (payload.role as any) ?? "USER" };
-    next();
-  } catch {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
+  const user = verifyAuthToken(h.slice("Bearer ".length));
+  if (!user) return res.status(401).json({ error: "Unauthorized" });
+
+  req.user = user;
+  next();
 }
 
 export async function requireAdmin(req: AuthRequest, res: Response, next: NextFunction) {
