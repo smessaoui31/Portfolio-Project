@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { apiAuthed } from "@/lib/api";
 import type { AdminProduct, AdminProductListResponse } from "@/types/admin";
+import ConfirmDialog from "@/components/theme/ui/ConfirmDialog";
 
 type SortKey = "name" | "createdAt" | "priceCents";
 type SortDir = "asc" | "desc";
@@ -22,6 +23,7 @@ export default function AdminProductsListPage() {
   // states d'actions par ligne
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // petit debounce sur la recherche
   const debounceRef = useRef<number | null>(null);
@@ -106,8 +108,7 @@ export default function AdminProductsListPage() {
   }
 
   async function deleteProduct(id: string) {
-    const ok = window.confirm("Supprimer ce produit ? Cette action est irréversible.");
-    if (!ok) return;
+    setConfirmDeleteId(null);
     try {
       setDeletingId(id);
       await apiAuthed(`/admin/products/${id}`, { method: "DELETE" });
@@ -252,7 +253,7 @@ export default function AdminProductsListPage() {
                       </Link>
 
                       <button
-                        onClick={() => deleteProduct(p.id)}
+                        onClick={() => setConfirmDeleteId(p.id)}
                         disabled={deletingId === p.id}
                         className="rounded-md border border-red-600/60 text-red-200 px-3 py-1.5 text-xs hover:bg-red-600/10 disabled:opacity-60"
                       >
@@ -268,6 +269,16 @@ export default function AdminProductsListPage() {
       </div>
 
       <p className="text-xs text-neutral-500">Total : {total}</p>
+
+      <ConfirmDialog
+        open={!!confirmDeleteId}
+        onOpenChange={(open) => !open && setConfirmDeleteId(null)}
+        title="Supprimer ce produit ?"
+        description={`« ${items.find((p) => p.id === confirmDeleteId)?.name ?? ""} » sera définitivement supprimé. Cette action est irréversible.`}
+        confirmLabel="Supprimer"
+        loading={deletingId === confirmDeleteId}
+        onConfirm={() => confirmDeleteId && deleteProduct(confirmDeleteId)}
+      />
     </div>
   );
 }

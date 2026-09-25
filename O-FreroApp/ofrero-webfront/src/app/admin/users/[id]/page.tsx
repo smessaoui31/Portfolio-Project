@@ -2,7 +2,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { apiAuthed } from "@/lib/api";
+import ConfirmDialog from "@/components/theme/ui/ConfirmDialog";
 
 type Role = "USER" | "ADMIN";
 
@@ -25,6 +27,7 @@ export default function AdminUserDetailPage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   async function fetchUser() {
     setLoading(true);
@@ -41,14 +44,13 @@ export default function AdminUserDetailPage() {
   }
 
   async function handleDelete() {
-    const confirm = window.confirm("Supprimer cet utilisateur ? Action irréversible.");
-    if (!confirm) return;
+    setConfirmOpen(false);
     try {
       setDeleting(true);
       await apiAuthed(`/admin/users/${id}`, { method: "DELETE" });
       router.push("/admin/users");
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : "Erreur lors de la suppression.");
+      toast.error(e instanceof Error ? e.message : "Erreur lors de la suppression.");
     } finally {
       setDeleting(false);
     }
@@ -98,7 +100,7 @@ export default function AdminUserDetailPage() {
 
             <div className="mt-6 flex items-center justify-end">
               <button
-                onClick={handleDelete}
+                onClick={() => setConfirmOpen(true)}
                 disabled={deleting}
                 className={`rounded-md border px-4 py-2 text-sm transition ${
                   deleting
@@ -112,6 +114,16 @@ export default function AdminUserDetailPage() {
           </>
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Supprimer cet utilisateur ?"
+        description={user ? `« ${user.fullName} » sera définitivement supprimé. Cette action est irréversible.` : undefined}
+        confirmLabel="Supprimer"
+        loading={deleting}
+        onConfirm={handleDelete}
+      />
     </main>
   );
 }

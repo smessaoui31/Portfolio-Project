@@ -6,6 +6,7 @@ import Link from "next/link";
 import ProductForm from "@/components/admin/ProductForm";
 import { apiAuthed } from "@/lib/api";
 import type { AdminProduct } from "@/types/admin";
+import ConfirmDialog from "@/components/theme/ui/ConfirmDialog";
 
 export default function AdminProductEditPage() {
   const params = useParams<{ id: string }>();
@@ -16,6 +17,7 @@ export default function AdminProductEditPage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -34,8 +36,7 @@ export default function AdminProductEditPage() {
   }, [id]);
 
   async function handleDelete() {
-    const ok = window.confirm("Supprimer ce produit ? Cette action est irréversible.");
-    if (!ok) return;
+    setConfirmOpen(false);
     try {
       setDeleting(true);
       await apiAuthed(`/admin/products/${id}`, { method: "DELETE" });
@@ -62,7 +63,7 @@ export default function AdminProductEditPage() {
             ← Retour
           </Link>
           <button
-            onClick={handleDelete}
+            onClick={() => setConfirmOpen(true)}
             disabled={deleting}
             className="rounded-md border border-red-600/60 text-red-200 px-3 py-2 text-sm hover:bg-red-600/10 disabled:opacity-60"
           >
@@ -70,6 +71,16 @@ export default function AdminProductEditPage() {
           </button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Supprimer ce produit ?"
+        description={product ? `« ${product.name} » sera définitivement supprimé. Cette action est irréversible.` : undefined}
+        confirmLabel="Supprimer"
+        loading={deleting}
+        onConfirm={handleDelete}
+      />
 
       <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4">
         {loading ? (

@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { apiAuthed } from "@/lib/api";
 import { showToast } from "@/lib/toast";
 import { ThermalPrinter } from "@/lib/thermal-printer";
+import OrderStatusBadge from "@/components/theme/ui/OrderStatusBadge";
 
 type OrderStatus = "PENDING" | "PAID" | "SHIPPED" | "DELIVERED" | "FAILED" | "CANCELLED";
 
@@ -175,7 +176,7 @@ export default function AdminOrderDetailPage() {
                   <span className="text-white font-medium">{totalFormatted}</span>
                 </div>
               </div>
-              <StatusBadge status={order.status} />
+              <OrderStatusBadge status={order.status} />
             </div>
 
             {/* Status Change */}
@@ -315,24 +316,4 @@ export default function AdminOrderDetailPage() {
       )}
     </main>
   );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const base = "inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border transition";
-  switch (status) {
-    case "PENDING":
-      return <span className={`${base} border-amber-500/40 bg-amber-500/10 text-amber-300`}>En attente</span>;
-    case "PAID":
-      return <span className={`${base} border-emerald-500/40 bg-emerald-500/10 text-emerald-300`}>Payée</span>;
-    case "SHIPPED":
-      return <span className={`${base} border-sky-500/40 bg-sky-500/10 text-sky-300`}>Expédiée</span>;
-    case "DELIVERED":
-      return <span className={`${base} border-green-500/40 bg-green-500/10 text-green-300`}>Livrée</span>;
-    case "FAILED":
-      return <span className={`${base} border-red-500/40 bg-red-500/10 text-red-300`}>Échouée</span>;
-    case "CANCELLED":
-      return <span className={`${base} border-neutral-700 bg-neutral-800 text-neutral-300`}>Annulée</span>;
-    default:
-      return <span className={`${base} border-neutral-700 bg-neutral-800 text-neutral-300`}>{status}</span>;
-  }
 }

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { apiAuthed } from "@/lib/api";
+import OrderStatusBadge from "@/components/theme/ui/OrderStatusBadge";
 
 // Types (adaptés à ton API Prisma)
 type OrderItem = {
@@ -37,23 +38,6 @@ function formatDate(iso: string) {
   } catch {
     return iso;
   }
-}
-
-function StatusChip({ status }: { status: Order["status"] }) {
-  const map: Record<Order["status"], { text: string; cls: string }> = {
-    PENDING:  { text: "En attente", cls: "bg-amber-500/10 text-amber-300 border-amber-500/30" },
-    PAID:     { text: "Payée",      cls: "bg-emerald-500/10 text-emerald-300 border-emerald-500/30" },
-    SHIPPED:  { text: "Expédiée",   cls: "bg-sky-500/10 text-sky-300 border-sky-500/30" },
-    DELIVERED:{ text: "Livrée",     cls: "bg-green-500/10 text-green-300 border-green-500/30" },
-    FAILED:   { text: "Échouée",    cls: "bg-rose-500/10 text-rose-300 border-rose-500/30" },
-    CANCELLED:{ text: "Annulée",    cls: "bg-neutral-700/30 text-neutral-300 border-neutral-600/50" },
-  };
-  const m = map[status];
-  return (
-    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs ${m.cls}`}>
-      {m.text}
-    </span>
-  );
 }
 
 export default function OrdersPage() {
@@ -134,7 +118,7 @@ export default function OrdersPage() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-sm text-neutral-300 truncate">#{o.id}</span>
-                    <StatusChip status={o.status} />
+                    <OrderStatusBadge status={o.status} />
                   </div>
                   <div className="mt-1 text-sm text-neutral-400">
                     Passée le <span className="text-neutral-300">{formatDate(o.createdAt)}</span>

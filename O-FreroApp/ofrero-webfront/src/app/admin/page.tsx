@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { RevenueChart } from "@/components/admin/RevenueChart";
 import { OrdersChart } from "@/components/admin/OrdersChart";
+import OrderStatusBadge from "@/components/theme/ui/OrderStatusBadge";
 
 type Period = "today" | "week" | "month" | "year" | "all";
 
@@ -248,7 +249,7 @@ export default function AdminDashboardHome() {
                     <span className="text-sm text-white font-medium">
                       {(o.totalCents / 100).toFixed(2)} €
                     </span>
-                    <StatusBadge status={o.status} />
+                    <OrderStatusBadge status={o.status} />
                     <Link
                       href={`/admin/orders/${o.id}`}
                       className="text-sm text-neutral-300 hover:text-white underline underline-offset-4"
@@ -273,38 +274,4 @@ function StatCard({ label, value }: { label: string; value: string }) {
       <div className="mt-1 text-2xl font-semibold text-white">{value}</div>
     </div>
   );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const base = "inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border transition";
-  switch (status) {
-    case "PENDING":
-      return (
-        <span className={`${base} border-amber-500/40 bg-amber-500/10 text-amber-300`}>En attente</span>
-      );
-    case "PAID":
-      return (
-        <span className={`${base} border-emerald-500/40 bg-emerald-500/10 text-emerald-300`}>Payée</span>
-      );
-    case "SHIPPED":
-      return (
-        <span className={`${base} border-sky-500/40 bg-sky-500/10 text-sky-300`}>Expédiée</span>
-      );
-    case "DELIVERED":
-      return (
-        <span className={`${base} border-green-500/40 bg-green-500/10 text-green-300`}>Livrée</span>
-      );
-    case "FAILED":
-      return (
-        <span className={`${base} border-rose-500/40 bg-rose-500/10 text-rose-300`}>Échouée</span>
-      );
-    case "CANCELLED":
-      return (
-        <span className={`${base} border-red-500/40 bg-red-500/10 text-red-300`}>Annulée</span>
-      );
-    default:
-      return (
-        <span className={`${base} border-neutral-700 bg-neutral-800 text-neutral-300`}>{status}</span>
-      );
-  }
 }

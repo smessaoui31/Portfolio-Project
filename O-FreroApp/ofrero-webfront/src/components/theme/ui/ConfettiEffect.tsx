@@ -8,6 +8,8 @@ import { createPortal } from "react-dom";
 type ConfettiEffectProps = {
   position: { x: number; y: number } | null;
   onComplete: () => void;
+  /** Nombre de particules — 20 pour un effet plein écran, moins pour un effet plus discret. */
+  count?: number;
 };
 
 const colors = [
@@ -19,7 +21,7 @@ const colors = [
   "#ec4899", // pink-500
 ];
 
-export default function ConfettiEffect({ position, onComplete }: ConfettiEffectProps) {
+export default function ConfettiEffect({ position, onComplete, count = 20 }: ConfettiEffectProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -32,8 +34,8 @@ export default function ConfettiEffect({ position, onComplete }: ConfettiEffectP
     <AnimatePresence>
       {position && (
         <div className="pointer-events-none fixed inset-0 z-[9998]">
-          {[...Array(20)].map((_, i) => {
-            const angle = (i * Math.PI * 2) / 20;
+          {[...Array(count)].map((_, i) => {
+            const angle = (i * Math.PI * 2) / count;
             const velocity = 150 + Math.random() * 100;
             const xVelocity = Math.cos(angle) * velocity;
             const yVelocity = Math.sin(angle) * velocity - 200; // Bias upward
@@ -64,7 +66,7 @@ export default function ConfettiEffect({ position, onComplete }: ConfettiEffectP
                   ease: [0.25, 0.46, 0.45, 0.94],
                 }}
                 onAnimationComplete={() => {
-                  if (i === 19) onComplete();
+                  if (i === count - 1) onComplete();
                 }}
                 className="absolute"
                 style={{

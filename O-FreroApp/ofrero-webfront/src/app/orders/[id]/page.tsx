@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiAuthed } from "@/lib/api";
+import OrderStatusBadge from "@/components/theme/ui/OrderStatusBadge";
 
 type OrderItem = {
   id: string;
@@ -22,7 +23,7 @@ type Payment = {
 
 type Order = {
   id: string;
-  status: "PENDING" | "PAID" | "FAILED" | "CANCELLED";
+  status: "PENDING" | "PAID" | "SHIPPED" | "DELIVERED" | "FAILED" | "CANCELLED";
   totalCents: number;
   createdAt: string;
 
@@ -54,21 +55,6 @@ function formatDate(iso: string) {
   } catch {
     return iso;
   }
-}
-
-function StatusChip({ status }: { status: Order["status"] }) {
-  const map: Record<Order["status"], { text: string; cls: string }> = {
-    PENDING:   { text: "En attente", cls: "bg-amber-500/10 text-amber-300 border-amber-500/30" },
-    PAID:      { text: "Payée",      cls: "bg-emerald-500/10 text-emerald-300 border-emerald-500/30" },
-    FAILED:    { text: "Échouée",    cls: "bg-rose-500/10 text-rose-300 border-rose-500/30" },
-    CANCELLED: { text: "Annulée",    cls: "bg-neutral-700/30 text-neutral-300 border-neutral-600/50" },
-  };
-  const m = map[status];
-  return (
-    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs ${m.cls}`}>
-      {m.text}
-    </span>
-  );
 }
 
 export default function OrderDetailPage() {
@@ -163,7 +149,7 @@ export default function OrderDetailPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <StatusChip status={order.status} />
+          <OrderStatusBadge status={order.status} />
           <button
             onClick={handlePrint}
             className="print:hidden rounded-md border border-neutral-700 bg-neutral-900/70 px-3 py-1.5 text-sm text-white hover:bg-neutral-800"

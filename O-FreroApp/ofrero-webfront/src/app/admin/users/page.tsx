@@ -3,7 +3,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { apiAuthed } from "@/lib/api";
+import ConfirmDialog from "@/components/theme/ui/ConfirmDialog";
 
 type Role = "USER" | "ADMIN";
 type AdminUser = {
@@ -24,6 +26,7 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   async function fetchUsers() {
     setLoading(true);
@@ -51,8 +54,7 @@ export default function AdminUsersPage() {
   const rows = useMemo(() => (Array.isArray(users) ? users : []), [users]);
 
   async function handleDelete(id: string) {
-    const confirm = window.confirm("Supprimer cet utilisateur ? Cette action est irréversible.");
-    if (!confirm) return;
+    setConfirmDeleteId(null);
     try {
       setBusyId(id);
       await apiAuthed(`/admin/users/${id}`, { method: "DELETE" });
@@ -60,7 +62,7 @@ export default function AdminUsersPage() {
       setUsers((prev) => prev.filter((u) => u.id !== id));
       setTotal((t) => Math.max(0, t - 1));
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : "Erreur lors de la suppression.");
+      toast.error(e instanceof Error ? e.message : "Erreur lors de la suppression.");
     } finally {
       setBusyId(null);
     }
@@ -124,7 +126,7 @@ export default function AdminUsersPage() {
                         Details
                       </Link>
                       <button
-                        onClick={() => handleDelete(u.id)}
+                        onClick={() => setConfirmDeleteId(u.id)}
                         disabled={busyId === u.id}
                         className={`rounded-md border px-3 py-1 text-xs transition ${
                           busyId === u.id
@@ -143,6 +145,16 @@ export default function AdminUsersPage() {
           </tbody>
         </table>
       </div>
+
+      <ConfirmDialog
+        open={!!confirmDeleteId}
+        onOpenChange={(open) => !open && setConfirmDeleteId(null)}
+        title="Supprimer cet utilisateur ?"
+        description={`« ${rows.find((u) => u.id === confirmDeleteId)?.fullName ?? ""} » sera définitivement supprimé. Cette action est irréversible.`}
+        confirmLabel="Supprimer"
+        loading={busyId === confirmDeleteId}
+        onConfirm={() => confirmDeleteId && handleDelete(confirmDeleteId)}
+      />
     </main>
   );
 }
