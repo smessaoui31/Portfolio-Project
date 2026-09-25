@@ -118,12 +118,12 @@ export default function FiltersBar({ categories }: Props) {
           placeholder="Rechercher une pizza… (appuyez sur /)"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 pr-10 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/10"
+          className="w-full glass rounded-md px-3 py-2 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-white/10"
         />
         {q && (
           <button
             onClick={() => setQ("")}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
             aria-label="Effacer la recherche"
           >
             <X className="h-4 w-4" />
@@ -135,7 +135,7 @@ export default function FiltersBar({ categories }: Props) {
       <select
         value={categoryId}
         onChange={(e) => router.push(buildUrl({ categoryId: e.target.value || null }))}
-        className="rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/10"
+        className="glass rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-white/10"
         aria-label="Filtrer par catégorie"
       >
         <option value="">Toutes les catégories</option>
@@ -148,7 +148,7 @@ export default function FiltersBar({ categories }: Props) {
       <select
         value={sort}
         onChange={(e) => router.push(buildUrl({ sort: e.target.value || null }))}
-        className="rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/10"
+        className="glass rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-white/10"
         aria-label="Trier"
       >
         {sortOptions.map((o) => (
@@ -162,7 +162,7 @@ export default function FiltersBar({ categories }: Props) {
         className={`rounded-md border px-4 py-2 text-sm transition
           ${featured
             ? "border-emerald-500/40 bg-emerald-600/15 text-emerald-300"
-            : "border-neutral-800 bg-neutral-900 text-neutral-300 hover:bg-neutral-800/60"}`}
+            : "border-border bg-card text-foreground hover:bg-accent/60"}`}
         aria-pressed={featured}
       >
         La Sélection du Chef
@@ -172,35 +172,35 @@ export default function FiltersBar({ categories }: Props) {
       {/* Chips des filtres actifs */}
       {activeFiltersCount > 0 && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-neutral-500">Filtres actifs:</span>
+          <span className="text-xs text-muted-foreground">Filtres actifs:</span>
 
           {q && (
             <button
               onClick={() => setQ("")}
-              className="inline-flex items-center gap-1.5 rounded-full bg-neutral-800/60 px-3 py-1 text-xs text-white hover:bg-neutral-800 transition"
+              className="inline-flex items-center gap-1.5 rounded-full bg-secondary/60 px-3 py-1 text-xs text-foreground hover:bg-accent transition"
             >
               Recherche: "{q}"
-              <X className="h-3 w-3 text-neutral-400" />
+              <X className="h-3 w-3 text-muted-foreground" />
             </button>
           )}
 
           {categoryId && categoryId !== defaultCategoryId && (
             <button
               onClick={() => router.push(buildUrl({ categoryId: null }))}
-              className="inline-flex items-center gap-1.5 rounded-full bg-neutral-800/60 px-3 py-1 text-xs text-white hover:bg-neutral-800 transition"
+              className="inline-flex items-center gap-1.5 rounded-full bg-secondary/60 px-3 py-1 text-xs text-foreground hover:bg-accent transition"
             >
               {getCategoryName(categoryId)}
-              <X className="h-3 w-3 text-neutral-400" />
+              <X className="h-3 w-3 text-muted-foreground" />
             </button>
           )}
 
           {sort && (
             <button
               onClick={() => router.push(buildUrl({ sort: null }))}
-              className="inline-flex items-center gap-1.5 rounded-full bg-neutral-800/60 px-3 py-1 text-xs text-white hover:bg-neutral-800 transition"
+              className="inline-flex items-center gap-1.5 rounded-full bg-secondary/60 px-3 py-1 text-xs text-foreground hover:bg-accent transition"
             >
               {sortOptions.find(o => o.value === sort)?.label}
-              <X className="h-3 w-3 text-neutral-400" />
+              <X className="h-3 w-3 text-muted-foreground" />
             </button>
           )}
 
@@ -217,7 +217,7 @@ export default function FiltersBar({ categories }: Props) {
           {activeFiltersCount > 1 && (
             <button
               onClick={clearAllFilters}
-              className="text-xs text-neutral-400 hover:text-white underline transition"
+              className="text-xs text-muted-foreground hover:text-foreground underline transition"
             >
               Tout effacer
             </button>

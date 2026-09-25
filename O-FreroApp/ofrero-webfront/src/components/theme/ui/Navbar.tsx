@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -65,7 +65,7 @@ export default function Navbar() {
   }, [safeCount, prevCount]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/80 bg-background/70 backdrop-blur">
+    <header className="glass sticky top-0 z-40 border-x-0 border-t-0">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 w-full">
         {/* Logo with parallax */}
         <Link
@@ -74,7 +74,7 @@ export default function Navbar() {
         >
           <motion.div
             style={{ rotate: logoRotate, scale: logoScale }}
-            className="relative h-12 w-12 rounded-xl border border-neutral-800 bg-linear-to-br from-neutral-900 to-neutral-950 p-2"
+            className="relative h-12 w-12 rounded-xl border border-border bg-linear-to-br from-neutral-900 to-neutral-950 p-2"
           >
             <Image
               src="/ofrero-pizza-logo.png"
