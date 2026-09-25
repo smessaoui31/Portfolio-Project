@@ -1,17 +1,82 @@
 /* src/app/globals.css */
 @import "tailwindcss";
+@import "tw-animate-css";
 
+@custom-variant dark (&:is(.dark *));
+
+/* Thème clair (par défaut si l'utilisateur bascule via ThemeToggle) */
 :root {
-  --bg: #0a0a0a;
-  --fg: #f4f4f5;
-  --muted: #a1a1aa;
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --primary: #0a0a0a;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #0a0a0a;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #f4f4f5;
+  --accent-foreground: #0a0a0a;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #a1a1aa;
+  color-scheme: light;
+}
+
+/* Thème sombre — identité visuelle d'origine du site, conservée à l'identique */
+.dark {
+  --background: #0a0a0a;
+  --foreground: #f4f4f5;
   --card: #171717;
+  --card-foreground: #f4f4f5;
+  --popover: #171717;
+  --popover-foreground: #f4f4f5;
+  --primary: #ffffff;
+  --primary-foreground: #0a0a0a;
+  --secondary: #262626;
+  --secondary-foreground: #f4f4f5;
+  --muted: #262626;
+  --muted-foreground: #a1a1aa;
+  --accent: #262626;
+  --accent-foreground: #f4f4f5;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
   --border: #262626;
+  --input: #262626;
+  --ring: #a1a1aa;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 }
 
 html, body {
-  background: var(--bg);
-  color: var(--fg);
+  background: var(--background);
+  color: var(--foreground);
 }
 
 /* --- Buttons micro-animations --- */
@@ -50,16 +115,11 @@ html, body {
   }
 }
 
-@keyframes fade-in {
-  from { opacity: 0; transform: scale(1.05); }
-  to { opacity: 0.6; transform: scale(1); }
-}
-
 /* --- Skeleton shimmer --- */
 .skeleton {
   position: relative;
   overflow: hidden;
-  background: #171717; /* neutral-900 */
+  background: var(--secondary);
 }
 .skeleton::after {
   content: "";
@@ -88,21 +148,6 @@ html, body {
   animation: badge-bump 300ms ease-out;
 }
 
-/* --- Petits fade/slide pour listes --- */
-.item-enter {
-  opacity: 0; transform: translateY(6px);
-}
-.item-enter-active {
-  opacity: 1; transform: translateY(0); transition: all .2s ease-out;
-}
-.item-exit {
-  opacity: 1; transform: translateY(0);
-}
-.item-exit-active {
-  opacity: 0; transform: translateY(-6px); transition: all .2s ease-out;
-}
-/* -- DarkMode --***/
-:root { color-scheme: light dark; }
 html { transition: background-color 200ms ease, color 200ms ease; }
 
 @media print {
@@ -112,16 +157,6 @@ html { transition: background-color 200ms ease, color 200ms ease; }
   .border, .border-neutral-800 { border-color: #e5e7eb !important; }
   .bg-neutral-900\/50, .bg-neutral-900, .bg-neutral-950 { background: white !important; }
   .text-white, .text-neutral-100, .text-neutral-200, .text-neutral-300, .text-neutral-400 { color: #111 !important; }
-}
-
-@keyframes popIn {
-  0% { transform: scale(0.8); opacity: 0; filter: blur(2px); }
-  100% { transform: scale(1); opacity: 1; filter: blur(0); }
-}
-
-@keyframes ringPulse {
-  0%   { transform: scale(1);   opacity: .55; }
-  100% { transform: scale(1.65); opacity: 0;  }
 }
 
 /* --- Glow effect for product cards --- */
@@ -157,16 +192,6 @@ html { transition: background-color 200ms ease, color 200ms ease; }
 
 .product-card-glow:hover::before {
   opacity: 1;
-}
-
-/* --- Badge pulse animation --- */
-@keyframes badge-pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-}
-
-.badge-pulse {
-  animation: badge-pulse 2s ease-in-out infinite;
 }
 
 /* --- Smooth scroll behavior --- */

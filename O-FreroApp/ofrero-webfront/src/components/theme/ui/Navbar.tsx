@@ -4,8 +4,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Lock, Unlock } from "lucide-react";
+import { Lock, Unlock, Menu } from "lucide-react";
 import { Button } from "@/components/theme/ui/button"; // Shadcn UI
+import { ThemeToggle } from "@/components/theme/ui/ThemeToggle";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { motion, useScroll, useTransform } from "framer-motion";
@@ -19,8 +20,8 @@ function NavLink({ href, label, onClick }: { href: string; label: string; onClic
       onClick={onClick}
       className={`px-3 py-2 text-sm rounded-md transition
         ${active
-          ? "text-white bg-neutral-800"
-          : "text-neutral-300 hover:text-white hover:bg-neutral-800/60"
+          ? "text-foreground bg-accent"
+          : "text-muted-foreground hover:text-foreground hover:bg-accent/60"
         }`}
     >
       {label}
@@ -64,7 +65,7 @@ export default function Navbar() {
   }, [safeCount, prevCount]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-neutral-800/80 bg-black/70 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-border/80 bg-background/70 backdrop-blur">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 w-full">
         {/* Logo with parallax */}
         <Link
@@ -105,7 +106,7 @@ export default function Navbar() {
               <div className="hidden md:flex items-center gap-3">
                 <Link
                   href="/orders"
-                  className="rounded-md border border-neutral-700 bg-neutral-900/70 px-3 py-1.5 text-sm text-white hover:bg-neutral-800 transition"
+                  className="rounded-md border border-border bg-card/70 px-3 py-1.5 text-sm text-foreground hover:bg-accent transition"
                 >
                   Mes commandes
                 </Link>
@@ -122,7 +123,7 @@ export default function Navbar() {
                 <Button
                   onClick={logout}
                   variant="ghost"
-                  className="text-sm text-white border border-neutral-700 hover:bg-neutral-800"
+                  className="text-sm text-foreground border border-border hover:bg-accent"
                 >
                   Se déconnecter
                 </Button>
@@ -133,7 +134,7 @@ export default function Navbar() {
                 onClick={logout}
                 size="icon"
                 variant="ghost"
-                className="md:hidden border border-neutral-700 text-white hover:bg-neutral-800 hover:text-red-400 transition transform active:scale-95"
+                className="md:hidden border border-border text-foreground hover:bg-accent hover:text-red-400 transition transform active:scale-95"
                 title="Se déconnecter"
               >
                 <Unlock className="h-5 w-5" />
@@ -142,11 +143,7 @@ export default function Navbar() {
           ) : (
             <>
               {/* Connexion — desktop */}
-              <Button
-                asChild
-                variant="outline"
-                className="hidden md:inline-flex border-neutral-200 bg-white text-black hover:bg-neutral-100 text-sm"
-              >
+              <Button asChild className="hidden md:inline-flex text-sm">
                 <Link href="/login">Se connecter</Link>
               </Button>
 
@@ -155,7 +152,7 @@ export default function Navbar() {
                 asChild
                 size="icon"
                 variant="ghost"
-                className="md:hidden border border-neutral-700 text-white hover:bg-neutral-800 hover:text-emerald-400 transition transform active:scale-95"
+                className="md:hidden border border-border text-foreground hover:bg-accent hover:text-emerald-400 transition transform active:scale-95"
                 title="Se connecter"
               >
                 <Link href="/login">
@@ -165,10 +162,13 @@ export default function Navbar() {
             </>
           )}
 
+          {/* Thème */}
+          <ThemeToggle />
+
           {/* Panier */}
           <Link
             href="/cart"
-            className="relative rounded-md border border-neutral-800 px-3 py-2 text-sm text-white hover:bg-neutral-800/60 transition-all"
+            className="relative rounded-md border border-border px-3 py-2 text-sm text-foreground hover:bg-accent/60 transition-all"
             aria-label={`Panier (${safeCount} article${plural})`}
           >
             Panier
@@ -178,7 +178,7 @@ export default function Navbar() {
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 500, damping: 15 }}
-              className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-white/10 px-1 text-xs text-white"
+              className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-xs text-foreground"
             >
               {safeCount}
             </motion.span>
@@ -188,13 +188,13 @@ export default function Navbar() {
           <Button
             variant="ghost"
             size="icon"
-            className="ml-2 md:hidden text-neutral-300 hover:bg-neutral-800/60"
+            className="ml-2 md:hidden text-muted-foreground hover:bg-accent/60"
             onClick={() => setOpen((v) => !v)}
             aria-label="Menu"
             aria-controls="mobile-drawer"
             aria-expanded={open}
           >
-            ☰
+            <Menu className="h-5 w-5" />
           </Button>
         </div>
       </nav>
@@ -202,7 +202,7 @@ export default function Navbar() {
       {/* Mobile Drawer */}
       <div
         id="mobile-drawer"
-        className={`md:hidden border-t border-neutral-800/80 bg-black/90 px-4 transition-[max-height,opacity] duration-200 overflow-hidden ${open ? "max-h-96 opacity-100 py-3" : "max-h-0 opacity-0 py-0"}`}
+        className={`md:hidden border-t border-border/80 bg-background/95 px-4 transition-[max-height,opacity] duration-200 overflow-hidden ${open ? "max-h-96 opacity-100 py-3" : "max-h-0 opacity-0 py-0"}`}
       >
         {open && (
           <div className="flex flex-col gap-1">
@@ -215,7 +215,7 @@ export default function Navbar() {
               <Link
                 href="/orders"
                 onClick={() => setOpen(false)}
-                className="mt-2 rounded-md border border-neutral-800 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800/60"
+                className="mt-2 rounded-md border border-border px-3 py-2 text-sm text-foreground hover:bg-accent/60"
               >
                 Mes commandes
               </Link>
