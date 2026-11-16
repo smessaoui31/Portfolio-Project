@@ -2,7 +2,17 @@ import Link from "next/link";
 import { buttonClasses } from "@/components/ui/Button";
 
 /** The stamp card. Guests see an empty card and the sign-up invitation. */
-export function LoyaltyCard({ balance, stampsForReward, signedIn }: { balance: number; stampsForReward: number; signedIn: boolean }) {
+export function LoyaltyCard({
+  balance,
+  stampsForReward,
+  signedIn,
+  onAccountPage = false,
+}: {
+  balance: number;
+  stampsForReward: number;
+  signedIn: boolean;
+  onAccountPage?: boolean;
+}) {
   const filled = Math.min(balance, stampsForReward);
   const remaining = Math.max(0, stampsForReward - balance);
   const ready = signedIn && remaining === 0;
@@ -43,7 +53,7 @@ export function LoyaltyCard({ balance, stampsForReward, signedIn }: { balance: n
           );
         })}
       </ol>
-      {signedIn ? (
+      {signedIn && onAccountPage && !ready ? null : signedIn ? (
         <Link href={ready ? "/carte" : "/compte"} className={buttonClasses("primary", "lg", "mt-6 w-full !bg-ember-ink !text-fg")}>
           {ready ? "Choisir ma pizza offerte" : "Voir mon compte"}
         </Link>

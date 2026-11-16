@@ -61,7 +61,7 @@ export default async function ComptePage({ searchParams }: PageProps<"/compte">)
       <div className="mt-10 grid gap-12 md:grid-cols-[minmax(0,420px)_1fr]">
         <section aria-labelledby="fidelite">
           <h2 id="fidelite" className="font-display mb-5 text-4xl">Fidélité</h2>
-          <LoyaltyCard balance={loyalty.balance} stampsForReward={loyalty.stampsForReward} signedIn />
+          <LoyaltyCard balance={loyalty.balance} stampsForReward={loyalty.stampsForReward} signedIn onAccountPage />
         </section>
 
         <section aria-labelledby="collection">
