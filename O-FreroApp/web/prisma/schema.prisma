@@ -1,0 +1,341 @@
+// O'Frero Pizza - data model (Prisma 7).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/* ---------- Auth (Better Auth 1.7) ---------- */
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  /// "USER" or "ADMIN" (Better Auth additional field, not user-editable)
+  role          String    @default("USER")
+  sessions      Session[]
+  accounts      Account[]
+
+  orders         Order[]
+  addresses      Address[]
+  cart           Cart?
+  loyaltyEntries LoyaltyEntry[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+/* ---------- Catalog ---------- */
+
+model Category {
+  id           String    @id @default(cuid())
+  name         String    @unique
+  description  String?
+  displayOrder Int       @default(0)
+  /// Products of this category earn stamps, can be offered as reward and can be editions.
+  isPizza      Boolean   @default(false)
+  products     Product[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Product {
+  id              String              @id @default(cuid())
+  name            String
+  description     String?
+  priceCents      Int
+  discountPercent Int                 @default(0)
+  imageUrl        String?
+  categoryId      String?
+  category        Category?           @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  isAvailable     Boolean             @default(true)
+  /// null = unlimited stock
+  stockQuantity   Int?
+  /// Orderable only while its edition is current.
+  isEditionOnly   Boolean             @default(false)
+  supplements     ProductSupplement[]
+  editions        Edition[]
+  orderItems      OrderItem[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+}
+
+model Supplement {
+  id         String              @id @default(cuid())
+  name       String              @unique
+  priceCents Int
+  isActive   Boolean             @default(true)
+  products   ProductSupplement[]
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+}
+
+model ProductSupplement {
+  productId          String
+  supplementId       String
+  overridePriceCents Int?
+  product            Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supplement         Supplement @relation(fields: [supplementId], references: [id], onDelete: Cascade)
+
+  @@id([productId, supplementId])
+}
+
+model Edition {
+  id           String   @id @default(cuid())
+  number       Int      @unique
+  productId    String
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  startsAt     DateTime
+  /// Exclusive bound: midnight (Paris) the day after the last day.
+  endsAt       DateTime
+  brothersNote String
+  orders       Order[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([startsAt, endsAt])
+}
+
+/* ---------- Store settings ---------- */
+
+model DeliveryZone {
+  id            String   @id @default(cuid())
+  name          String
+  postalCodes   String[]
+  feeCents      Int
+  minOrderCents Int
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ServiceWindow {
+  id       String @id @default(cuid())
+  /// ISO weekday: 1 = Monday ... 7 = Sunday
+  weekday  Int
+  opensAt  String
+  closesAt String
+
+  @@index([weekday])
+}
+
+model Closure {
+  id     String  @id @default(cuid())
+  /// Paris calendar day, "YYYY-MM-DD"
+  date   String  @unique
+  reason String?
+}
+
+model Settings {
+  id                  Int     @id @default(1)
+  featuredProductId   String?
+  stampsForReward     Int     @default(10)
+  pickupLeadMinutes   Int     @default(15)
+  deliveryLeadMinutes Int     @default(30)
+}
+
+/* ---------- Orders ---------- */
+
+enum FulfillmentMode {
+  PICKUP
+  DELIVERY
+}
+
+enum PaymentMethod {
+  ONLINE
+  AT_PICKUP
+}
+
+enum Cooking {
+  NORMAL
+  WELL_DONE
+  EXTRA_CRISPY
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  RECEIVED
+  IN_OVEN
+  READY
+  OUT_FOR_DELIVERY
+  COMPLETED
+  NOT_COLLECTED
+  CANCELLED
+  FAILED
+}
+
+model Order {
+  id                    String          @id @default(cuid())
+  number                Int             @unique @default(autoincrement())
+  trackingToken         String          @unique
+  userId                String?
+  user                  User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  customerFirstName     String
+  customerPhone         String
+  /// Always stored lowercase.
+  customerEmail         String
+  mode                  FulfillmentMode
+  slotAt                DateTime
+  paymentMethod         PaymentMethod
+  status                OrderStatus
+  subtotalCents         Int
+  rewardCents           Int             @default(0)
+  deliveryFeeCents      Int             @default(0)
+  totalCents            Int
+  addressLine1          String?
+  addressLine2          String?
+  postalCode            String?
+  city                  String?
+  editionId             String?
+  edition               Edition?        @relation(fields: [editionId], references: [id], onDelete: SetNull)
+  stripePaymentIntentId String?         @unique
+  confirmationSentAt    DateTime?
+  items                 OrderItem[]
+  logs                  OrderLog[]
+  loyaltyEntries        LoyaltyEntry[]
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  @@index([customerEmail])
+  @@index([status, slotAt])
+  @@index([userId])
+}
+
+model OrderItem {
+  id                    String                @id @default(cuid())
+  orderId               String
+  order                 Order                 @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId             String
+  product               Product               @relation(fields: [productId], references: [id], onDelete: Restrict)
+  name                  String
+  unitPriceCents        Int
+  quantity              Int
+  cooking               Cooking               @default(NORMAL)
+  /// Supplements per unit times quantity.
+  supplementsTotalCents Int                   @default(0)
+  isPizza               Boolean               @default(false)
+  isReward              Boolean               @default(false)
+  supplements           OrderItemSupplement[]
+}
+
+model OrderItemSupplement {
+  id             String    @id @default(cuid())
+  orderItemId    String
+  orderItem      OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  supplementId   String?
+  name           String
+  unitPriceCents Int
+}
+
+model OrderLog {
+  id        String      @id @default(cuid())
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    OrderStatus
+  message   String?
+  createdBy String?
+  createdAt DateTime    @default(now())
+
+  @@index([orderId])
+}
+
+/* ---------- Accounts ---------- */
+
+model Address {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label      String?
+  line1      String
+  line2      String?
+  postalCode String
+  city       String
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Cart {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lines     Json
+  updatedAt DateTime @updatedAt
+}
+
+enum LoyaltyKind {
+  EARN
+  REDEEM
+}
+
+model LoyaltyEntry {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  kind      LoyaltyKind
+  stamps    Int
+  createdAt DateTime    @default(now())
+
+  @@unique([orderId, kind])
+  @@index([userId])
+}

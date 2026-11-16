@@ -1,3 +1,5 @@
+name: ofrero
+
 services:
   db:
     image: postgres:17
@@ -10,7 +12,6 @@ services:
       - "5433:5432"
     volumes:
       - ofrero-db:/var/lib/postgresql/data
-      - ./docker/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ofrero -d ofrero"]
       interval: 2s

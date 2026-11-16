@@ -13,6 +13,7 @@
     "test:int": "vitest run --project integration",
     "test:e2e": "playwright test",
     "db:up": "docker compose up -d",
+    "db:local": "node scripts/local-db.mjs",
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset --force",
     "db:seed": "prisma db seed",
@@ -46,6 +47,7 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "dotenv": "18.0.10",
+    "embedded-postgres": "17.11.0-beta.19",
     "eslint": "9.39.5",
     "eslint-config-next": "16.4.6",
     "prisma": "7.10.1",
@@ -57,7 +59,9 @@
   "allowScripts": {
     "prisma@7.10.1": true,
     "@prisma/engines@7.10.1": true,
-    "esbuild@0.28.2": true
+    "esbuild@0.28.2": true,
+    "@embedded-postgres/darwin-arm64@17.11.0-beta.19": true,
+    "fsevents": false
   },
   "engines": {
     "node": ">=24"

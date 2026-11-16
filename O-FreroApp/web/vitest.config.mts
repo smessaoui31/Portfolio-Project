@@ -22,6 +22,7 @@ export default defineConfig({
           environment: "node",
           include: ["src/server/**/*.test.ts", "src/app/**/*.test.ts"],
           setupFiles: ["./src/server/test/load-env.ts"],
+          globalSetup: ["./src/server/test/global-setup.ts"],
           fileParallelism: false,
           testTimeout: 30_000,
           hookTimeout: 60_000,
