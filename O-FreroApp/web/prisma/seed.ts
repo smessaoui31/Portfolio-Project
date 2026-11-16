@@ -1,7 +1,7 @@
 // Seed: the menu, opening hours, a delivery zone, editions, settings and the admin account.
 // Prices and menu items are demo data, editable in the admin. Idempotent.
 import "dotenv/config";
-import { TZDate } from "@date-fns/tz";
+import { editionBounds } from "../src/domain/editions";
 import type { PrismaClient } from "../src/generated/prisma/client";
 
 const PIZZA = "/images/pizzas";
@@ -66,15 +66,15 @@ const SUPPLEMENTS = [
   { name: "Piment", priceCents: 50 },
 ];
 
-const EDITIONS: (ProductSeed & { number: number; start: [number, number, number]; end: [number, number, number]; note: string })[] = [
+const EDITIONS: (ProductSeed & { number: number; start: string; end: string; note: string })[] = [
   {
     number: 7,
     name: "Savoyarde d'hiver",
     description: "Crème, reblochon fermier, pommes de terre fondantes, lardons fumés, oignons confits",
     priceCents: 1490,
     image: "savoyarde.webp",
-    start: [2026, 11, 1],
-    end: [2026, 12, 31],
+    start: "2026-11-01",
+    end: "2026-12-31",
     note: "L'hiver, on a envie de fromage qui coule. On l'a testée tout le mois d'octobre avant de la lancer.",
   },
   {
@@ -83,8 +83,8 @@ const EDITIONS: (ProductSeed & { number: number; start: [number, number, number]
     description: "Sauce barbecue maison, poulet fumé, oignons rouges, cheddar",
     priceCents: 1390,
     image: "bbq-chicken.jpg",
-    start: [2026, 9, 1],
-    end: [2026, 10, 31],
+    start: "2026-09-01",
+    end: "2026-10-31",
     note: "Pour la rentrée, une sauce barbecue qu'on fume nous-mêmes au four.",
   },
   {
@@ -93,8 +93,8 @@ const EDITIONS: (ProductSeed & { number: number; start: [number, number, number]
     description: "Mozzarella, burrata, pecorino, chèvre frais, miel de lavande",
     priceCents: 1450,
     image: "4-fromages.jpg",
-    start: [2026, 7, 1],
-    end: [2026, 8, 31],
+    start: "2026-07-01",
+    end: "2026-08-31",
     note: "Une quatre fromages plus légère, avec un filet de miel pour l'été.",
   },
   {
@@ -103,16 +103,11 @@ const EDITIONS: (ProductSeed & { number: number; start: [number, number, number]
     description: "Tomate, mozzarella, salami piquant, piment de Calabre",
     priceCents: 1350,
     image: "pepperoni.jpg",
-    start: [2026, 5, 1],
-    end: [2026, 6, 30],
+    start: "2026-05-01",
+    end: "2026-06-30",
     note: "Celle qui pique. Les habitués nous la réclamaient depuis l'ouverture.",
   },
 ];
-
-/** Midnight in Paris for a calendar day, as a UTC Date. */
-function parisMidnight(year: number, month: number, day: number): Date {
-  return new Date(new TZDate(year, month - 1, day, 0, 0, 0, "Europe/Paris").getTime());
-}
 
 async function upsertProduct(db: PrismaClient, categoryId: string, p: ProductSeed) {
   const data = {
@@ -159,14 +154,7 @@ export async function runSeed(db: PrismaClient): Promise<void> {
       data: supplements.map((s) => ({ productId: product.id, supplementId: s.id })),
       skipDuplicates: true,
     });
-    const [ey, em, ed] = e.end;
-    const endExclusive = new Date(Date.UTC(ey, em - 1, ed + 1));
-    const data = {
-      productId: product.id,
-      startsAt: parisMidnight(...e.start),
-      endsAt: parisMidnight(endExclusive.getUTCFullYear(), endExclusive.getUTCMonth() + 1, endExclusive.getUTCDate()),
-      brothersNote: e.note,
-    };
+    const data = { productId: product.id, ...editionBounds(e.start, e.end), brothersNote: e.note };
     await db.edition.upsert({ where: { number: e.number }, update: data, create: { number: e.number, ...data } });
   }
 
