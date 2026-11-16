@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { currentEdition, editionBounds, editionProgress, pastEditions, splitRemaining } from "./editions";
+import { currentEdition, editionBounds, editionLabel, editionProgress, pastEditions, splitRemaining } from "./editions";
 
 const ed = (id: string, number: number, start: string, end: string) => ({ id, number, ...editionBounds(start, end) });
 const E7 = ed("e7", 7, "2026-11-01", "2026-12-31");
@@ -43,4 +43,9 @@ test("editionProgress counts days across a DST change", () => {
 test("splitRemaining", () => {
   expect(splitRemaining(((38 * 24 + 4) * 60 + 12) * 60000)).toEqual({ days: 38, hours: 4, minutes: 12 });
   expect(splitRemaining(-5)).toEqual({ days: 0, hours: 0, minutes: 0 });
+});
+
+test("editionLabel gives the number and the Paris months", () => {
+  expect(editionLabel(E7)).toEqual({ number: "N°07", short: "NOV — DÉC", long: "NOVEMBRE — DÉCEMBRE" });
+  expect(editionLabel(ed("x", 12, "2027-03-01", "2027-03-31"))).toEqual({ number: "N°12", short: "MARS", long: "MARS" });
 });

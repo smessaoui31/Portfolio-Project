@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { categoryAnchor as anchor } from "@/lib/anchors";
 import type { MenuCategory, MenuProduct } from "@/server/catalog";
 import { ProductRow } from "./ProductRow";
 import { ProductSheet } from "./ProductSheet";
-
-const anchor = (name: string) => `categorie-${name.toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g, "-")}`;
 
 export function MenuList({ categories }: { categories: MenuCategory[] }) {
   const [selected, setSelected] = useState<MenuProduct | null>(null);

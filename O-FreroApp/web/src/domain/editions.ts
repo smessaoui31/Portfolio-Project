@@ -43,6 +43,20 @@ export function editionProgress(
   return { dayIndex, totalDays, ratio, remainingMs: Math.max(0, e.endsAt.getTime() - now.getTime()) };
 }
 
+const monthShort = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", month: "short" });
+const monthLong = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", month: "long" });
+
+/** "N°07", "NOV — DÉC", "NOVEMBRE — DÉCEMBRE". */
+export function editionLabel(e: EditionLike): { number: string; short: string; long: string } {
+  const last = new Date(e.endsAt.getTime() - 1);
+  const months = (format: Intl.DateTimeFormat) => {
+    const from = format.format(e.startsAt).replace(".", "").toUpperCase();
+    const to = format.format(last).replace(".", "").toUpperCase();
+    return from === to ? from : `${from} — ${to}`;
+  };
+  return { number: `N°${String(e.number).padStart(2, "0")}`, short: months(monthShort), long: months(monthLong) };
+}
+
 export function splitRemaining(ms: number): { days: number; hours: number; minutes: number } {
   const totalMinutes = Math.max(0, Math.floor(ms / 60_000));
   return {
