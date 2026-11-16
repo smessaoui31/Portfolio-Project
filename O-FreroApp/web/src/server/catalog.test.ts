@@ -21,6 +21,10 @@ describe("getMenu", () => {
     expect(names).not.toContain("BBQ fumée");
   });
 
+  test("puts the current edition first among pizzas", async () => {
+    expect((await getMenu(DURING_7))[0].products[0].name).toBe("Savoyarde d'hiver");
+  });
+
   test("orders categories and exposes supplements with prices", async () => {
     const menu = await getMenu(DURING_7);
     expect(menu.map((c) => c.name)).toEqual(["Pizzas", "Desserts", "Boissons"]);

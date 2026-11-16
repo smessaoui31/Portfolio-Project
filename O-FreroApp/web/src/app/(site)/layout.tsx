@@ -1,8 +1,12 @@
+import { CartSheet } from "@/components/cart/CartSheet";
+import { CartSync } from "@/components/cart/CartSync";
 import { Footer } from "@/components/site/Footer";
 import { Header } from "@/components/site/Header";
 import { SiteActionBar } from "@/components/site/SiteActionBar";
+import { getSession } from "@/lib/session";
 
-export default function SiteLayout({ children }: LayoutProps<"/">) {
+export default async function SiteLayout({ children }: LayoutProps<"/">) {
+  const session = await getSession();
   return (
     <div className="flex min-h-dvh flex-col">
       <a
@@ -17,6 +21,8 @@ export default function SiteLayout({ children }: LayoutProps<"/">) {
       </main>
       <Footer />
       <SiteActionBar />
+      <CartSheet />
+      <CartSync signedIn={Boolean(session)} />
     </div>
   );
 }

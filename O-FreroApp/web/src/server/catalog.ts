@@ -82,7 +82,10 @@ export async function getMenu(now: Date): Promise<MenuCategory[]> {
       id: c.id,
       name: c.name,
       isPizza: c.isPizza,
-      products: c.products.filter((p) => !p.isEditionOnly || p.id === editionProductId).map(toMenuProduct),
+      products: c.products
+        .filter((p) => !p.isEditionOnly || p.id === editionProductId)
+        .sort((a, b) => Number(b.id === editionProductId) - Number(a.id === editionProductId))
+        .map(toMenuProduct),
     }))
     .filter((c) => c.products.length > 0);
 }
