@@ -4,10 +4,12 @@ import { connection } from "next/server";
 import { PageTitle } from "@/components/admin/ui";
 import { formatParisDay } from "@/lib/time";
 import { listUsersAdmin } from "@/server/admin/settings";
+import { requireAdmin } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Utilisateurs" };
 
 export default async function AdminUsersPage() {
+  await requireAdmin();
   await connection();
   const users = await listUsersAdmin();
   return (

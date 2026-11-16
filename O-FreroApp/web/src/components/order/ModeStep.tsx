@@ -29,7 +29,7 @@ export function ModeStep({
   mode: FulfillmentMode;
   onModeChange: (mode: FulfillmentMode) => void;
   slot: string | null;
-  onSlotChange: (slot: string | null) => void;
+  onSlotChange: (slot: string | null, asap?: boolean) => void;
   address: AddressDraft;
   onAddressChange: (address: AddressDraft) => void;
   delivery: DeliveryQuoteResult | null;
@@ -174,7 +174,7 @@ export function ModeStep({
               <button
                 type="button"
                 aria-pressed={slot === slots.asap}
-                onClick={() => onSlotChange(slots.asap)}
+                onClick={() => onSlotChange(slots.asap, true)}
                 className="mt-4 flex w-full items-center justify-between rounded-2xl border border-line-2 px-4 py-3.5 text-left transition aria-pressed:border-ember aria-pressed:bg-ember/10"
               >
                 <span className="font-semibold">Dès que possible</span>
@@ -188,7 +188,7 @@ export function ModeStep({
                     key={s}
                     type="button"
                     aria-pressed={slot === s}
-                    onClick={() => onSlotChange(s)}
+                    onClick={() => onSlotChange(s, false)}
                     className="rounded-xl border border-line-2 py-2.5 text-sm tabular-nums transition hover:border-muted aria-pressed:border-ember aria-pressed:bg-ember aria-pressed:font-bold aria-pressed:text-ember-ink"
                   >
                     {mode === "DELIVERY" ? "~" : ""}

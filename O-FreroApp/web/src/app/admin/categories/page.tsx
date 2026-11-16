@@ -3,10 +3,12 @@ import { connection } from "next/server";
 import { CategoriesManager } from "@/components/admin/CategoriesManager";
 import { PageTitle } from "@/components/admin/ui";
 import { listCategoriesAdmin } from "@/server/admin/catalog";
+import { requireAdmin } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Catégories" };
 
 export default async function AdminCategoriesPage() {
+  await requireAdmin();
   await connection();
   const categories = await listCategoriesAdmin();
   return (

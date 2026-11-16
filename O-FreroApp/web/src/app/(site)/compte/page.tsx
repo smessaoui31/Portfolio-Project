@@ -3,11 +3,13 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { AddressBook } from "@/components/account/AddressBook";
 import { ResendVerification, SignOutButton } from "@/components/account/AuthForms";
+import { OrdersLinkButton } from "@/components/account/OrdersLinkButton";
 import { ReorderButton } from "@/components/account/ReorderButton";
 import { EditionsGrid } from "@/components/home/EditionsArchive";
 import { LoyaltyCard } from "@/components/home/LoyaltyCard";
 import { STATUS_LABELS } from "@/domain/order-status";
 import { now } from "@/lib/clock";
+import { prisma } from "@/lib/db";
 import { formatEuros } from "@/lib/money";
 import { requireUser } from "@/lib/session";
 import { formatParisDay } from "@/lib/time";
@@ -21,13 +23,15 @@ export const metadata: Metadata = { title: "Mon compte", robots: { index: false 
 export default async function ComptePage({ searchParams }: PageProps<"/compte">) {
   await connection();
   const session = await requireUser("/compte");
-  const { verifie } = await searchParams;
-  const [loyalty, history, addresses, home] = await Promise.all([
+  const { verifie, rattache } = await searchParams;
+  const [loyalty, history, addresses, home, linkState] = await Promise.all([
     getLoyaltySummary(session.user.id),
     getOrderHistory(session.user.id),
     listAddresses(session.user.id),
     getHomeData(now()),
+    prisma.user.findUnique({ where: { id: session.user.id }, select: { ordersLinkedAt: true } }),
   ]);
+  const linked = Boolean(linkState?.ordersLinkedAt);
   const editions = [
     ...(home.edition ? [{ id: home.edition.id, number: home.edition.number, name: home.edition.product.name, imageUrl: home.edition.product.imageUrl }] : []),
     ...home.past,
@@ -43,10 +47,20 @@ export default async function ComptePage({ searchParams }: PageProps<"/compte">)
         <SignOutButton />
       </div>
 
-      {verifie === "1" ? (
+      {(verifie === "1" || rattache === "1") && linked ? (
         <p className="mt-6 rounded-2xl border border-ok/40 bg-ok/10 p-4 text-sm text-ok">
-          Adresse confirmée. Tes commandes passées avec cette adresse sont rattachées à ton compte.
+          {verifie === "1" ? "Adresse confirmée. " : ""}Tes commandes passées avec cette adresse sont rattachées à ton compte.
         </p>
+      ) : null}
+
+      {session.user.emailVerified && !linked ? (
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line-2 bg-surface p-4">
+          <p className="max-w-xl text-sm text-muted-2">
+            Tes commandes passées sans compte ne sont pas encore rattachées. Reçois un lien par e-mail et ouvre-le sur cet
+            appareil, connecté à ton compte.
+          </p>
+          <OrdersLinkButton />
+        </div>
       ) : null}
 
       {!session.user.emailVerified ? (

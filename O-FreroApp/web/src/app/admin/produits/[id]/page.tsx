@@ -5,12 +5,14 @@ import { connection } from "next/server";
 import { ProductForm, type ProductFormValue } from "@/components/admin/ProductForm";
 import { getProductAdmin, listCategoriesAdmin, listSupplementsAdmin } from "@/server/admin/catalog";
 import { listPublicImages } from "@/server/admin/images";
+import { requireAdmin } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Produit" };
 
 const euros = (cents: number) => (cents / 100).toFixed(2).replace(".", ",");
 
 export default async function AdminProductPage({ params }: PageProps<"/admin/produits/[id]">) {
+  await requireAdmin();
   await connection();
   const { id } = await params;
   const [categories, supplements, images] = await Promise.all([listCategoriesAdmin(), listSupplementsAdmin(), listPublicImages()]);

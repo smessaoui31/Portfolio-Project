@@ -6,10 +6,12 @@ import { now } from "@/lib/clock";
 import { addDaysToKey, parisDateKey } from "@/lib/time";
 import { prisma } from "@/lib/db";
 import { listEditionsAdmin } from "@/server/admin/settings";
+import { requireAdmin } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Éditions" };
 
 export default async function AdminEditionsPage() {
+  await requireAdmin();
   await connection();
   const at = now().getTime();
   const [editions, products] = await Promise.all([

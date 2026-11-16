@@ -69,8 +69,8 @@ export default async function HomePage() {
           <div>
             <h2 className="font-display text-5xl md:text-6xl">Ta carte de fidélité</h2>
             <p className="mt-3 mb-8 text-muted-2">
-              Une pizza achetée, un tampon. La {settings.stampsForReward}e est offerte. Le compte est facultatif, mais il
-              garde tes tampons et tes commandes.
+              Une pizza achetée, un tampon. Au bout de {settings.stampsForReward} tampons, la pizza suivante est offerte. Le
+              compte est facultatif, mais il garde tes tampons et tes commandes.
             </p>
             <LoyaltyCard
               balance={loyalty?.balance ?? 0}

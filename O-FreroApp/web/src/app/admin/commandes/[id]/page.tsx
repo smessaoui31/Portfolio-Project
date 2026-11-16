@@ -9,15 +9,20 @@ import { COOKING_LABELS } from "@/domain/types";
 import { formatEuros } from "@/lib/money";
 import { formatParisDay, formatParisTime } from "@/lib/time";
 import { getAdminOrder } from "@/server/admin/orders";
+import { refundPending } from "@/server/lifecycle";
+import { RefundDoneButton } from "@/components/admin/RefundDoneButton";
+import { requireAdmin } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Commande" };
 
 export default async function AdminOrderPage({ params }: PageProps<"/admin/commandes/[id]">) {
+  await requireAdmin();
   await connection();
   const { id } = await params;
   const order = await getAdminOrder(id);
   if (!order) notFound();
   const toCollect = order.paymentMethod === "AT_PICKUP" && !["COMPLETED", "CANCELLED", "NOT_COLLECTED"].includes(order.status);
+  const toRefund = refundPending(order.logs);
 
   return (
     <div className="max-w-4xl">
@@ -34,6 +39,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/comma
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {toCollect ? <span className="rounded-full bg-ember px-3 py-1 text-sm font-bold text-ember-ink">À ENCAISSER</span> : null}
+          {toRefund ? <span className="rounded-full bg-danger px-3 py-1 text-sm font-bold text-ember-ink">À REMBOURSER</span> : null}
           <StatusBadge status={order.status} />
           <Link href={`/admin/commandes/${order.id}/ticket`} target="_blank" className="rounded-xl border border-line-2 px-3 py-2 text-sm">
             Imprimer le ticket
@@ -41,8 +47,9 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/comma
         </div>
       </div>
 
-      <div className="mt-6">
-        <StatusActions orderId={order.id} status={order.status} mode={order.mode} />
+      <div className="mt-6 space-y-4">
+        <StatusActions orderId={order.id} status={order.status} mode={order.mode} paidOnline={order.paymentMethod === "ONLINE" && order.status !== "PENDING_PAYMENT"} />
+        {toRefund ? <RefundDoneButton orderId={order.id} /> : null}
       </div>
 
       <div className="mt-8 grid gap-4 md:grid-cols-[1.4fr_1fr]">

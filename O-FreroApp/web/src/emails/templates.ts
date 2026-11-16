@@ -28,10 +28,10 @@ const button = (url: string, label: string) =>
 export function verificationEmail(url: string): Mail {
   return {
     subject: "Confirme ton adresse e-mail",
-    text: `Bienvenue chez ${SITE.name}.\n\nConfirme ton adresse en ouvrant ce lien : ${url}\n\nTes commandes passées avec cette adresse seront rattachées à ton compte, avec leurs tampons.\n\n${footerText}`,
+    text: `Bienvenue chez ${SITE.name}.\n\nConfirme ton adresse en ouvrant ce lien sur l'appareil où tu as créé ton compte : ${url}\n\nTes commandes passées avec cette adresse seront rattachées à ton compte, avec leurs tampons.\n\nSi tu n'as pas créé de compte chez ${SITE.name}, ignore ce message.\n\n${footerText}`,
     html: layout(
       "Confirme ton adresse",
-      `<p>Bienvenue chez ${escape(SITE.name)}.</p><p>Confirme ton adresse pour activer ton compte. Tes commandes passées avec cette adresse y seront rattachées, avec leurs tampons.</p>${button(url, "Confirmer mon adresse")}`,
+      `<p>Bienvenue chez ${escape(SITE.name)}.</p><p>Confirme ton adresse sur l'appareil où tu as créé ton compte. Tes commandes passées avec cette adresse y seront rattachées, avec leurs tampons.</p>${button(url, "Confirmer mon adresse")}<p>Si tu n'as pas créé de compte chez ${escape(SITE.name)}, ignore ce message.</p>`,
     ),
   };
 }
@@ -73,6 +73,17 @@ export function orderConfirmationEmail(order: {
       `<p>Ta commande <strong style="color:#f3e9d8">n°${number}</strong> est confirmée.</p>
 <p><strong style="color:#f3e9d8">${escape(order.modeLabel)}</strong> : ${escape(order.slotLabel)}<br>Total : ${escape(order.totalLabel)} (${payment})</p>
 ${button(order.trackingUrl, "Suivre ma commande")}`,
+    ),
+  };
+}
+
+export function ordersLinkEmail(url: string): Mail {
+  return {
+    subject: "Rattacher tes commandes à ton compte",
+    text: `Pour rattacher à ton compte les commandes passées avec cette adresse, ouvre ce lien en étant connecté : ${url}\n\nSi tu n'es pas à l'origine de cette demande, ignore ce message.\n\n${footerText}`,
+    html: layout(
+      "Rattacher tes commandes",
+      `<p>Ouvre ce lien en étant connecté à ton compte : tes commandes passées avec cette adresse y seront rattachées, avec leurs tampons.</p>${button(url, "Rattacher mes commandes")}<p>Si tu n'es pas à l'origine de cette demande, ignore ce message.</p>`,
     ),
   };
 }

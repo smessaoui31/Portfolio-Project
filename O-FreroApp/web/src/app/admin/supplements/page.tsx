@@ -3,10 +3,12 @@ import { connection } from "next/server";
 import { SupplementsManager } from "@/components/admin/SupplementsManager";
 import { PageTitle } from "@/components/admin/ui";
 import { listSupplementsAdmin } from "@/server/admin/catalog";
+import { requireAdmin } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Suppléments" };
 
 export default async function AdminSupplementsPage() {
+  await requireAdmin();
   await connection();
   const supplements = await listSupplementsAdmin();
   return (

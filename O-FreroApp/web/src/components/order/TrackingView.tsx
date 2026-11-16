@@ -21,7 +21,19 @@ const readLastEmail = () => {
   }
 };
 
-export function TrackingView({ token, initial, fresh, paid }: { token: string; initial: View; fresh: boolean; paid: boolean }) {
+export function TrackingView({
+  token,
+  initial,
+  fresh,
+  paid,
+  paymentFailed = false,
+}: {
+  token: string;
+  initial: View;
+  fresh: boolean;
+  paid: boolean;
+  paymentFailed?: boolean;
+}) {
   const [view, setView] = useState(initial);
   const clear = useCart((s) => s.clear);
   const lastEmail = useSyncExternalStore(subscribeNoop, readLastEmail, () => null);
@@ -64,10 +76,21 @@ export function TrackingView({ token, initial, fresh, paid }: { token: string; i
             .
           </p>
         </section>
+      ) : view.status === "PENDING_PAYMENT" && paymentFailed ? (
+        <section>
+          <h1 className="font-display text-5xl">Paiement non abouti</h1>
+          <p className="mt-4 text-muted-2">Ta banque a refusé ou interrompu le paiement. Ton panier est toujours là : tu peux réessayer.</p>
+          <Link href="/commande" className={buttonClasses("primary", "lg", "mt-6")}>
+            Réessayer
+          </Link>
+        </section>
       ) : view.status === "PENDING_PAYMENT" ? (
         <section aria-live="polite">
           <h1 className="font-display text-5xl">Paiement en cours</h1>
-          <p className="mt-4 text-muted-2">On attend la confirmation de ta banque, la page se met à jour toute seule.</p>
+          <p className="mt-4 text-muted-2">
+            On attend la confirmation de ta banque, la page se met à jour toute seule. Sans confirmation d&apos;ici 30 minutes, la
+            commande est annulée et rien n&apos;est débité.
+          </p>
         </section>
       ) : (
         <section aria-live="polite">
@@ -101,7 +124,8 @@ export function TrackingView({ token, initial, fresh, paid }: { token: string; i
             Cette commande vaut {view.stamps} tampon{view.stamps > 1 ? "s" : ""}
           </p>
           <p className="mt-2 text-sm">
-            Crée ton compte avec la même adresse e-mail pour les garder, collectionner les éditions et recommander en un geste.
+            Crée ton compte (ou connecte-toi) avec la même adresse e-mail pour les garder, collectionner les éditions et recommander
+            en un geste.
           </p>
           <div className="mt-4 flex gap-1.5" aria-hidden>
             {Array.from({ length: 10 }, (_, i) => (

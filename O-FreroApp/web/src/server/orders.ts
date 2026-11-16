@@ -3,14 +3,17 @@ import { z } from "zod";
 import { quoteDelivery } from "@/domain/delivery";
 import { canRedeem, stampBalance } from "@/domain/loyalty";
 import { CartError, orderTotalCents, priceCart, type CartErrorCode, type PricedCart } from "@/domain/pricing";
-import { isValidSlot } from "@/domain/slots";
+import { computeSlots, isValidSlot } from "@/domain/slots";
 import { prisma } from "@/lib/db";
 import { formatEuros } from "@/lib/money";
 import { getCurrentEditionRef, getPricedProducts } from "./catalog";
+import { expireStalePendingOrders, releasePendingOrdersOfUser } from "./lifecycle";
 import { notifyOrderReceived } from "./notifications";
 import { releaseOrderResources } from "./order-resources";
 import { createPaymentIntent, isOnlinePaymentEnabled } from "./payments";
 import { getActiveZones, getSettings, getSlotOptions } from "./settings";
+
+const STRIPE_MINIMUM_CENTS = 50;
 
 const phone = z
   .string()
@@ -26,7 +29,8 @@ const lineSchema = z.object({
 
 export const placeOrderSchema = z.object({
   mode: z.enum(["PICKUP", "DELIVERY"]),
-  slotAt: z.iso.datetime({ offset: true }),
+  /** "asap" lets the server pick the first slot at submit time. */
+  slotAt: z.union([z.literal("asap"), z.iso.datetime({ offset: true })]),
   paymentMethod: z.enum(["ONLINE", "AT_PICKUP"]),
   customer: z.object({
     firstName: z.string().trim().min(1).max(40),
@@ -57,6 +61,7 @@ export type PlaceOrderError =
   | "BELOW_MINIMUM"
   | "REWARD_UNAVAILABLE"
   | "PAYMENT_UNAVAILABLE"
+  | "ONLINE_MINIMUM"
   | CartErrorCode;
 
 export const ORDER_ERROR_MESSAGES: Record<PlaceOrderError, string> = {
@@ -69,6 +74,7 @@ export const ORDER_ERROR_MESSAGES: Record<PlaceOrderError, string> = {
   BELOW_MINIMUM: "Le minimum de commande pour la livraison n'est pas atteint.",
   REWARD_UNAVAILABLE: "Ta pizza offerte n'est pas disponible.",
   PAYMENT_UNAVAILABLE: "Le paiement en ligne est indisponible pour le moment. Tu peux payer au retrait ou nous appeler.",
+  ONLINE_MINIMUM: "Le paiement en ligne n'est possible qu'à partir de 0,50 €. Choisis le paiement au retrait.",
   EMPTY: "Ton panier est vide.",
   INVALID_QUANTITY: "Une quantité de ton panier n'est pas valide.",
   UNKNOWN_PRODUCT: "Un produit de ton panier n'existe plus.",
@@ -120,8 +126,19 @@ export async function placeOrder(input: unknown, ctx: { userId: string | null; n
   if (data.rewardLineIndex !== undefined && !ctx.userId) return fail("REWARD_UNAVAILABLE");
   if (data.paymentMethod === "ONLINE" && !isOnlinePaymentEnabled()) return fail("PAYMENT_UNAVAILABLE");
 
-  const slotAt = new Date(data.slotAt);
-  if (!isValidSlot(slotAt, await getSlotOptions(data.mode, ctx.now))) return fail("INVALID_SLOT");
+  await expireStalePendingOrders(ctx.now);
+  if (data.rewardLineIndex !== undefined && ctx.userId) await releasePendingOrdersOfUser(ctx.userId);
+
+  const slotOptions = await getSlotOptions(data.mode, ctx.now);
+  let slotAt: Date;
+  if (data.slotAt === "asap") {
+    const first = computeSlots(slotOptions);
+    if (!first) return fail("INVALID_SLOT");
+    slotAt = first.asap;
+  } else {
+    slotAt = new Date(data.slotAt);
+    if (!isValidSlot(slotAt, slotOptions)) return fail("INVALID_SLOT");
+  }
 
   const [products, edition] = await Promise.all([
     getPricedProducts(data.lines.map((l) => l.productId)),
@@ -148,8 +165,13 @@ export async function placeOrder(input: unknown, ctx: { userId: string | null; n
     postalCode = data.address.postalCode.replace(/\s+/g, "");
   }
 
+  const totalCents = orderTotalCents(cart, deliveryFeeCents);
+  // Stripe refuses amounts under 0,50 €; a free order needs no payment at all.
+  if (data.paymentMethod === "ONLINE" && totalCents > 0 && totalCents < STRIPE_MINIMUM_CENTS) return fail("ONLINE_MINIMUM");
+  const needsPayment = data.paymentMethod === "ONLINE" && totalCents > 0;
+
   const settings = await getSettings();
-  const status = data.paymentMethod === "ONLINE" ? "PENDING_PAYMENT" : "RECEIVED";
+  const status = needsPayment ? "PENDING_PAYMENT" : "RECEIVED";
 
   let order: { id: string; number: number; trackingToken: string; totalCents: number; customerEmail: string };
   try {
@@ -175,6 +197,7 @@ export async function placeOrder(input: unknown, ctx: { userId: string | null; n
       const created = await tx.order.create({
         data: {
           trackingToken: randomBytes(24).toString("base64url"),
+          createdAt: ctx.now,
           userId: ctx.userId,
           customerFirstName: data.customer.firstName,
           customerPhone: data.customer.phone,
@@ -186,7 +209,7 @@ export async function placeOrder(input: unknown, ctx: { userId: string | null; n
           subtotalCents: cart.subtotalCents,
           rewardCents: cart.rewardCents,
           deliveryFeeCents,
-          totalCents: orderTotalCents(cart, deliveryFeeCents),
+          totalCents,
           addressLine1: data.mode === "DELIVERY" ? data.address?.line1 : null,
           addressLine2: data.mode === "DELIVERY" ? data.address?.line2 || null : null,
           postalCode,
@@ -224,7 +247,7 @@ export async function placeOrder(input: unknown, ctx: { userId: string | null; n
     throw error;
   }
 
-  if (data.paymentMethod === "AT_PICKUP") {
+  if (!needsPayment) {
     await notifyOrderReceived(order.id);
     return { ok: true, orderId: order.id, number: order.number, trackingToken: order.trackingToken, totalCents: order.totalCents, clientSecret: null };
   }

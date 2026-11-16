@@ -6,10 +6,12 @@ import { ProductImage } from "@/components/menu/ProductImage";
 import { unitPriceCents } from "@/domain/pricing";
 import { formatEuros } from "@/lib/money";
 import { listProductsAdmin } from "@/server/admin/catalog";
+import { requireAdmin } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Produits" };
 
 export default async function AdminProductsPage() {
+  await requireAdmin();
   await connection();
   const products = await listProductsAdmin();
   return (

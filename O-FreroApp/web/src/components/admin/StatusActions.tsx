@@ -26,7 +26,17 @@ function actionLabel(to: OrderStatus, mode: FulfillmentMode): string {
   }
 }
 
-export function StatusActions({ orderId, status, mode }: { orderId: string; status: OrderStatus; mode: FulfillmentMode }) {
+export function StatusActions({
+  orderId,
+  status,
+  mode,
+  paidOnline = false,
+}: {
+  orderId: string;
+  status: OrderStatus;
+  mode: FulfillmentMode;
+  paidOnline?: boolean;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +44,10 @@ export function StatusActions({ orderId, status, mode }: { orderId: string; stat
   if (options.length === 0) return <p className="text-sm text-muted">Commande terminée.</p>;
 
   async function apply(to: OrderStatus) {
-    if (to === "CANCELLED" && !window.confirm("Annuler cette commande ? Le stock et la pizza offerte seront rendus.")) return;
+    const cancelText = paidOnline
+      ? "Annuler cette commande ? Elle a été payée en ligne : pense à la rembourser depuis Stripe (elle sera marquée « À rembourser »)."
+      : "Annuler cette commande ? Le stock et la pizza offerte seront rendus.";
+    if (to === "CANCELLED" && !window.confirm(cancelText)) return;
     setBusy(true);
     const result = await advanceOrderAction(orderId, to);
     setBusy(false);

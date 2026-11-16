@@ -21,6 +21,8 @@ model User {
   updatedAt     DateTime  @updatedAt
   /// "USER" or "ADMIN" (Better Auth additional field, not user-editable)
   role          String    @default("USER")
+  /// Set once the owner proved, while signed in, control of the e-mail: guest orders attach from then on.
+  ordersLinkedAt DateTime?
   sessions      Session[]
   accounts      Account[]
 

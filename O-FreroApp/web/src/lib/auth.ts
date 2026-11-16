@@ -5,7 +5,7 @@ import { resetPasswordEmail, verificationEmail } from "@/emails/templates";
 import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { env } from "@/lib/env";
-import { attachGuestOrders } from "@/server/accounts";
+import { onEmailVerified, onSessionCreated } from "@/server/accounts";
 
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
@@ -14,18 +14,29 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
+    revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
       await sendEmail({ to: user.email, ...resetPasswordEmail(url) });
     },
   },
   emailVerification: {
     sendOnSignUp: true,
-    autoSignInAfterVerification: true,
+    // Off: the person clicking the link is not necessarily the one who signed up.
+    autoSignInAfterVerification: false,
     sendVerificationEmail: async ({ user, url }) => {
       await sendEmail({ to: user.email, ...verificationEmail(url) });
     },
-    afterEmailVerification: async (user) => {
-      await attachGuestOrders(user.id, user.email);
+    afterEmailVerification: async (user, request) => {
+      await onEmailVerified(user, request);
+    },
+  },
+  databaseHooks: {
+    session: {
+      create: {
+        after: async (session) => {
+          await onSessionCreated(session.userId);
+        },
+      },
     },
   },
   user: {

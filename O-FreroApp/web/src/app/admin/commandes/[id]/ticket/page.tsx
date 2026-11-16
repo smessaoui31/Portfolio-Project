@@ -6,9 +6,11 @@ import { formatEuros } from "@/lib/money";
 import { SITE } from "@/lib/site";
 import { formatParisDay, formatParisTime } from "@/lib/time";
 import { getAdminOrder } from "@/server/admin/orders";
+import { requireAdmin } from "@/lib/session";
 
 /** 80 mm receipt for the kitchen printer. */
 export default async function TicketPage({ params }: PageProps<"/admin/commandes/[id]/ticket">) {
+  await requireAdmin();
   await connection();
   const { id } = await params;
   const order = await getAdminOrder(id);

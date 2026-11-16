@@ -8,11 +8,15 @@ import { now } from "@/lib/clock";
 import { formatEuros } from "@/lib/money";
 import { formatParisDay, formatParisTime, parisDateKey } from "@/lib/time";
 import { listOrders } from "@/server/admin/orders";
+import { expireStalePendingOrders } from "@/server/lifecycle";
+import { requireAdmin } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Commandes" };
 
 export default async function AdminOrdersPage({ searchParams }: PageProps<"/admin/commandes">) {
+  await requireAdmin();
   await connection();
+  await expireStalePendingOrders(now());
   const query = await searchParams;
   const date = typeof query.jour === "string" && /^\d{4}-\d{2}-\d{2}$/.test(query.jour) ? query.jour : parisDateKey(now());
   const mode = query.mode === "PICKUP" || query.mode === "DELIVERY" ? (query.mode as FulfillmentMode) : undefined;
@@ -43,10 +47,14 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
                   </span>
                 </span>
                 <span className="hidden md:block">
-                  {o.paymentMethod === "AT_PICKUP" && !["COMPLETED", "CANCELLED", "NOT_COLLECTED"].includes(o.status) ? (
+                  {o.needsRefund ? (
+                    <span className="rounded-full bg-danger px-2.5 py-0.5 text-xs font-bold text-ember-ink">À REMBOURSER</span>
+                  ) : o.paymentMethod === "AT_PICKUP" && !["COMPLETED", "CANCELLED", "NOT_COLLECTED"].includes(o.status) ? (
                     <span className="rounded-full bg-ember px-2.5 py-0.5 text-xs font-bold text-ember-ink">À ENCAISSER</span>
                   ) : (
-                    <span className="text-xs text-muted">{o.paymentMethod === "ONLINE" ? "Payée en ligne" : "Encaissée"}</span>
+                    <span className="text-xs text-muted">
+                      {o.status === "PENDING_PAYMENT" ? "Paiement en cours" : o.paymentMethod === "ONLINE" ? "Payée en ligne" : "Encaissée"}
+                    </span>
                   )}
                 </span>
                 <span className="hidden font-semibold tabular-nums md:block">{formatEuros(o.totalCents)}</span>

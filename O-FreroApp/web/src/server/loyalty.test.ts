@@ -22,3 +22,10 @@ test("a new account starts at zero", async () => {
   const user = await makeUser();
   expect(await getLoyaltySummary(user.id)).toEqual({ balance: 0, stampsForReward: 10, tastedEditionIds: [] });
 });
+
+test("a free pizza reserved by an unpaid order stays available", async () => {
+  const user = await makeUser({ stamps: 10 });
+  const pending = await makeOrder({ userId: user.id, status: "PENDING_PAYMENT", paymentMethod: "ONLINE" });
+  await prisma.loyaltyEntry.create({ data: { userId: user.id, orderId: pending.id, kind: "REDEEM", stamps: 10 } });
+  expect((await getLoyaltySummary(user.id)).balance).toBe(10);
+});

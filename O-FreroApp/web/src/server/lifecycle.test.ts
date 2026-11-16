@@ -2,7 +2,15 @@ import type Stripe from "stripe";
 import { beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { prisma } from "@/lib/db";
 import { runSeed } from "../../prisma/seed";
-import { advanceOrderStatus, getTracking, handleStripeEvent } from "./lifecycle";
+import {
+  advanceOrderStatus,
+  confirmPaymentFromReturn,
+  expireStalePendingOrders,
+  getTracking,
+  handleStripeEvent,
+  markRefunded,
+  refundPending,
+} from "./lifecycle";
 import { placeOrder } from "./orders";
 import { resetDb } from "./test/db";
 import { makeUser } from "./test/fixtures";
@@ -15,9 +23,14 @@ vi.mock("@/lib/email", () => ({
   },
 }));
 let intentCounter = 0;
+const stripeCalls = vi.hoisted(() => ({ cancelled: [] as string[], status: "requires_payment_method" }));
 vi.mock("@/server/payments", () => ({
   isOnlinePaymentEnabled: () => true,
   createPaymentIntent: async () => ({ intentId: `pi_lifecycle_${++intentCounter}`, clientSecret: "cs_test" }),
+  cancelPaymentIntent: async (id: string) => {
+    stripeCalls.cancelled.push(id);
+  },
+  retrievePaymentIntentStatus: async () => stripeCalls.status,
 }));
 
 const NOW = new Date("2026-11-19T18:02:00Z");
@@ -154,4 +167,67 @@ test("getTracking hides contact details and marks done steps", async () => {
   expect(view!.steps.map((s) => s.done)).toEqual([true, true, false, false]);
   expect(view!.items[0]).toMatchObject({ name: "Margherita", quantity: 2, cooking: "NORMAL", supplements: [] });
   expect(await getTracking("unknown-token")).toBeNull();
+});
+
+describe("unpaid online orders", () => {
+  const minutesAfter = (date: Date, minutes: number) => new Date(date.getTime() + minutes * 60_000);
+
+  test("stale unpaid orders expire, are cancelled at Stripe and give stock and reward back", async () => {
+    const user = await makeUser({ email: "abandon@exemple.fr", stamps: 10 });
+    const stale = await place(delivery({ lines: line(3), rewardLineIndex: 0 }), user.id);
+    const fresh = await place(delivery());
+    await prisma.order.update({ where: { id: stale.id }, data: { createdAt: minutesAfter(NOW, -45) } });
+    await prisma.order.update({ where: { id: fresh.id }, data: { createdAt: minutesAfter(NOW, -5) } });
+    stripeCalls.cancelled.length = 0;
+
+    expect(await expireStalePendingOrders(NOW)).toBe(1);
+    expect((await prisma.order.findUniqueOrThrow({ where: { id: stale.id } })).status).toBe("FAILED");
+    expect((await prisma.order.findUniqueOrThrow({ where: { id: fresh.id } })).status).toBe("PENDING_PAYMENT");
+    expect(stripeCalls.cancelled).toEqual([stale.stripePaymentIntentId]);
+    expect((await prisma.product.findUniqueOrThrow({ where: { id: MARG } })).stockQuantity).toBe(3);
+    expect(await prisma.loyaltyEntry.count({ where: { orderId: stale.id, kind: "REDEEM" } })).toBe(0);
+    expect(await expireStalePendingOrders(NOW)).toBe(0);
+  });
+
+  test("a new order using the free pizza frees the customer's unpaid orders", async () => {
+    const user = await makeUser({ email: "retente@exemple.fr", stamps: 10 });
+    const first = await place(delivery({ lines: line(3), rewardLineIndex: 0 }), user.id);
+    const second = await place(pickup({ lines: line(1), rewardLineIndex: 0 }), user.id);
+    expect((await prisma.order.findUniqueOrThrow({ where: { id: first.id } })).status).toBe("FAILED");
+    expect(second.rewardCents).toBe(1050);
+  });
+
+  test("cancelling an unpaid order from the admin cancels it at Stripe", async () => {
+    const order = await place(delivery());
+    stripeCalls.cancelled.length = 0;
+    await advanceOrderStatus(order.id, "CANCELLED", "admin@ofrero.test");
+    expect(stripeCalls.cancelled).toEqual([order.stripePaymentIntentId]);
+  });
+
+  test("cancelling a paid online order flags a refund until it is marked done", async () => {
+    const order = await place(delivery());
+    await handleStripeEvent(event("payment_intent.succeeded", order.stripePaymentIntentId!));
+    await advanceOrderStatus(order.id, "CANCELLED", "admin@ofrero.test");
+    const logs = () => prisma.orderLog.findMany({ where: { orderId: order.id } });
+    expect(refundPending(await logs())).toBe(true);
+    await markRefunded(order.id, "admin@ofrero.test");
+    expect(refundPending(await logs())).toBe(false);
+  });
+
+  test("a cancelled order paid at pickup needs no refund", async () => {
+    const order = await place(pickup());
+    await advanceOrderStatus(order.id, "CANCELLED", "admin@ofrero.test");
+    expect(refundPending(await prisma.orderLog.findMany({ where: { orderId: order.id } }))).toBe(false);
+  });
+
+  test("the payment return page confirms with Stripe when the webhook is late", async () => {
+    const order = await place(delivery());
+    stripeCalls.status = "processing";
+    await confirmPaymentFromReturn(order.trackingToken);
+    expect((await prisma.order.findUniqueOrThrow({ where: { id: order.id } })).status).toBe("PENDING_PAYMENT");
+    stripeCalls.status = "succeeded";
+    await confirmPaymentFromReturn(order.trackingToken);
+    expect((await prisma.order.findUniqueOrThrow({ where: { id: order.id } })).status).toBe("RECEIVED");
+    stripeCalls.status = "requires_payment_method";
+  });
 });

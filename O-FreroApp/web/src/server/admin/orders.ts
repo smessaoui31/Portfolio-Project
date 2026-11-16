@@ -1,6 +1,7 @@
 import type { FulfillmentMode, OrderStatus, PaymentMethod } from "@/domain/types";
 import { prisma } from "@/lib/db";
 import { addDaysToKey, atParisTime } from "@/lib/time";
+import { refundPending } from "../lifecycle";
 
 export interface AdminOrderRow {
   id: string;
@@ -13,11 +14,12 @@ export interface AdminOrderRow {
   phone: string;
   totalCents: number;
   itemsCount: number;
+  needsRefund: boolean;
 }
 
 const ACTIVE: OrderStatus[] = ["RECEIVED", "IN_OVEN", "READY", "OUT_FOR_DELIVERY"];
 
-/** Orders whose slot falls on a Paris day, earliest slot first. Unpaid online orders are left out. */
+/** Orders whose slot falls on a Paris day, earliest slot first (failed payments left out). */
 export async function listOrders(filter: {
   date: string;
   status?: OrderStatus;
@@ -29,11 +31,11 @@ export async function listOrders(filter: {
   const orders = await prisma.order.findMany({
     where: {
       slotAt: { gte: from, lt: to },
-      status: filter.status ?? (filter.activeOnly ? { in: ACTIVE } : { notIn: ["PENDING_PAYMENT", "FAILED"] }),
+      status: filter.status ?? (filter.activeOnly ? { in: ACTIVE } : { not: "FAILED" }),
       ...(filter.mode ? { mode: filter.mode } : {}),
     },
     orderBy: [{ slotAt: "asc" }, { number: "asc" }],
-    include: { items: { select: { quantity: true } } },
+    include: { items: { select: { quantity: true } }, logs: { select: { message: true } } },
   });
   return orders.map((o) => ({
     id: o.id,
@@ -46,6 +48,7 @@ export async function listOrders(filter: {
     phone: o.customerPhone,
     totalCents: o.totalCents,
     itemsCount: o.items.reduce((sum, i) => sum + i.quantity, 0),
+    needsRefund: refundPending(o.logs),
   }));
 }
 
@@ -71,4 +74,13 @@ export async function countNewOrders(since: Date): Promise<{ count: number; newe
     select: { createdAt: true },
   });
   return { count: logs.length, newest: logs[0]?.createdAt.toISOString() ?? null };
+}
+
+/** Cancelled orders that were paid online and still wait for a refund in Stripe. */
+export async function countRefundsToDo(): Promise<number> {
+  const flagged = await prisma.order.findMany({
+    where: { logs: { some: { message: { contains: "à rembourser" } } } },
+    select: { logs: { select: { message: true } } },
+  });
+  return flagged.filter((o) => refundPending(o.logs)).length;
 }

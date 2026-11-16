@@ -16,6 +16,8 @@ vi.mock("@/lib/email", () => ({
 vi.mock("@/server/payments", () => ({
   isOnlinePaymentEnabled: () => true,
   createPaymentIntent: vi.fn(async () => ({ intentId: `pi_test_${Math.random()}`, clientSecret: "cs_test" })),
+  cancelPaymentIntent: async () => {},
+  retrievePaymentIntentStatus: async () => "requires_payment_method",
 }));
 
 const NOW = new Date("2026-11-19T18:02:00Z"); // Thursday 19:02 in Paris
@@ -178,4 +180,45 @@ test("a Stripe failure cancels the order and gives back stock and reward", async
   expect(o.status).toBe("CANCELLED");
   expect((await prisma.product.findUniqueOrThrow({ where: { id: MARG } })).stockQuantity).toBe(5);
   expect(await prisma.loyaltyEntry.count({ where: { orderId: o.id, kind: "REDEEM" } })).toBe(0);
+});
+
+describe("slot at submit time", () => {
+  test("ASAP is resolved by the server to the current first slot", async () => {
+    const later = new Date("2026-11-19T18:20:00Z"); // 19:20 Paris: first slot is now 19:45
+    const r = await placeOrder(validPickup({ slotAt: "asap" }), { userId: null, now: later });
+    if (!r.ok) throw new Error(r.message);
+    const o = await prisma.order.findUniqueOrThrow({ where: { id: r.orderId } });
+    expect(o.slotAt.toISOString()).toBe("2026-11-19T18:45:00.000Z");
+  });
+
+  test("a chosen time that no longer leaves 15 minutes is refused (the client's rule)", async () => {
+    const r = await placeOrder(validPickup({ slotAt: "2026-11-19T18:30:00Z" }), { userId: null, now: new Date("2026-11-19T18:17:00Z") });
+    expect(r).toMatchObject({ ok: false, error: "INVALID_SLOT" });
+  });
+});
+
+describe("very small totals", () => {
+  test("a free order chosen as online payment needs no payment at all", async () => {
+    const user = await makeUser({ email: "gratuit@exemple.fr", stamps: 10 });
+    vi.mocked(createPaymentIntent).mockClear();
+    const r = await placeOrder(
+      validPickup({ paymentMethod: "ONLINE", lines: [{ productId: MARG, quantity: 1, cooking: "NORMAL", supplementIds: [] }], rewardLineIndex: 0 }),
+      { userId: user.id, now: NOW },
+    );
+    expect(r).toMatchObject({ ok: true, clientSecret: null, totalCents: 0 });
+    expect(createPaymentIntent).not.toHaveBeenCalled();
+    if (r.ok) expect((await prisma.order.findUniqueOrThrow({ where: { id: r.orderId } })).status).toBe("RECEIVED");
+  });
+
+  test("online payment under 0,50 € is refused with a clear message", async () => {
+    const user = await makeUser({ email: "centimes@exemple.fr", stamps: 10 });
+    const oregano = await prisma.supplement.create({ data: { name: "Origan", priceCents: 30 } });
+    await prisma.productSupplement.create({ data: { productId: MARG, supplementId: oregano.id } });
+    const r = await placeOrder(
+      validPickup({ paymentMethod: "ONLINE", lines: [{ productId: MARG, quantity: 1, cooking: "NORMAL", supplementIds: [oregano.id] }], rewardLineIndex: 0 }),
+      { userId: user.id, now: NOW },
+    );
+    expect(r).toMatchObject({ ok: false, error: "ONLINE_MINIMUM" });
+    if (!r.ok) expect(r.message).toContain("0,50");
+  });
 });

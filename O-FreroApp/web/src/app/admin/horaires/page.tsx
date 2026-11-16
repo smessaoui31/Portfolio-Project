@@ -4,10 +4,12 @@ import { HoursManager } from "@/components/admin/HoursManager";
 import { PageTitle } from "@/components/admin/ui";
 import { prisma } from "@/lib/db";
 import { getServiceWindows } from "@/server/settings";
+import { requireAdmin } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Horaires" };
 
 export default async function AdminHoursPage() {
+  await requireAdmin();
   await connection();
   const [windows, closures] = await Promise.all([
     getServiceWindows(),

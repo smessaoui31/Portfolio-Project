@@ -6,6 +6,7 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Field";
 import { authClient } from "@/lib/auth-client";
+import { safeNext } from "@/lib/redirect";
 import { useCart } from "@/components/cart/cart-store";
 import { CART_OWNER_KEY } from "@/components/cart/CartSync";
 import { authErrorMessage } from "./auth-errors";
@@ -27,8 +28,6 @@ function ErrorText({ message }: { message: string | null }) {
     </p>
   ) : null;
 }
-
-const safeNext = (next: string | null) => (next && next.startsWith("/") && !next.startsWith("//") ? next : "/compte");
 
 export function SignInForm({ next }: { next: string | null }) {
   const router = useRouter();

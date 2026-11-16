@@ -8,10 +8,12 @@ import { stampBalance } from "@/domain/loyalty";
 import { formatEuros } from "@/lib/money";
 import { formatParisDay } from "@/lib/time";
 import { getUserAdmin } from "@/server/admin/settings";
+import { requireAdmin } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Utilisateur" };
 
 export default async function AdminUserPage({ params }: PageProps<"/admin/utilisateurs/[id]">) {
+  await requireAdmin();
   await connection();
   const { id } = await params;
   const user = await getUserAdmin(id);

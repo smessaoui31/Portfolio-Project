@@ -7,6 +7,7 @@ import { placeOrderAction, type DeliveryQuoteResult } from "@/app/actions/order"
 import { cartCount, useCart, useCartReady } from "@/components/cart/cart-store";
 import { buttonClasses } from "@/components/ui/Button";
 import type { FulfillmentMode, PaymentMethod } from "@/domain/types";
+import { SITE } from "@/lib/site";
 import { formatParisTime } from "@/lib/time";
 import { DetailsStep } from "./DetailsStep";
 import { ModeStep } from "./ModeStep";
@@ -33,6 +34,7 @@ export function Checkout({
   const [step, setStep] = useState<Step>("mode");
   const [mode, setMode] = useState<FulfillmentMode>("PICKUP");
   const [slot, setSlot] = useState<string | null>(null);
+  const [asap, setAsap] = useState(false);
   const [address, setAddress] = useState<AddressDraft>({
     line1: defaultAddress?.line1 ?? "",
     line2: defaultAddress?.line2 ?? "",
@@ -70,15 +72,22 @@ export function Checkout({
     if (!slot) return;
     setPlacing(true);
     setError(null);
-    const result = await placeOrderAction({
+    let result: Awaited<ReturnType<typeof placeOrderAction>>;
+    try {
+      result = await placeOrderAction({
       mode,
-      slotAt: slot,
+      slotAt: asap ? "asap" : slot,
       paymentMethod: payment,
       customer,
       address: mode === "DELIVERY" ? { ...address, line2: address.line2 || undefined } : undefined,
       lines: lines.map(({ productId, quantity, cooking, supplementIds }) => ({ productId, quantity, cooking, supplementIds })),
       rewardLineIndex,
-    });
+      });
+    } catch {
+      setPlacing(false);
+      setError("La connexion a été interrompue avant la confirmation. Vérifie ta connexion puis réessaie, ou appelle-nous.");
+      return;
+    }
     setPlacing(false);
     if (!result.ok) {
       setError(result.message);
@@ -103,11 +112,18 @@ export function Checkout({
   }
 
   const summary = slot
-    ? `${mode === "PICKUP" ? "À emporter" : "Livraison"} · ${mode === "DELIVERY" ? "vers " : ""}${formatParisTime(new Date(slot))}`
+    ? `${mode === "PICKUP" ? "À emporter" : "Livraison"} · ${asap ? "dès que possible, " : ""}${mode === "DELIVERY" ? "vers " : ""}${formatParisTime(new Date(slot))}`
     : "";
 
   return (
     <div>
+      <a
+        href={SITE.phoneHref}
+        className="mb-6 flex items-center justify-between rounded-2xl border border-line-2 px-4 py-3 text-sm text-muted-2 transition hover:text-fg md:hidden"
+      >
+        <span>Une question ? Appelle-nous</span>
+        <span className="font-semibold text-fg">{SITE.phoneDisplay}</span>
+      </a>
       <ol className="mb-8 flex gap-2" aria-label="Étapes">
         {(["mode", "details", "payment"] as const).map((s, i) => (
           <li
@@ -132,7 +148,10 @@ export function Checkout({
             mode={mode}
             onModeChange={changeMode}
             slot={slot}
-            onSlotChange={setSlot}
+            onSlotChange={(next, isAsap = false) => {
+              setSlot(next);
+              setAsap(isAsap);
+            }}
             address={address}
             onAddressChange={setAddress}
             delivery={delivery}
