@@ -123,3 +123,5 @@ eslintcache/
 uploads/
 tmp/
 temp/
+# Brainstorming mockups
+.superpowers/
