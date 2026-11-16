@@ -22,7 +22,7 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
       <Footer />
       <SiteActionBar />
       <CartSheet />
-      <CartSync signedIn={Boolean(session)} />
+      <CartSync userId={session?.user.id ?? null} />
     </div>
   );
 }
