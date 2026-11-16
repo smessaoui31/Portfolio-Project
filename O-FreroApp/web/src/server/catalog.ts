@@ -59,9 +59,14 @@ async function loadEditions() {
   return prisma.edition.findMany({ include: { product: { include: productInclude } }, orderBy: { number: "desc" } });
 }
 
-export async function getCurrentEditionProductId(now: Date): Promise<string | null> {
+export async function getCurrentEditionRef(now: Date): Promise<{ id: string; productId: string } | null> {
   const editions = await prisma.edition.findMany({ select: { id: true, number: true, startsAt: true, endsAt: true, productId: true } });
-  return currentEdition(editions, now)?.productId ?? null;
+  const current = currentEdition(editions, now);
+  return current ? { id: current.id, productId: current.productId } : null;
+}
+
+export async function getCurrentEditionProductId(now: Date): Promise<string | null> {
+  return (await getCurrentEditionRef(now))?.productId ?? null;
 }
 
 export async function getMenu(now: Date): Promise<MenuCategory[]> {
