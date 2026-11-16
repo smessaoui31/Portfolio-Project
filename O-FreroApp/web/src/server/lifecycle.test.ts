@@ -150,7 +150,7 @@ test("getTracking hides contact details and marks done steps", async () => {
   expect(Object.keys(view!)).not.toContain("customerPhone");
   expect(JSON.stringify(view)).not.toContain("karim@exemple.fr");
   expect(JSON.stringify(view)).not.toContain("0612345678");
-  expect(view).toMatchObject({ number: order.number, status: "IN_OVEN", firstName: "Karim", addressShort: null });
+  expect(view).toMatchObject({ number: order.number, status: "IN_OVEN", firstName: "Karim", addressShort: null, stamps: 2, isGuest: true });
   expect(view!.steps.map((s) => s.done)).toEqual([true, true, false, false]);
   expect(view!.items[0]).toMatchObject({ name: "Margherita", quantity: 2, cooking: "NORMAL", supplements: [] });
   expect(await getTracking("unknown-token")).toBeNull();

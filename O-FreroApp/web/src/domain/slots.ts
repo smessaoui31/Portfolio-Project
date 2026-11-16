@@ -1,4 +1,4 @@
-import { addDaysToKey, atParisTime, parisDateKey, parisWeekday } from "@/lib/time";
+import { addDaysToKey, atParisTime, formatParisTime, parisDateKey, parisWeekday } from "@/lib/time";
 import type { ServiceWindowLike } from "./types";
 
 export interface SlotOptions {
@@ -44,4 +44,15 @@ export function computeSlots(o: SlotOptions): { slots: Date[]; asap: Date } | nu
 
 export function isValidSlot(slot: Date, o: SlotOptions): boolean {
   return computeSlots(o)?.slots.some((s) => s.getTime() === slot.getTime()) ?? false;
+}
+
+const WEEKDAYS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"];
+
+/** "ce soir", "demain midi", "samedi soir"... for the service a slot belongs to. */
+export function serviceLabel(slot: Date, now: Date): string {
+  const part = Number(formatParisTime(slot).slice(0, 2)) < 16 ? "midi" : "soir";
+  const day = parisDateKey(slot);
+  if (day === parisDateKey(now)) return `ce ${part}`;
+  if (day === addDaysToKey(parisDateKey(now), 1)) return `demain ${part}`;
+  return `${WEEKDAYS[parisWeekday(slot) - 1]} ${part}`;
 }

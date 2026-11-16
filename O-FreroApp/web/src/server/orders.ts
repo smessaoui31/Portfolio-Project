@@ -92,7 +92,7 @@ export function orderErrorMessage(error: PlaceOrderError, detail: { productName?
 }
 
 export type PlaceOrderResult =
-  | { ok: true; orderId: string; number: number; trackingToken: string; clientSecret: string | null }
+  | { ok: true; orderId: string; number: number; trackingToken: string; totalCents: number; clientSecret: string | null }
   | { ok: false; error: PlaceOrderError; message: string };
 
 class OrderRejected extends Error {
@@ -226,13 +226,20 @@ export async function placeOrder(input: unknown, ctx: { userId: string | null; n
 
   if (data.paymentMethod === "AT_PICKUP") {
     await notifyOrderReceived(order.id);
-    return { ok: true, orderId: order.id, number: order.number, trackingToken: order.trackingToken, clientSecret: null };
+    return { ok: true, orderId: order.id, number: order.number, trackingToken: order.trackingToken, totalCents: order.totalCents, clientSecret: null };
   }
 
   try {
     const intent = await createPaymentIntent(order);
     await prisma.order.update({ where: { id: order.id }, data: { stripePaymentIntentId: intent.intentId } });
-    return { ok: true, orderId: order.id, number: order.number, trackingToken: order.trackingToken, clientSecret: intent.clientSecret };
+    return {
+      ok: true,
+      orderId: order.id,
+      number: order.number,
+      trackingToken: order.trackingToken,
+      totalCents: order.totalCents,
+      clientSecret: intent.clientSecret,
+    };
   } catch (error) {
     console.error("[commande] création du paiement impossible", order.id, error);
     await prisma.$transaction(async (tx) => {

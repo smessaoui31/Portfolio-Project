@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { formatParisTime, parisDateKey } from "@/lib/time";
-import { computeSlots, isValidSlot, type SlotOptions } from "./slots";
+import { computeSlots, isValidSlot, serviceLabel, type SlotOptions } from "./slots";
 import type { ServiceWindowLike } from "./types";
 
 const HOURS: ServiceWindowLike[] = [
@@ -83,5 +83,17 @@ describe("isValidSlot", () => {
     expect(isValidSlot(P("2026-11-19T18:15:00Z"), o)).toBe(false);
     expect(isValidSlot(P("2026-11-19T18:37:00Z"), o)).toBe(false);
     expect(isValidSlot(P("2026-11-20T17:00:00Z"), o)).toBe(false);
+  });
+});
+
+describe("serviceLabel", () => {
+  test.each([
+    ["2026-11-19T18:30:00Z", "2026-11-19T18:02:00Z", "ce soir"],
+    ["2026-11-16T10:30:00Z", "2026-11-16T09:00:00Z", "ce midi"],
+    ["2026-11-20T17:00:00Z", "2026-11-19T20:40:00Z", "demain soir"],
+    ["2026-11-21T11:00:00Z", "2026-11-20T11:00:00Z", "demain midi"],
+    ["2026-11-21T11:00:00Z", "2026-11-19T20:40:00Z", "samedi midi"],
+  ])("slot %s seen at %s is %s", (slot, now, label) => {
+    expect(serviceLabel(new Date(slot), new Date(now))).toBe(label);
   });
 });

@@ -59,7 +59,7 @@ const validDelivery = (over: Record<string, unknown> = {}) => ({
 
 test("guest pickup paid at pickup is RECEIVED with no client secret and a confirmation e-mail", async () => {
   const r = await placeOrder(validPickup(), ctx);
-  expect(r).toMatchObject({ ok: true, clientSecret: null });
+  expect(r).toMatchObject({ ok: true, clientSecret: null, totalCents: 2300 });
   if (!r.ok) return;
   const o = await prisma.order.findUniqueOrThrow({ where: { id: r.orderId }, include: { items: { include: { supplements: true } }, logs: true } });
   expect(o).toMatchObject({

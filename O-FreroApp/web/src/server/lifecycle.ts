@@ -113,6 +113,9 @@ export interface TrackingView {
   totalCents: number;
   addressShort: string | null;
   steps: { status: OrderStatus; label: string; done: boolean }[];
+  /** Stamps this order is worth once completed. */
+  stamps: number;
+  isGuest: boolean;
 }
 
 /** Public view of an order for its private tracking link: no e-mail, no phone. */
@@ -146,5 +149,10 @@ export async function getTracking(token: string): Promise<TrackingView | null> {
     totalCents: order.totalCents,
     addressShort: order.mode === "DELIVERY" ? `${order.addressLine1}, ${order.postalCode} ${order.city}` : null,
     steps: steps.map((s, index) => ({ ...s, done: reached >= 0 && index <= reached })),
+    stamps: stampsEarned({
+      pizzaCount: order.items.filter((i) => i.isPizza).reduce((sum, i) => sum + i.quantity, 0),
+      rewardCents: order.rewardCents,
+    }),
+    isGuest: order.userId === null,
   };
 }
