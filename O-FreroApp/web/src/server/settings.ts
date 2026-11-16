@@ -1,10 +1,21 @@
 import type { ZoneLike } from "@/domain/delivery";
 import type { SlotOptions } from "@/domain/slots";
 import type { FulfillmentMode, ServiceWindowLike } from "@/domain/types";
+import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db";
 
+/** The single settings row, created with defaults on first use (safe under concurrent first calls). */
 export async function getSettings() {
-  return prisma.settings.upsert({ where: { id: 1 }, update: {}, create: { id: 1 } });
+  const existing = await prisma.settings.findUnique({ where: { id: 1 } });
+  if (existing) return existing;
+  try {
+    return await prisma.settings.create({ data: { id: 1 } });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return prisma.settings.findUniqueOrThrow({ where: { id: 1 } });
+    }
+    throw error;
+  }
 }
 
 export async function getServiceWindows(): Promise<ServiceWindowLike[]> {
