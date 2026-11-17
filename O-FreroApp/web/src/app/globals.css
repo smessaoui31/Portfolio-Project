@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #0d0a08;
+  --fg: #f3e9d8;
+  --muted: #a8998a;
+  --muted-2: #cbbfae;
+  --surface: #1a1410;
+  --surface-2: #221a14;
+  --line: #241c16;
+  --line-2: #3a2e25;
+  --ember: #ff5a1f;
+  --ember-ink: #160b05;
+  --danger: #ff8a7a;
+  --ok: #8fd19e;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-muted-2: var(--muted-2);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+  --color-ember: var(--ember);
+  --color-ember-ink: var(--ember-ink);
+  --color-danger: var(--danger);
+  --color-ok: var(--ok);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-anton), Impact, "Arial Narrow", sans-serif;
+}
+
+html {
+  background: var(--bg);
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ember);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--ember);
+  color: var(--ember-ink);
+}
+
+/* Display type: Anton, uppercase, tight. */
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: -0.005em;
+  line-height: 0.9;
+}
+
+/* Edition pizza: slow rotation, stopped when the user asks for less motion. */
+@keyframes slow-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin-slow {
+  animation: slow-spin 40s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .spin-slow {
+    animation: none;
+  }
+}
+
+/* Leaves room for the fixed action bar on phones. */
+.pb-action-bar {
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+  .pb-action-bar {
+    padding-bottom: 0;
+  }
+}

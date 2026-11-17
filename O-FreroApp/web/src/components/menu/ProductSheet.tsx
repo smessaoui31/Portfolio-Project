@@ -1,0 +1,110 @@
+"use client";
+
+import { useState } from "react";
+import { useCart } from "@/components/cart/cart-store";
+import { Button } from "@/components/ui/Button";
+import { Segmented } from "@/components/ui/Segmented";
+import { Sheet } from "@/components/ui/Sheet";
+import { COOKING_LABELS, type Cooking } from "@/domain/types";
+import { formatEuros } from "@/lib/money";
+import type { MenuProduct } from "@/server/catalog";
+import { ProductImage } from "./ProductImage";
+import { QuantityStepper } from "./QuantityStepper";
+
+const COOKINGS = (Object.keys(COOKING_LABELS) as Cooking[]).map((value) => ({ value, label: COOKING_LABELS[value] }));
+
+/** Customize then add a product. Mount with a `key` per product so its state resets. */
+export function ProductSheet({
+  product,
+  open,
+  onOpenChange,
+}: {
+  product: MenuProduct | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const add = useCart((s) => s.add);
+  const setCartOpen = useCart((s) => s.setOpen);
+  const [cooking, setCooking] = useState<Cooking>("NORMAL");
+  const [supplementIds, setSupplementIds] = useState<string[]>([]);
+  const [quantity, setQuantity] = useState(1);
+
+  if (!product) return null;
+
+  const supplementsCents = product.supplements
+    .filter((s) => supplementIds.includes(s.id))
+    .reduce((sum, s) => sum + s.priceCents, 0);
+  const total = (product.unitPriceCents + supplementsCents) * quantity;
+
+  function toggle(id: string) {
+    setSupplementIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
+  }
+
+  function onAdd() {
+    if (!product) return;
+    add({
+      productId: product.id,
+      quantity,
+      cooking: product.isPizza ? cooking : "NORMAL",
+      supplementIds,
+      name: product.name,
+      imageUrl: product.imageUrl,
+      supplementNames: product.supplements.filter((s) => supplementIds.includes(s.id)).map((s) => s.name),
+    });
+    onOpenChange(false);
+    setCartOpen(true);
+  }
+
+  return (
+    <Sheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={product.name}
+      description={product.description ?? undefined}
+      footer={
+        <Button size="lg" className="w-full justify-between" onClick={onAdd} disabled={product.soldOut}>
+          <span>{product.soldOut ? "Épuisé" : "Ajouter au panier"}</span>
+          <span className="tabular-nums">{formatEuros(total)}</span>
+        </Button>
+      }
+    >
+      <div className="flex justify-center py-2">
+        <ProductImage src={product.imageUrl} alt={product.name} size={208} />
+      </div>
+
+      {product.isPizza ? (
+        <section className="mt-6">
+          <h3 className="mb-2 text-xs uppercase tracking-[0.14em] text-muted">Cuisson</h3>
+          <Segmented label="Cuisson" value={cooking} options={COOKINGS} onChange={setCooking} />
+        </section>
+      ) : null}
+
+      {product.supplements.length > 0 ? (
+        <section className="mt-6">
+          <h3 className="mb-2 text-xs uppercase tracking-[0.14em] text-muted">Suppléments</h3>
+          <ul className="divide-y divide-line rounded-2xl border border-line">
+            {product.supplements.map((s) => (
+              <li key={s.id}>
+                <label className="flex cursor-pointer items-center gap-3 px-4 py-3 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={supplementIds.includes(s.id)}
+                    onChange={() => toggle(s.id)}
+                    className="size-4 accent-[var(--ember)]"
+                  />
+                  <span className="flex-1">{s.name}</span>
+                  <span className="text-muted-2 tabular-nums">+ {formatEuros(s.priceCents)}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <section className="mt-6 flex items-center justify-between">
+        <h3 className="text-xs uppercase tracking-[0.14em] text-muted">Quantité</h3>
+        <QuantityStepper label="Quantité" value={quantity} onChange={setQuantity} />
+      </section>
+    </Sheet>
+  );
+}

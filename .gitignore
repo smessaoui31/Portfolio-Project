@@ -65,3 +65,9 @@ docker-compose.yml
 uploads/
 tmp/
 temp/
+# Brainstorming mockups
+.superpowers/
+
+# O'Frero web app: lockfile and local database are part of the project
+!O-FreroApp/web/package-lock.json
+!O-FreroApp/web/docker-compose.yml
