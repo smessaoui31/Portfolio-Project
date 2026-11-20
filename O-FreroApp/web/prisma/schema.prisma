@@ -9,22 +9,24 @@ datasource db {
   provider = "postgresql"
 }
 
-/* ---------- Auth (Better Auth 1.7) ---------- */
+/**
+ * ---------- Auth (Better Auth 1.7) ----------
+ */
 
 model User {
-  id            String    @id
-  name          String
-  email         String
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id             String    @id
+  name           String
+  email          String
+  emailVerified  Boolean   @default(false)
+  image          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
   /// "USER" or "ADMIN" (Better Auth additional field, not user-editable)
-  role          String    @default("USER")
+  role           String    @default("USER")
   /// Set once the owner proved, while signed in, control of the e-mail: guest orders attach from then on.
   ordersLinkedAt DateTime?
-  sessions      Session[]
-  accounts      Account[]
+  sessions       Session[]
+  accounts       Account[]
 
   orders         Order[]
   addresses      Address[]
@@ -83,7 +85,9 @@ model Verification {
   @@map("verification")
 }
 
-/* ---------- Catalog ---------- */
+/**
+ * ---------- Catalog ----------
+ */
 
 model Category {
   id           String    @id @default(cuid())
@@ -92,36 +96,48 @@ model Category {
   displayOrder Int       @default(0)
   /// Products of this category earn stamps, can be offered as reward and can be editions.
   isPizza      Boolean   @default(false)
+  /// Menus earn a stamp but cannot be the free pizza.
+  isMenu       Boolean   @default(false)
   products     Product[]
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 }
 
 model Product {
-  id              String              @id @default(cuid())
+  id              String               @id @default(cuid())
   name            String
   description     String?
   priceCents      Int
-  discountPercent Int                 @default(0)
+  discountPercent Int                  @default(0)
   imageUrl        String?
   categoryId      String?
-  category        Category?           @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  isAvailable     Boolean             @default(true)
+  category        Category?            @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  isAvailable     Boolean              @default(true)
   /// null = unlimited stock
   stockQuantity   Int?
   /// Orderable only while its edition is current.
-  isEditionOnly   Boolean             @default(false)
+  isEditionOnly   Boolean              @default(false)
   supplements     ProductSupplement[]
+  optionGroups    ProductOptionGroup[]
   editions        Edition[]
   orderItems      OrderItem[]
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+}
+
+enum SupplementFamily {
+  CHEESE
+  MEAT
+  FISH
+  VEGETABLE
+  OTHER
 }
 
 model Supplement {
   id         String              @id @default(cuid())
   name       String              @unique
   priceCents Int
+  family     SupplementFamily    @default(OTHER)
   isActive   Boolean             @default(true)
   products   ProductSupplement[]
   createdAt  DateTime            @default(now())
@@ -136,6 +152,45 @@ model ProductSupplement {
   supplement         Supplement @relation(fields: [supplementId], references: [id], onDelete: Cascade)
 
   @@id([productId, supplementId])
+}
+
+/// A reusable set of choices (size, sauce, flavour, a menu's pizza).
+model OptionGroup {
+  id          String               @id @default(cuid())
+  name        String               @unique
+  minSelect   Int                  @default(1)
+  maxSelect   Int                  @default(1)
+  options     OptionChoice[]
+  attachments ProductOptionGroup[]
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+}
+
+model OptionChoice {
+  id           String      @id @default(cuid())
+  groupId      String
+  group        OptionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  name         String
+  /// Added to the unit price.
+  priceCents   Int         @default(0)
+  displayOrder Int         @default(0)
+  isActive     Boolean     @default(true)
+
+  @@unique([groupId, name])
+}
+
+/// One slot of choices on a product. A group can be attached several times ("Pizza 1", "Pizza 2").
+model ProductOptionGroup {
+  id        String      @id @default(cuid())
+  productId String
+  product   Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  groupId   String
+  group     OptionGroup @relation(fields: [groupId], references: [id], onDelete: Restrict)
+  /// Shown instead of the group name.
+  label     String?
+  position  Int         @default(0)
+
+  @@index([productId])
 }
 
 model Edition {
@@ -154,7 +209,9 @@ model Edition {
   @@index([startsAt, endsAt])
 }
 
-/* ---------- Store settings ---------- */
+/**
+ * ---------- Store settings ----------
+ */
 
 model DeliveryZone {
   id            String   @id @default(cuid())
@@ -185,14 +242,18 @@ model Closure {
 }
 
 model Settings {
-  id                  Int     @id @default(1)
-  featuredProductId   String?
-  stampsForReward     Int     @default(10)
-  pickupLeadMinutes   Int     @default(15)
-  deliveryLeadMinutes Int     @default(30)
+  id                    Int     @id @default(1)
+  featuredProductId     String?
+  stampsForReward       Int     @default(10)
+  pickupLeadMinutes     Int     @default(15)
+  deliveryLeadMinutes   Int     @default(30)
+  /// Delivery slots stop this many minutes before each closing.
+  deliveryCutoffMinutes Int     @default(30)
 }
 
-/* ---------- Orders ---------- */
+/**
+ * ---------- Orders ----------
+ */
 
 enum FulfillmentMode {
   PICKUP
@@ -207,7 +268,7 @@ enum PaymentMethod {
 enum Cooking {
   NORMAL
   WELL_DONE
-  EXTRA_CRISPY
+  LIGHTLY_COOKED
 }
 
 enum OrderStatus {
@@ -271,9 +332,25 @@ model OrderItem {
   cooking               Cooking               @default(NORMAL)
   /// Supplements per unit times quantity.
   supplementsTotalCents Int                   @default(0)
+  /// Options per unit times quantity.
+  choicesTotalCents     Int                   @default(0)
   isPizza               Boolean               @default(false)
+  isMenu                Boolean               @default(false)
   isReward              Boolean               @default(false)
   supplements           OrderItemSupplement[]
+  choices               OrderItemChoice[]
+}
+
+/// Snapshot of a choice at order time. slotId and optionId are kept to reorder, without foreign keys.
+model OrderItemChoice {
+  id             String    @id @default(cuid())
+  orderItemId    String
+  orderItem      OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  slotId         String?
+  optionId       String?
+  label          String
+  name           String
+  unitPriceCents Int
 }
 
 model OrderItemSupplement {
@@ -297,7 +374,9 @@ model OrderLog {
   @@index([orderId])
 }
 
-/* ---------- Accounts ---------- */
+/**
+ * ---------- Accounts ----------
+ */
 
 model Address {
   id         String   @id @default(cuid())

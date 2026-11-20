@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from "node:crypto";
-import type { FulfillmentMode, OrderStatus, PaymentMethod } from "@/generated/prisma/enums";
+import type { FulfillmentMode, OrderStatus, PaymentMethod, SupplementFamily } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/db";
 
 let defaultPizzaId: string | null = null;
@@ -12,9 +12,14 @@ export function resetFixtureCache() {
 
 const uid = () => randomUUID().slice(0, 8);
 
-export async function makeCategory(o: { name?: string; isPizza?: boolean; displayOrder?: number } = {}) {
+export async function makeCategory(o: { name?: string; isPizza?: boolean; isMenu?: boolean; displayOrder?: number } = {}) {
   return prisma.category.create({
-    data: { name: o.name ?? `Catégorie ${uid()}`, isPizza: o.isPizza ?? false, displayOrder: o.displayOrder ?? 0 },
+    data: {
+      name: o.name ?? `Catégorie ${uid()}`,
+      isPizza: o.isPizza ?? false,
+      isMenu: o.isMenu ?? false,
+      displayOrder: o.displayOrder ?? 0,
+    },
   });
 }
 
@@ -52,9 +57,48 @@ export async function makeProduct(
   });
 }
 
-export async function makeSupplement(o: { name?: string; priceCents?: number; isActive?: boolean } = {}) {
+export async function makeSupplement(
+  o: { name?: string; priceCents?: number; isActive?: boolean; family?: SupplementFamily } = {},
+) {
   return prisma.supplement.create({
-    data: { name: o.name ?? `Supplément ${uid()}`, priceCents: o.priceCents ?? 100, isActive: o.isActive ?? true },
+    data: {
+      name: o.name ?? `Supplément ${uid()}`,
+      priceCents: o.priceCents ?? 100,
+      isActive: o.isActive ?? true,
+      family: o.family ?? "OTHER",
+    },
+  });
+}
+
+export async function makeOptionGroup(
+  o: {
+    name?: string;
+    minSelect?: number;
+    maxSelect?: number;
+    options?: { name: string; priceCents?: number; isActive?: boolean }[];
+  } = {},
+) {
+  return prisma.optionGroup.create({
+    data: {
+      name: o.name ?? `Groupe ${uid()}`,
+      minSelect: o.minSelect ?? 1,
+      maxSelect: o.maxSelect ?? 1,
+      options: {
+        create: (o.options ?? [{ name: "Option" }]).map((option, index) => ({
+          name: option.name,
+          priceCents: option.priceCents ?? 0,
+          isActive: option.isActive ?? true,
+          displayOrder: index,
+        })),
+      },
+    },
+    include: { options: { orderBy: { displayOrder: "asc" } } },
+  });
+}
+
+export async function attachGroup(productId: string, groupId: string, o: { label?: string; position?: number } = {}) {
+  return prisma.productOptionGroup.create({
+    data: { productId, groupId, label: o.label ?? null, position: o.position ?? 0 },
   });
 }
 

@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 const storedLine = z.object({
   productId: z.string(),
   quantity: z.number().int().min(1).max(20),
-  cooking: z.enum(["NORMAL", "WELL_DONE", "EXTRA_CRISPY"]),
+  cooking: z.enum(["NORMAL", "WELL_DONE", "LIGHTLY_COOKED"]),
   supplementIds: z.array(z.string()),
 });
 

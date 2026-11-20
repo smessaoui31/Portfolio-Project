@@ -1,6 +1,6 @@
 export type FulfillmentMode = "PICKUP" | "DELIVERY";
 export type PaymentMethod = "ONLINE" | "AT_PICKUP";
-export type Cooking = "NORMAL" | "WELL_DONE" | "EXTRA_CRISPY";
+export type Cooking = "NORMAL" | "WELL_DONE" | "LIGHTLY_COOKED";
 export type OrderStatus =
   | "PENDING_PAYMENT"
   | "RECEIVED"
@@ -26,8 +26,9 @@ export interface CartLineInput {
   supplementIds: string[];
 }
 
+/** Display order of the cooking choices; NORMAL is the default. */
 export const COOKING_LABELS: Record<Cooking, string> = {
-  NORMAL: "Normale",
   WELL_DONE: "Bien cuite",
-  EXTRA_CRISPY: "Extra croustillante",
+  NORMAL: "Normale",
+  LIGHTLY_COOKED: "Pas trop cuite",
 };

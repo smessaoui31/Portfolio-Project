@@ -14,7 +14,7 @@ const linesSchema = z
     z.object({
       productId: z.string().min(1),
       quantity: z.number(),
-      cooking: z.enum(["NORMAL", "WELL_DONE", "EXTRA_CRISPY"]),
+      cooking: z.enum(["NORMAL", "WELL_DONE", "LIGHTLY_COOKED"]),
       supplementIds: z.array(z.string()).max(10),
     }),
   )
