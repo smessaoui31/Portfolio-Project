@@ -8,7 +8,9 @@ import { getSession } from "@/lib/session";
 import { describeLines, mergeIntoAccount, saveCart, type DescribedLine } from "@/server/cart";
 import { getCurrentEditionProductId, getPricedProducts } from "@/server/catalog";
 import { orderErrorMessage } from "@/server/orders";
+import { getLoyaltySummary } from "@/server/loyalty";
 import { checkOrderableLines } from "@/server/reorder";
+import { getSettings } from "@/server/settings";
 
 const linesSchema = z
   .array(
@@ -50,6 +52,14 @@ export async function checkLinesAction(lines: (CartLineInput & { name?: string }
   if (!parsed.success) return { lines: [], skipped: [] };
   const named = parsed.data.map((line, index) => ({ ...line, name: typeof lines[index]?.name === "string" ? lines[index].name : undefined }));
   return checkOrderableLines(named, now());
+}
+
+/** Stamps of the signed-in customer, for the cart hint. */
+export async function loyaltyHintAction(): Promise<{ signedIn: boolean; balance: number; stampsForReward: number }> {
+  const session = await getSession();
+  if (!session) return { signedIn: false, balance: 0, stampsForReward: (await getSettings()).stampsForReward };
+  const summary = await getLoyaltySummary(session.user.id);
+  return { signedIn: true, balance: summary.balance, stampsForReward: summary.stampsForReward };
 }
 
 export async function syncCartAction(lines: CartLineInput[]): Promise<void> {

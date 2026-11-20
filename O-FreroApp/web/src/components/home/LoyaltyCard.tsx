@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PizzaStampCard } from "@/components/loyalty/PizzaStampCard";
 import { buttonClasses } from "@/components/ui/Button";
 
 /** The stamp card. Guests see an empty card and the sign-up invitation. */
@@ -25,34 +26,15 @@ export function LoyaltyCard({
         </p>
         <p className="text-sm font-medium">
           {!signedIn
-            ? "Une pizza, un tampon"
+            ? "Une commande à emporter, un tampon"
             : ready
               ? "Ta pizza offerte t'attend"
-              : `Plus que ${remaining} pizza${remaining > 1 ? "s" : ""}`}
+              : `Plus que ${remaining} commande${remaining > 1 ? "s" : ""}`}
         </p>
       </div>
-      <ol className="mt-5 grid grid-cols-5 gap-2.5 md:gap-3" aria-label={`${filled} tampons sur ${stampsForReward}`}>
-        {Array.from({ length: stampsForReward }, (_, i) => {
-          const on = i < filled;
-          const last = i === stampsForReward - 1;
-          return (
-            <li
-              key={i}
-              className={`grid aspect-square place-items-center rounded-full text-xs font-bold ${
-                on ? "bg-ember text-ember-ink" : last ? "border-2 border-ember-ink" : "border-[1.5px] border-dashed border-[#b9a58f]"
-              }`}
-            >
-              {on ? (
-                <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
-                  <path d="M2.5 7.5l3 3 6-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              ) : last ? (
-                stampsForReward
-              ) : null}
-            </li>
-          );
-        })}
-      </ol>
+      <div className="mt-5 rounded-2xl bg-ember-ink p-4">
+        <PizzaStampCard filled={filled} total={stampsForReward} />
+      </div>
       {signedIn && onAccountPage && !ready ? null : signedIn ? (
         <Link href={ready ? "/carte" : "/compte"} className={buttonClasses("primary", "lg", "mt-6 w-full !bg-ember-ink !text-fg")}>
           {ready ? "Choisir ma pizza offerte" : "Voir mon compte"}

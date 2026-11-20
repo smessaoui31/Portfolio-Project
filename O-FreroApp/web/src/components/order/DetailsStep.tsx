@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { quoteCartAction, type QuoteResult } from "@/app/actions/cart";
 import { useCart } from "@/components/cart/cart-store";
+import { StampHint } from "@/components/loyalty/StampHint";
 import { Button } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Field";
 import { canRedeem } from "@/domain/loyalty";
@@ -94,6 +95,15 @@ export function DetailsStep({
         </ul>
         {quote && !quote.ok ? <p className="mt-3 text-sm text-danger">{quote.message}</p> : null}
       </section>
+
+      <StampHint
+        mode={mode}
+        loyalty={
+          account
+            ? { signedIn: true, balance: account.balance, stampsForReward: account.stampsForReward }
+            : { signedIn: false, balance: 0, stampsForReward: 10 }
+        }
+      />
 
       {mode === "PICKUP" && rewardAvailable && pizzaLines.length > 0 ? (
         <section className="rounded-2xl bg-fg p-4 text-ember-ink">

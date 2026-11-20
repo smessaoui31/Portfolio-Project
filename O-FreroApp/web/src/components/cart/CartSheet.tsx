@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { COOKING_LABELS } from "@/domain/types";
 import { formatEuros } from "@/lib/money";
+import { StampHint } from "@/components/loyalty/StampHint";
 import { cartCount, useCart } from "./cart-store";
 
 export function CartSheet() {
@@ -33,6 +34,7 @@ export function CartSheet() {
               <span>Sous-total</span>
               <span className="text-lg font-semibold text-fg tabular-nums">{quote ? formatEuros(quote.subtotalCents) : "…"}</span>
             </div>
+            <StampHint mode={null} />
             <Button size="lg" className="w-full" onClick={() => go("/commande")} disabled={Boolean(quoteError) || !quote}>
               Continuer
             </Button>
