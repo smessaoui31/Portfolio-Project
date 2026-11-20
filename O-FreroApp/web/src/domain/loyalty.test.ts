@@ -17,3 +17,14 @@ test("stampBalance and canRedeem", () => {
   expect(canRedeem(10, 10)).toBe(true);
   expect(canRedeem(9, 10)).toBe(false);
 });
+
+test("referral bonuses count as earned stamps", () => {
+  expect(
+    stampBalance([
+      { kind: "EARN", stamps: 3 },
+      { kind: "REFERRER_BONUS", stamps: 1 },
+      { kind: "REFEREE_BONUS", stamps: 1 },
+      { kind: "REDEEM", stamps: 2 },
+    ]),
+  ).toBe(3);
+});

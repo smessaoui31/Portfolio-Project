@@ -153,7 +153,15 @@ export async function makeEdition(o: {
 }
 
 export async function makeUser(
-  o: { email?: string; name?: string; role?: "USER" | "ADMIN"; emailVerified?: boolean; stamps?: number } = {},
+  o: {
+    email?: string;
+    name?: string;
+    role?: "USER" | "ADMIN";
+    emailVerified?: boolean;
+    stamps?: number;
+    referralCode?: string;
+    referredById?: string;
+  } = {},
 ) {
   const user = await prisma.user.create({
     data: {
@@ -162,6 +170,8 @@ export async function makeUser(
       name: o.name ?? "Karim",
       role: o.role ?? "USER",
       emailVerified: o.emailVerified ?? true,
+      referralCode: o.referralCode ?? null,
+      referredById: o.referredById ?? null,
     },
   });
   if (o.stamps && o.stamps > 0) {
@@ -195,6 +205,7 @@ export async function makeOrder(
     totalCents?: number;
     createdAt?: Date;
     slotAt?: Date;
+    source?: "WEB" | "REORDER";
   } = {},
 ) {
   const quantity = o.pizzas ?? 1;
@@ -216,6 +227,7 @@ export async function makeOrder(
       editionId: o.editionId ?? null,
       stripePaymentIntentId: o.stripePaymentIntentId ?? null,
       createdAt: o.createdAt,
+      source: o.source ?? "WEB",
       items: {
         create: [
           { productId, name: "Pizza test", unitPriceCents: 1050, quantity, isPizza: o.isPizza ?? true, isMenu: o.isMenu ?? false },

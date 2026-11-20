@@ -25,6 +25,11 @@ model User {
   role           String    @default("USER")
   /// Set once the owner proved, while signed in, control of the e-mail: guest orders attach from then on.
   ordersLinkedAt DateTime?
+  /// Short code to share; created on first need.
+  referralCode   String?   @unique
+  referredById   String?
+  referredBy     User?     @relation("Referrals", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals      User[]    @relation("Referrals")
   sessions       Session[]
   accounts       Account[]
 
@@ -32,6 +37,7 @@ model User {
   addresses      Address[]
   cart           Cart?
   loyaltyEntries LoyaltyEntry[]
+  pollVotes      PollVote[]
 
   @@unique([email])
   @@map("user")
@@ -271,6 +277,11 @@ enum Cooking {
   LIGHTLY_COOKED
 }
 
+enum OrderSource {
+  WEB
+  REORDER
+}
+
 enum OrderStatus {
   PENDING_PAYMENT
   RECEIVED
@@ -309,6 +320,9 @@ model Order {
   edition               Edition?        @relation(fields: [editionId], references: [id], onDelete: SetNull)
   stripePaymentIntentId String?         @unique
   confirmationSentAt    DateTime?
+  /// REORDER when placed from "Recommander" (home card or account history).
+  source                OrderSource     @default(WEB)
+  rating                OrderRating?
   items                 OrderItem[]
   logs                  OrderLog[]
   loyaltyEntries        LoyaltyEntry[]
@@ -405,6 +419,10 @@ model Cart {
 enum LoyaltyKind {
   EARN
   REDEEM
+  /// +1 to the referrer at the first completed pickup order of the referee.
+  REFERRER_BONUS
+  /// +1 to the referee on that same order.
+  REFEREE_BONUS
 }
 
 model LoyaltyEntry {
@@ -419,4 +437,61 @@ model LoyaltyEntry {
 
   @@unique([orderId, kind])
   @@index([userId])
+}
+
+/**
+ * ---------- Retention ----------
+ */
+
+/// A vote among three candidates for the next edition.
+model Poll {
+  id         String          @id @default(cuid())
+  title      String
+  closesAt   DateTime
+  candidates PollCandidate[]
+  votes      PollVote[]
+  createdAt  DateTime        @default(now())
+}
+
+model PollCandidate {
+  id          String     @id @default(cuid())
+  pollId      String
+  poll        Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  position    Int        @default(0)
+  votes       PollVote[]
+}
+
+model PollVote {
+  id          String        @id @default(cuid())
+  pollId      String
+  poll        Poll          @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  candidateId String
+  candidate   PollCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+
+  @@unique([pollId, userId])
+}
+
+/// Private rating left from the tracking page once the order is completed.
+model OrderRating {
+  orderId   String   @id
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  /// 1 = Bof, 2 = Bon, 3 = Excellent
+  score     Int
+  comment   String?
+  createdAt DateTime @default(now())
+}
+
+/// An evening with a match: banner 3 days before, evening slots open the day before.
+model MatchNight {
+  id        String   @id @default(cuid())
+  /// Paris calendar day, "YYYY-MM-DD"
+  date      String   @unique
+  title     String
+  message   String?
+  createdAt DateTime @default(now())
 }

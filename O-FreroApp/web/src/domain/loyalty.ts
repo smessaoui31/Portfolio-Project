@@ -8,8 +8,11 @@ export function stampsEarned(order: { mode: FulfillmentMode; rewardCents: number
   return order.mode === "PICKUP" && order.rewardCents === 0 && order.hasPizzaOrMenu ? 1 : 0;
 }
 
-export function stampBalance(entries: { kind: "EARN" | "REDEEM"; stamps: number }[]): number {
-  return entries.reduce((sum, e) => sum + (e.kind === "EARN" ? e.stamps : -e.stamps), 0);
+export type LoyaltyKind = "EARN" | "REDEEM" | "REFERRER_BONUS" | "REFEREE_BONUS";
+
+/** Everything earns (orders, referral bonuses) except the free pizza, which spends. */
+export function stampBalance(entries: { kind: LoyaltyKind; stamps: number }[]): number {
+  return entries.reduce((sum, e) => sum + (e.kind === "REDEEM" ? -e.stamps : e.stamps), 0);
 }
 
 export function canRedeem(balance: number, stampsForReward: number): boolean {

@@ -2,6 +2,11 @@ import { prisma } from "@/lib/db";
 import { resetFixtureCache } from "./fixtures";
 
 const TABLES = [
+  "PollVote",
+  "PollCandidate",
+  "Poll",
+  "OrderRating",
+  "MatchNight",
   "LoyaltyEntry",
   "Cart",
   "Address",
