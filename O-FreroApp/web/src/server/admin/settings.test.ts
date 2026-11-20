@@ -106,3 +106,10 @@ describe("users", () => {
     expect(row).toMatchObject({ balance: 7, ordersCount: 2 });
   });
 });
+
+test("saves the delivery cutoff", async () => {
+  expect(
+    await saveLoyaltySettings({ stampsForReward: 10, featuredProductId: null, pickupLeadMinutes: 15, deliveryLeadMinutes: 30, deliveryCutoffMinutes: 45 }),
+  ).toEqual({ ok: true });
+  expect(await prisma.settings.findUniqueOrThrow({ where: { id: 1 } })).toMatchObject({ deliveryCutoffMinutes: 45 });
+});

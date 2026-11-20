@@ -5,6 +5,7 @@ import { connection } from "next/server";
 import { StatusActions } from "@/components/admin/StatusActions";
 import { Card, StatusBadge } from "@/components/admin/ui";
 import { STATUS_LABELS } from "@/domain/order-status";
+import { choiceText } from "@/domain/options";
 import { COOKING_LABELS } from "@/domain/types";
 import { formatEuros } from "@/lib/money";
 import { formatParisDay, formatParisTime } from "@/lib/time";
@@ -63,6 +64,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/comma
                 </p>
                 <p className="text-sm text-muted-2">
                   {COOKING_LABELS[item.cooking]}
+                  {item.choices.length > 0 ? ` · ${item.choices.map(choiceText).join(" · ")}` : ""}
                   {item.supplements.length > 0 ? ` · ${item.supplements.map((s) => `+ ${s.name}`).join(" · ")}` : ""}
                 </p>
               </li>

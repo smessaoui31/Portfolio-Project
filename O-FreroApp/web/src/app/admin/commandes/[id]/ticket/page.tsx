@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { AutoPrint } from "@/components/admin/AutoPrint";
+import { choiceText } from "@/domain/options";
 import { COOKING_LABELS } from "@/domain/types";
 import { formatEuros } from "@/lib/money";
 import { SITE } from "@/lib/site";
@@ -48,6 +49,9 @@ export default async function TicketPage({ params }: PageProps<"/admin/commandes
             {item.isReward ? " (1 OFFERTE)" : ""}
           </p>
           {item.cooking !== "NORMAL" ? <p>  {COOKING_LABELS[item.cooking].toUpperCase()}</p> : null}
+          {item.choices.map((c) => (
+            <p key={c.id}>  {choiceText(c)}</p>
+          ))}
           {item.supplements.map((s) => (
             <p key={s.id}>  + {s.name}</p>
           ))}

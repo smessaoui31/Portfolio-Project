@@ -23,6 +23,11 @@ const productSchema = z.object({
   stockQuantity: z.number().int().min(0).nullable(),
   isEditionOnly: z.boolean(),
   supplementIds: z.array(z.string()),
+  /** Ordered slots; an existing slot keeps its id so saved carts stay valid. */
+  optionGroups: z
+    .array(z.object({ id: z.string().optional(), groupId: z.string().min(1), label: z.string().trim().max(40).optional() }))
+    .max(12)
+    .default([]),
 });
 
 export type ProductInput = z.input<typeof productSchema>;
@@ -37,13 +42,16 @@ export async function listProductsAdmin() {
 }
 
 export async function getProductAdmin(id: string) {
-  return prisma.product.findUnique({ where: { id }, include: { supplements: true } });
+  return prisma.product.findUnique({
+    where: { id },
+    include: { supplements: true, optionGroups: { orderBy: { position: "asc" } } },
+  });
 }
 
 export async function upsertProduct(input: ProductInput): Promise<Result> {
   const parsed = productSchema.safeParse(input);
   if (!parsed.success) return { ok: false, message: firstIssue(parsed.error) };
-  const { id, supplementIds, ...data } = parsed.data;
+  const { id, supplementIds, optionGroups, ...data } = parsed.data;
 
   return prisma.$transaction(async (tx) => {
     const product = id
@@ -54,6 +62,13 @@ export async function upsertProduct(input: ProductInput): Promise<Result> {
       data: supplementIds.map((supplementId) => ({ productId: product.id, supplementId })),
       skipDuplicates: true,
     });
+    const kept = optionGroups.flatMap((g) => (g.id ? [g.id] : []));
+    await tx.productOptionGroup.deleteMany({ where: { productId: product.id, id: { notIn: kept } } });
+    for (const [position, slot] of optionGroups.entries()) {
+      const values = { groupId: slot.groupId, label: slot.label || null, position };
+      if (slot.id) await tx.productOptionGroup.update({ where: { id: slot.id, productId: product.id }, data: values });
+      else await tx.productOptionGroup.create({ data: { ...values, productId: product.id } });
+    }
     return { ok: true as const, id: product.id };
   });
 }
@@ -74,6 +89,7 @@ const categorySchema = z.object({
   name: z.string().trim().min(1, "Le nom est obligatoire.").max(40),
   description: z.string().trim().max(200).optional().transform((v) => v || null),
   isPizza: z.boolean(),
+  isMenu: z.boolean().default(false),
 });
 
 export async function listCategoriesAdmin() {
@@ -119,6 +135,7 @@ const supplementSchema = z.object({
   id: z.string().optional(),
   name: z.string().trim().min(1, "Le nom est obligatoire.").max(40),
   priceCents: z.number().int().min(0).max(10_000),
+  family: z.enum(["CHEESE", "MEAT", "FISH", "VEGETABLE", "OTHER"]).default("OTHER"),
   isActive: z.boolean(),
 });
 

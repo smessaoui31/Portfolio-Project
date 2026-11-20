@@ -143,6 +143,7 @@ const loyaltySchema = z.object({
   featuredProductId: z.string().nullable(),
   pickupLeadMinutes: z.number().int().min(5).max(120),
   deliveryLeadMinutes: z.number().int().min(10).max(180),
+  deliveryCutoffMinutes: z.number().int().min(0).max(120).optional(),
 });
 
 export async function saveLoyaltySettings(input: z.input<typeof loyaltySchema>): Promise<Done> {

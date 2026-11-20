@@ -4,15 +4,34 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { deleteSupplementAction, saveSupplementAction } from "@/app/actions/admin-catalog";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Field";
+import { Input, inputClasses } from "@/components/ui/Field";
+import { SUPPLEMENT_FAMILIES, type SupplementFamily } from "@/domain/types";
 import { parseEuros } from "@/lib/money";
 
 interface Supplement {
   id: string;
   name: string;
   priceCents: number;
+  family: SupplementFamily;
   isActive: boolean;
   products: number;
+}
+
+function FamilySelect({ value, onChange, label }: { value: SupplementFamily; onChange: (family: SupplementFamily) => void; label: string }) {
+  return (
+    <select
+      aria-label={label}
+      value={value}
+      onChange={(e) => onChange(e.target.value as SupplementFamily)}
+      className={`${inputClasses} !w-32`}
+    >
+      {SUPPLEMENT_FAMILIES.map((f) => (
+        <option key={f.value} value={f.value}>
+          {f.label}
+        </option>
+      ))}
+    </select>
+  );
 }
 
 const euros = (cents: number) => (cents / 100).toFixed(2).replace(".", ",");
@@ -20,8 +39,15 @@ const euros = (cents: number) => (cents / 100).toFixed(2).replace(".", ",");
 function Row({ supplement, onDone }: { supplement: Supplement; onDone: (message: string | null) => void }) {
   const [price, setPrice] = useState(euros(supplement.priceCents));
 
-  async function save(changes: Partial<{ priceCents: number; isActive: boolean }>) {
-    const result = await saveSupplementAction({ id: supplement.id, name: supplement.name, priceCents: supplement.priceCents, isActive: supplement.isActive, ...changes });
+  async function save(changes: Partial<{ priceCents: number; family: SupplementFamily; isActive: boolean }>) {
+    const result = await saveSupplementAction({
+      id: supplement.id,
+      name: supplement.name,
+      priceCents: supplement.priceCents,
+      family: supplement.family,
+      isActive: supplement.isActive,
+      ...changes,
+    });
     onDone(result.ok ? null : result.message);
   }
 
@@ -45,6 +71,7 @@ function Row({ supplement, onDone }: { supplement: Supplement; onDone: (message:
         }}
         className="!w-24 text-right"
       />
+      <FamilySelect label={`Famille de ${supplement.name}`} value={supplement.family} onChange={(family) => save({ family })} />
       <label className="flex items-center gap-2 text-sm text-muted-2">
         <input type="checkbox" className="accent-[var(--ember)]" checked={supplement.isActive} onChange={(e) => save({ isActive: e.target.checked })} />
         Actif
@@ -69,6 +96,7 @@ export function SupplementsManager({ supplements }: { supplements: Supplement[] 
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
+  const [family, setFamily] = useState<SupplementFamily>("OTHER");
 
   const done = (message: string | null) => {
     setError(message);
@@ -79,7 +107,7 @@ export function SupplementsManager({ supplements }: { supplements: Supplement[] 
     e.preventDefault();
     const cents = parseEuros(price);
     if (cents === null) return setError("Prix invalide (exemple : 1,50).");
-    const result = await saveSupplementAction({ name, priceCents: cents, isActive: true });
+    const result = await saveSupplementAction({ name, priceCents: cents, family, isActive: true });
     if (result.ok) {
       setName("");
       setPrice("");
@@ -98,6 +126,7 @@ export function SupplementsManager({ supplements }: { supplements: Supplement[] 
       <form onSubmit={add} className="flex flex-wrap items-center gap-3 rounded-2xl border border-line p-4">
         <Input aria-label="Nouveau supplément" placeholder="Nouveau supplément" value={name} onChange={(e) => setName(e.target.value)} className="!w-auto flex-1" required />
         <Input aria-label="Prix" placeholder="Prix" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} className="!w-24" required />
+        <FamilySelect label="Famille" value={family} onChange={setFamily} />
         <Button type="submit">Ajouter</Button>
       </form>
       <p className="text-sm text-muted">Pour proposer un supplément sur une pizza, coche-le dans la fiche du produit.</p>

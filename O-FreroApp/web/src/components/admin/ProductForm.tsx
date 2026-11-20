@@ -20,17 +20,21 @@ export interface ProductFormValue {
   stock: string;
   isEditionOnly: boolean;
   supplementIds: string[];
+  /** Ordered slots: an attached group and an optional label ("Pizza 1"). */
+  optionGroups: { id?: string; groupId: string; label: string }[];
 }
 
 export function ProductForm({
   initial,
   categories,
   supplements,
+  groups,
   images,
 }: {
   initial: ProductFormValue;
   categories: { id: string; name: string }[];
   supplements: { id: string; name: string; priceCents: number }[];
+  groups: { id: string; name: string }[];
   images: string[];
 }) {
   const router = useRouter();
@@ -58,12 +62,22 @@ export function ProductForm({
       stockQuantity: stock,
       isEditionOnly: v.isEditionOnly,
       supplementIds: v.supplementIds,
+      optionGroups: v.optionGroups.map((g) => ({ id: g.id, groupId: g.groupId, label: g.label || undefined })),
     });
     setBusy(false);
     if (!result.ok) return setError(result.message);
     router.push("/admin/produits");
     router.refresh();
   }
+
+  const setSlots = (slots: ProductFormValue["optionGroups"]) => set("optionGroups", slots);
+  const moveSlot = (index: number, by: number) => {
+    const target = index + by;
+    if (target < 0 || target >= v.optionGroups.length) return;
+    const next = [...v.optionGroups];
+    [next[index], next[target]] = [next[target], next[index]];
+    setSlots(next);
+  };
 
   async function remove() {
     if (!v.id || !window.confirm(`Supprimer ${v.name} ?`)) return;
@@ -146,6 +160,53 @@ export function ProductForm({
             </div>
           </fieldset>
         ) : null}
+        <fieldset className="space-y-2 rounded-2xl border border-line p-4">
+          <legend className="px-1 text-xs uppercase tracking-[0.12em] text-muted">Choix proposés</legend>
+          {v.optionGroups.length === 0 ? <p className="text-sm text-muted">Aucun choix (taille, sauce, parfum…).</p> : null}
+          {v.optionGroups.map((slot, index) => (
+            <div key={slot.id ?? `new-${index}`} className="flex flex-wrap items-center gap-2">
+              <select
+                aria-label={`Groupe du choix ${index + 1}`}
+                className={`${inputClasses} !w-auto flex-1`}
+                value={slot.groupId}
+                onChange={(e) => setSlots(v.optionGroups.map((s, i) => (i === index ? { ...s, groupId: e.target.value } : s)))}
+              >
+                {groups.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+              <Input
+                aria-label={`Libellé du choix ${index + 1}`}
+                placeholder="Libellé (facultatif)"
+                value={slot.label}
+                onChange={(e) => setSlots(v.optionGroups.map((s, i) => (i === index ? { ...s, label: e.target.value } : s)))}
+                className="!w-40"
+              />
+              <button type="button" aria-label="Monter" className="px-1 text-muted-2 hover:text-fg" onClick={() => moveSlot(index, -1)}>
+                ↑
+              </button>
+              <button type="button" aria-label="Descendre" className="px-1 text-muted-2 hover:text-fg" onClick={() => moveSlot(index, 1)}>
+                ↓
+              </button>
+              <button type="button" className="text-xs text-muted-2 hover:text-danger" onClick={() => setSlots(v.optionGroups.filter((_, i) => i !== index))}>
+                Retirer
+              </button>
+            </div>
+          ))}
+          {groups.length > 0 ? (
+            <button
+              type="button"
+              className="text-sm text-muted-2 underline-offset-4 hover:text-fg hover:underline"
+              onClick={() => setSlots([...v.optionGroups, { groupId: groups[0].id, label: "" }])}
+            >
+              + Ajouter un choix
+            </button>
+          ) : (
+            <p className="text-sm text-muted">Crée d&apos;abord un groupe dans « Choix ».</p>
+          )}
+        </fieldset>
         {error ? <p role="alert" className="text-sm text-danger">{error}</p> : null}
         <div className="flex flex-wrap gap-2">
           <Button type="submit" size="lg" disabled={busy}>

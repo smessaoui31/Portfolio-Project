@@ -17,7 +17,7 @@ export default async function AdminCategoriesPage() {
       <p className="mb-6 max-w-2xl text-sm text-muted-2">
         L&apos;ordre ici est celui de la carte. Les catégories « Pizzas » rapportent des tampons et peuvent porter une édition.
       </p>
-      <CategoriesManager categories={categories.map((c) => ({ id: c.id, name: c.name, isPizza: c.isPizza, products: c._count.products }))} />
+      <CategoriesManager categories={categories.map((c) => ({ id: c.id, name: c.name, isPizza: c.isPizza, isMenu: c.isMenu, products: c._count.products }))} />
     </>
   );
 }

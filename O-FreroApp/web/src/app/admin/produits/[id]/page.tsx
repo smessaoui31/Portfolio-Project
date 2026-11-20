@@ -5,6 +5,7 @@ import { connection } from "next/server";
 import { ProductForm, type ProductFormValue } from "@/components/admin/ProductForm";
 import { getProductAdmin, listCategoriesAdmin, listSupplementsAdmin } from "@/server/admin/catalog";
 import { listPublicImages } from "@/server/admin/images";
+import { listOptionGroupsAdmin } from "@/server/admin/options";
 import { requireAdmin } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Produit" };
@@ -15,7 +16,12 @@ export default async function AdminProductPage({ params }: PageProps<"/admin/pro
   await requireAdmin();
   await connection();
   const { id } = await params;
-  const [categories, supplements, images] = await Promise.all([listCategoriesAdmin(), listSupplementsAdmin(), listPublicImages()]);
+  const [categories, supplements, groups, images] = await Promise.all([
+    listCategoriesAdmin(),
+    listSupplementsAdmin(),
+    listOptionGroupsAdmin(),
+    listPublicImages(),
+  ]);
 
   let initial: ProductFormValue = {
     name: "",
@@ -28,6 +34,7 @@ export default async function AdminProductPage({ params }: PageProps<"/admin/pro
     stock: "",
     isEditionOnly: false,
     supplementIds: [],
+    optionGroups: [],
   };
   if (id !== "nouveau") {
     const product = await getProductAdmin(id);
@@ -44,6 +51,7 @@ export default async function AdminProductPage({ params }: PageProps<"/admin/pro
       stock: product.stockQuantity === null ? "" : String(product.stockQuantity),
       isEditionOnly: product.isEditionOnly,
       supplementIds: product.supplements.map((s) => s.supplementId),
+      optionGroups: product.optionGroups.map((s) => ({ id: s.id, groupId: s.groupId, label: s.label ?? "" })),
     };
   }
 
@@ -57,6 +65,7 @@ export default async function AdminProductPage({ params }: PageProps<"/admin/pro
         initial={initial}
         categories={categories.map((c) => ({ id: c.id, name: c.name }))}
         supplements={supplements.map((s) => ({ id: s.id, name: s.name, priceCents: s.priceCents }))}
+        groups={groups.map((g) => ({ id: g.id, name: g.name }))}
         images={images}
       />
     </>

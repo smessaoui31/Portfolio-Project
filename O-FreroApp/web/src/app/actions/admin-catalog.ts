@@ -1,5 +1,6 @@
 "use server";
 
+import type { SupplementFamily } from "@/domain/types";
 import { requireAdmin } from "@/lib/session";
 import {
   deleteCategory,
@@ -22,7 +23,13 @@ export async function deleteProductAction(id: string) {
   return deleteProduct(id);
 }
 
-export async function saveCategoryAction(input: { id?: string; name: string; description?: string; isPizza: boolean }) {
+export async function saveCategoryAction(input: {
+  id?: string;
+  name: string;
+  description?: string;
+  isPizza: boolean;
+  isMenu: boolean;
+}) {
   await requireAdmin();
   return upsertCategory(input);
 }
@@ -37,7 +44,13 @@ export async function deleteCategoryAction(id: string) {
   return deleteCategory(id);
 }
 
-export async function saveSupplementAction(input: { id?: string; name: string; priceCents: number; isActive: boolean }) {
+export async function saveSupplementAction(input: {
+  id?: string;
+  name: string;
+  priceCents: number;
+  family: SupplementFamily;
+  isActive: boolean;
+}) {
   await requireAdmin();
   return upsertSupplement(input);
 }

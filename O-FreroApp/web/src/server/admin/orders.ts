@@ -56,7 +56,7 @@ export async function getAdminOrder(id: string) {
   return prisma.order.findUnique({
     where: { id },
     include: {
-      items: { include: { supplements: true } },
+      items: { include: { supplements: true, choices: { orderBy: { id: "asc" } } } },
       logs: { orderBy: { createdAt: "asc" } },
       user: { select: { id: true, name: true, email: true } },
       edition: { select: { number: true } },

@@ -10,7 +10,13 @@ export function LoyaltySettingsForm({
   initial,
   products,
 }: {
-  initial: { stampsForReward: number; featuredProductId: string | null; pickupLeadMinutes: number; deliveryLeadMinutes: number };
+  initial: {
+    stampsForReward: number;
+    featuredProductId: string | null;
+    pickupLeadMinutes: number;
+    deliveryLeadMinutes: number;
+    deliveryCutoffMinutes: number;
+  };
   products: { id: string; name: string }[];
 }) {
   const router = useRouter();
@@ -19,6 +25,7 @@ export function LoyaltySettingsForm({
     featured: initial.featuredProductId ?? "",
     pickup: String(initial.pickupLeadMinutes),
     delivery: String(initial.deliveryLeadMinutes),
+    cutoff: String(initial.deliveryCutoffMinutes),
   });
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -29,6 +36,7 @@ export function LoyaltySettingsForm({
       featuredProductId: v.featured || null,
       pickupLeadMinutes: Number(v.pickup),
       deliveryLeadMinutes: Number(v.delivery),
+      deliveryCutoffMinutes: Number(v.cutoff),
     });
     setMessage(result.ok ? { ok: true, text: "Réglages enregistrés." } : { ok: false, text: result.message });
     router.refresh();
@@ -57,6 +65,9 @@ export function LoyaltySettingsForm({
         </Field>
         <Field label="Délai livraison (min)">
           {(p) => <Input {...p} type="number" min={10} max={180} value={v.delivery} onChange={(e) => setV({ ...v, delivery: e.target.value })} required />}
+        </Field>
+        <Field label="Fin des livraisons avant la fermeture (min)" hint="30 : dernière livraison à 21 h 30 pour 22 h.">
+          {(p) => <Input {...p} type="number" min={0} max={120} value={v.cutoff} onChange={(e) => setV({ ...v, cutoff: e.target.value })} required />}
         </Field>
       </div>
       {message ? <p className={`text-sm ${message.ok ? "text-ok" : "text-danger"}`}>{message.text}</p> : null}

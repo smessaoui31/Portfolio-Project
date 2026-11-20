@@ -10,6 +10,7 @@ interface Category {
   id: string;
   name: string;
   isPizza: boolean;
+  isMenu: boolean;
   products: number;
 }
 
@@ -18,6 +19,7 @@ export function CategoriesManager({ categories }: { categories: Category[] }) {
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [isPizza, setIsPizza] = useState(false);
+  const [isMenu, setIsMenu] = useState(false);
 
   async function run(action: () => Promise<{ ok: boolean; message?: string } | void>) {
     const result = await action();
@@ -35,9 +37,10 @@ export function CategoriesManager({ categories }: { categories: Category[] }) {
 
   async function add(e: FormEvent) {
     e.preventDefault();
-    await run(() => saveCategoryAction({ name, isPizza }));
+    await run(() => saveCategoryAction({ name, isPizza, isMenu }));
     setName("");
     setIsPizza(false);
+    setIsMenu(false);
   }
 
   return (
@@ -70,9 +73,18 @@ export function CategoriesManager({ categories }: { categories: Category[] }) {
                 type="checkbox"
                 className="accent-[var(--ember)]"
                 checked={c.isPizza}
-                onChange={(e) => run(() => saveCategoryAction({ id: c.id, name: c.name, isPizza: e.target.checked }))}
+                onChange={(e) => run(() => saveCategoryAction({ id: c.id, name: c.name, isPizza: e.target.checked, isMenu: c.isMenu }))}
               />
               Pizzas (tampons, offerte, éditions)
+            </label>
+            <label className="flex items-center gap-2 text-sm text-muted-2">
+              <input
+                type="checkbox"
+                className="accent-[var(--ember)]"
+                checked={c.isMenu}
+                onChange={(e) => run(() => saveCategoryAction({ id: c.id, name: c.name, isPizza: c.isPizza, isMenu: e.target.checked }))}
+              />
+              Menus (tampon)
             </label>
             <button
               type="button"
@@ -90,6 +102,10 @@ export function CategoriesManager({ categories }: { categories: Category[] }) {
         <label className="flex items-center gap-2 text-sm text-muted-2">
           <input type="checkbox" className="accent-[var(--ember)]" checked={isPizza} onChange={(e) => setIsPizza(e.target.checked)} />
           Pizzas
+        </label>
+        <label className="flex items-center gap-2 text-sm text-muted-2">
+          <input type="checkbox" className="accent-[var(--ember)]" checked={isMenu} onChange={(e) => setIsMenu(e.target.checked)} />
+          Menus
         </label>
         <Button type="submit">Ajouter</Button>
       </form>

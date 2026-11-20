@@ -15,7 +15,14 @@ export default async function AdminSupplementsPage() {
     <>
       <PageTitle title="Suppléments" />
       <SupplementsManager
-        supplements={supplements.map((s) => ({ id: s.id, name: s.name, priceCents: s.priceCents, isActive: s.isActive, products: s._count.products }))}
+        supplements={supplements.map((s) => ({
+          id: s.id,
+          name: s.name,
+          priceCents: s.priceCents,
+          family: s.family,
+          isActive: s.isActive,
+          products: s._count.products,
+        }))}
       />
     </>
   );
