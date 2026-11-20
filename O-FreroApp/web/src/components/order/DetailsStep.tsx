@@ -98,6 +98,7 @@ export function DetailsStep({
 
       <StampHint
         mode={mode}
+        usingReward={rewardLineIndex !== undefined}
         loyalty={
           account
             ? { signedIn: true, balance: account.balance, stampsForReward: account.stampsForReward }

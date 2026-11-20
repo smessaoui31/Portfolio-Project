@@ -54,7 +54,8 @@ test("an account with 10 stamps gets a free pizza", async ({ page }) => {
   await expect(page.getByLabel("E-mail")).toHaveValue(EMAIL);
   await page.getByLabel("Téléphone").fill("0612345678");
   await page.getByLabel("Utiliser ma pizza offerte").check();
-  await expect(page.getByText("Pizza offerte")).toBeVisible();
+  await expect(page.getByText("Pizza offerte", { exact: true })).toBeVisible();
+  await expect(page.getByText("Cette commande utilise ta pizza offerte : elle ne rapporte pas de tampon.")).toBeVisible();
   await page.getByRole("radio", { name: /Payer au retrait/ }).click();
   await expect(page.getByRole("button", { name: /Valider la commande/ })).toContainText("0,00");
   await page.getByRole("button", { name: /Valider la commande/ }).click();

@@ -33,3 +33,9 @@ test("the last stamp before the reward", () => {
 test("the reward is ready", () => {
   expect(stampHint({ signedIn: true, mode: null, balance: 10, stampsForReward: 10 })).toBe("Ta pizza offerte t'attend.");
 });
+
+test("an order that uses the free pizza says it earns no stamp", () => {
+  expect(stampHint({ signedIn: true, mode: "PICKUP", balance: 10, stampsForReward: 10, usingReward: true })).toBe(
+    "Cette commande utilise ta pizza offerte : elle ne rapporte pas de tampon.",
+  );
+});
