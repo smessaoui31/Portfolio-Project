@@ -12,6 +12,7 @@ const LINKS = [
   { href: "/admin/supplements", label: "Suppléments" },
   { href: "/admin/choix", label: "Choix" },
   { href: "/admin/editions", label: "Éditions" },
+  { href: "/admin/votes", label: "Votes" },
   { href: "/admin/livraison", label: "Livraison" },
   { href: "/admin/horaires", label: "Horaires" },
   { href: "/admin/fidelite", label: "Fidélité" },

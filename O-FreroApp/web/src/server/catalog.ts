@@ -143,6 +143,8 @@ export interface HomeData {
   featured: MenuProduct | null;
   past: { id: string; number: number; name: string; imageUrl: string | null }[];
   preview: MenuProduct[];
+  /** The next edition, without its name: only its number and when it starts. */
+  next: { number: number; startsAt: string } | null;
 }
 
 export async function getHomeData(now: Date): Promise<HomeData> {
@@ -156,6 +158,8 @@ export async function getHomeData(now: Date): Promise<HomeData> {
     }),
   ]);
 
+  const nextEdition =
+    editions.filter((e) => e.startsAt > now).sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime())[0] ?? null;
   const current = currentEdition(editions, now);
   const featuredRow =
     (settings.featuredProductId && pizzas.find((p) => p.id === settings.featuredProductId)) || pizzas[0] || null;
@@ -179,5 +183,6 @@ export async function getHomeData(now: Date): Promise<HomeData> {
       imageUrl: e.product.imageUrl,
     })),
     preview: pizzas.slice(0, 3).map(toMenuProduct),
+    next: nextEdition ? { number: nextEdition.number, startsAt: nextEdition.startsAt.toISOString() } : null,
   };
 }

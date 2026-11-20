@@ -11,6 +11,10 @@ import { now } from "@/lib/clock";
 import { getSession } from "@/lib/session";
 import { getHomeData } from "@/server/catalog";
 import { getLoyaltySummary } from "@/server/loyalty";
+import { CollectionProgress } from "@/components/home/CollectionProgress";
+import { NextEditionTeaser } from "@/components/home/NextEditionTeaser";
+import { PollCard } from "@/components/home/PollCard";
+import { getPollView } from "@/server/polls";
 
 export const metadata: Metadata = {
   title: "Les éditions",
@@ -19,8 +23,11 @@ export const metadata: Metadata = {
 
 export default async function EditionsPage() {
   await connection();
-  const [home, session] = await Promise.all([getHomeData(now()), getSession()]);
+  const at = now();
+  const [home, session] = await Promise.all([getHomeData(at), getSession()]);
   const tasted = session ? (await getLoyaltySummary(session.user.id)).tastedEditionIds : [];
+  const poll = await getPollView(at, session?.user.id ?? null);
+  const started = home.past.length + (home.edition ? 1 : 0);
   const current = home.edition;
 
   return (
@@ -54,8 +61,20 @@ export default async function EditionsPage() {
           </section>
         ) : null}
 
+        {poll || home.next ? (
+          <div className="mt-8 grid gap-6">
+            {poll ? <PollCard initial={poll} signedIn={Boolean(session)} /> : null}
+            {home.next ? <NextEditionTeaser number={home.next.number} startsAt={home.next.startsAt} serverNow={at.toISOString()} /> : null}
+          </div>
+        ) : null}
+
         <section aria-labelledby="archives" className="pt-16">
           <h2 id="archives" className="font-display text-4xl md:text-5xl">Les éditions passées</h2>
+          {session ? (
+            <div className="mt-4">
+              <CollectionProgress tastedIds={tasted} total={started} />
+            </div>
+          ) : null}
           {home.past.length > 0 ? (
             <div className="mt-8">
               <EditionsGrid editions={home.past} tastedIds={tasted} />

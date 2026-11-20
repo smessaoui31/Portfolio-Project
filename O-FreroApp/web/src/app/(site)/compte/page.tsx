@@ -19,6 +19,7 @@ import { getHomeData } from "@/server/catalog";
 import { getLoyaltySummary } from "@/server/loyalty";
 import { ReferralCard } from "@/components/account/ReferralCard";
 import { getReferralSummary } from "@/server/referrals";
+import { CollectionProgress } from "@/components/home/CollectionProgress";
 
 export const metadata: Metadata = { title: "Mon compte", robots: { index: false } };
 
@@ -93,10 +94,9 @@ export default async function ComptePage({ searchParams }: PageProps<"/compte">)
           ) : (
             <p className="text-muted-2">Les éditions apparaîtront ici.</p>
           )}
-          <p className="mt-4 text-sm text-muted">
-            {loyalty.tastedEditionIds.length} édition{loyalty.tastedEditionIds.length > 1 ? "s" : ""} goûtée
-            {loyalty.tastedEditionIds.length > 1 ? "s" : ""}.
-          </p>
+          <div className="mt-4">
+            <CollectionProgress tastedIds={loyalty.tastedEditionIds} total={editions.length} />
+          </div>
         </section>
       </div>
 

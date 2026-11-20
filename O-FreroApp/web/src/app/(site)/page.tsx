@@ -16,6 +16,9 @@ import { getHomeData, getMenu } from "@/server/catalog";
 import { getLoyaltySummary } from "@/server/loyalty";
 import { getLastAccountOrderSummary } from "@/server/reorder";
 import { getServiceWindows, getSettings } from "@/server/settings";
+import { NextEditionTeaser } from "@/components/home/NextEditionTeaser";
+import { PollCard } from "@/components/home/PollCard";
+import { getPollView } from "@/server/polls";
 
 export default async function HomePage() {
   await connection();
@@ -27,6 +30,7 @@ export default async function HomePage() {
     getSession(),
     getSettings(),
   ]);
+  const poll = await getPollView(at, session?.user.id ?? null);
   const [loyalty, lastAccountOrder] = session
     ? await Promise.all([getLoyaltySummary(session.user.id), getLastAccountOrderSummary(session.user.id)])
     : [null, null];
@@ -60,6 +64,13 @@ export default async function HomePage() {
           <blockquote className="mt-4 max-w-3xl text-2xl leading-snug text-fg md:text-4xl">
             « {home.edition.brothersNote} »
           </blockquote>
+        </section>
+      ) : null}
+
+      {poll || home.next ? (
+        <section aria-label="La prochaine édition" className="mx-auto grid max-w-6xl gap-6 px-4 pb-14 md:px-6 md:pb-20">
+          {poll ? <PollCard initial={poll} signedIn={Boolean(session)} /> : null}
+          {home.next ? <NextEditionTeaser number={home.next.number} startsAt={home.next.startsAt} serverNow={at.toISOString()} /> : null}
         </section>
       ) : null}
 
