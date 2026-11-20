@@ -32,6 +32,7 @@ test("orderConfirmationEmail mentions the slot, tracking link and payment at pic
     totalLabel: "26,40 €",
     trackingUrl: "http://localhost:3000/suivi/abc",
     payAtPickup: true,
+    items: ["2 × Margarita"],
   });
   expect(mail.subject).toBe("Commande n°0427 confirmée");
   expect(mail.text).toContain("jeudi 19 novembre à 20:00");
@@ -50,6 +51,7 @@ test("templates escape HTML in user-provided values", async () => {
     totalLabel: "x",
     trackingUrl: "http://x",
     payAtPickup: false,
+    items: [],
   });
   expect(mail.html).not.toContain("<b>Karim</b>");
   expect(mail.html).toContain("&lt;b&gt;Karim&lt;/b&gt;");
