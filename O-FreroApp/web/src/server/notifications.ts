@@ -1,3 +1,4 @@
+import { choiceText } from "@/domain/options";
 import { orderConfirmationEmail } from "@/emails/templates";
 import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
@@ -17,7 +18,10 @@ export async function notifyOrderReceived(orderId: string): Promise<void> {
   });
   if (count === 0) return;
 
-  const order = await prisma.order.findUniqueOrThrow({ where: { id: orderId } });
+  const order = await prisma.order.findUniqueOrThrow({
+    where: { id: orderId },
+    include: { items: { include: { supplements: true, choices: { orderBy: { id: "asc" } } } } },
+  });
   const slot = `${formatParisDay(order.slotAt)} à ${formatParisTime(order.slotAt)}`;
   await sendEmail({
     to: order.customerEmail,
@@ -29,6 +33,10 @@ export async function notifyOrderReceived(orderId: string): Promise<void> {
       totalLabel: formatEuros(order.totalCents),
       trackingUrl: trackingUrl(order.trackingToken),
       payAtPickup: order.paymentMethod === "AT_PICKUP",
+      items: order.items.map((item) => {
+        const details = [...item.choices.map(choiceText), ...item.supplements.map((s) => `+ ${s.name}`)];
+        return `${item.quantity} × ${item.name}${details.length > 0 ? ` (${details.join(", ")})` : ""}`;
+      }),
     }),
   });
 }

@@ -55,6 +55,8 @@ export function orderConfirmationEmail(order: {
   totalLabel: string;
   trackingUrl: string;
   payAtPickup: boolean;
+  /** One line per item, e.g. "2 × Reine (Taille : Large 33 cm, + Chèvre)". */
+  items: string[];
 }): Mail {
   const number = String(order.number).padStart(4, "0");
   const payment = order.payAtPickup ? "à régler sur place" : "payée en ligne";
@@ -64,6 +66,7 @@ export function orderConfirmationEmail(order: {
       `Merci ${order.firstName} !`,
       `Ta commande n°${number} est confirmée.`,
       `${order.modeLabel} : ${order.slotLabel}`,
+      order.items.join("\n"),
       `Total : ${order.totalLabel} (${payment})`,
       `Suivre ta commande : ${order.trackingUrl}`,
       footerText,
@@ -71,6 +74,7 @@ export function orderConfirmationEmail(order: {
     html: layout(
       `Merci ${order.firstName} !`,
       `<p>Ta commande <strong style="color:#f3e9d8">n°${number}</strong> est confirmée.</p>
+<p>${order.items.map(escape).join("<br>")}</p>
 <p><strong style="color:#f3e9d8">${escape(order.modeLabel)}</strong> : ${escape(order.slotLabel)}<br>Total : ${escape(order.totalLabel)} (${payment})</p>
 ${button(order.trackingUrl, "Suivre ma commande")}`,
     ),
