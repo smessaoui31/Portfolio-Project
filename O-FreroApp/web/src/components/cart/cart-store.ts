@@ -11,6 +11,7 @@ export interface CartItem extends CartLineInput {
   name: string;
   imageUrl: string | null;
   supplementNames: string[];
+  choiceNames: string[];
 }
 
 export interface CartQuote {
@@ -60,7 +61,8 @@ export const useCart = create<CartState>()(
       setQuote: (quote, error = null) => set({ quote, quoteError: error }),
     }),
     {
-      name: "ofrero-cart-v1",
+      // v2: lines carry choices; carts saved before are dropped.
+      name: "ofrero-cart-v2",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ lines: state.lines }),
     },

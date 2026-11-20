@@ -151,7 +151,7 @@ export function TrackingView({
               </span>
               {item.isReward ? <span className="ml-2 text-xs text-ember">dont 1 offerte</span> : null}
               <span className="block text-xs text-muted">
-                {[COOKING_LABELS[item.cooking], ...item.supplements.map((s) => `+ ${s}`)].join(" · ")}
+                {[COOKING_LABELS[item.cooking], ...item.choices, ...item.supplements.map((s) => `+ ${s}`)].join(" · ")}
               </span>
             </li>
           ))}

@@ -24,6 +24,14 @@ export async function Footer() {
           <a href={SITE.phoneHref} className="mt-2 inline-block text-sm font-semibold text-fg underline-offset-4 hover:underline">
             {SITE.phoneDisplay}
           </a>
+          <br />
+          <a href={SITE.phone2Href} className="inline-block text-sm text-fg underline-offset-4 hover:underline">
+            {SITE.phone2Display}
+          </a>
+          <br />
+          <a href={`mailto:${SITE.email}`} className="inline-block text-sm text-muted-2 underline-offset-4 hover:underline">
+            {SITE.email}
+          </a>
         </div>
 
         <div>

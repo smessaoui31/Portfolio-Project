@@ -85,7 +85,7 @@ export function DetailsStep({
                   {line.quantity} × {line.name}
                 </span>
                 <span className="block text-xs text-muted">
-                  {[COOKING_LABELS[line.cooking], ...line.supplementNames.map((n) => `+ ${n}`)].join(" · ")}
+                  {[COOKING_LABELS[line.cooking], ...(line.choiceNames ?? []), ...line.supplementNames.map((n) => `+ ${n}`)].join(" · ")}
                 </span>
               </span>
               <span className="font-semibold tabular-nums">{priced?.lines[i] ? formatEuros(priced.lines[i].lineTotalCents) : "…"}</span>
@@ -95,7 +95,7 @@ export function DetailsStep({
         {quote && !quote.ok ? <p className="mt-3 text-sm text-danger">{quote.message}</p> : null}
       </section>
 
-      {rewardAvailable && pizzaLines.length > 0 ? (
+      {mode === "PICKUP" && rewardAvailable && pizzaLines.length > 0 ? (
         <section className="rounded-2xl bg-fg p-4 text-ember-ink">
           <label className="flex items-center gap-3 font-semibold">
             <input

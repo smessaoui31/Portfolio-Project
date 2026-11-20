@@ -14,7 +14,9 @@ export default function MentionsLegalesPage() {
           <br />
           {SITE.address}, {SITE.postalCity}
           <br />
-          Téléphone : {SITE.phoneDisplay}
+          Téléphone : {SITE.phoneDisplay} / {SITE.phone2Display}
+          <br />
+          E-mail : {SITE.email}
           <br />
           SIRET : <ToComplete>numéro SIRET</ToComplete>
           <br />

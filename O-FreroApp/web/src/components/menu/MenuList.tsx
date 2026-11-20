@@ -6,9 +6,12 @@ import type { MenuCategory, MenuProduct } from "@/server/catalog";
 import { ProductRow } from "./ProductRow";
 import { ProductSheet } from "./ProductSheet";
 
+const BOTTLE_OFFER = "3 pizzas Large à emporter : une bouteille 1,5 L offerte.";
+
 export function MenuList({ categories }: { categories: MenuCategory[] }) {
   const [selected, setSelected] = useState<MenuProduct | null>(null);
   const [open, setOpen] = useState(false);
+  const firstPizzaCategoryId = categories.find((c) => c.isPizza)?.id;
 
   function select(product: MenuProduct) {
     setSelected(product);
@@ -34,6 +37,9 @@ export function MenuList({ categories }: { categories: MenuCategory[] }) {
 
       {categories.map((c) => (
         <section key={c.id} id={anchor(c.name)} className="scroll-mt-32 pt-10">
+          {c.id === firstPizzaCategoryId ? (
+            <p className="mb-4 rounded-2xl border border-ember/40 px-4 py-3 text-sm text-fg">{BOTTLE_OFFER}</p>
+          ) : null}
           <h2 className="font-display text-4xl md:text-5xl">{c.name}</h2>
           <div className="mt-4 grid gap-x-10 md:grid-cols-2">
             {c.products.map((p) => (

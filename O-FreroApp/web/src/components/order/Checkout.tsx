@@ -64,6 +64,8 @@ export function Checkout({
 
   function changeMode(next: FulfillmentMode) {
     setMode(next);
+    // The free pizza is for pickup only.
+    if (next === "DELIVERY") setRewardLineIndex(undefined);
     if (next === "DELIVERY") setPayment("ONLINE");
     else if (!onlinePayment) setPayment("AT_PICKUP");
   }
@@ -80,7 +82,13 @@ export function Checkout({
       paymentMethod: payment,
       customer,
       address: mode === "DELIVERY" ? { ...address, line2: address.line2 || undefined } : undefined,
-      lines: lines.map(({ productId, quantity, cooking, supplementIds }) => ({ productId, quantity, cooking, supplementIds })),
+      lines: lines.map(({ productId, quantity, cooking, supplementIds, choices }) => ({
+        productId,
+        quantity,
+        cooking,
+        supplementIds,
+        choices: choices ?? [],
+      })),
       rewardLineIndex,
       });
     } catch {

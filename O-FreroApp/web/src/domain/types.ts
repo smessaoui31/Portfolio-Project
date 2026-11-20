@@ -35,3 +35,14 @@ export const COOKING_LABELS: Record<Cooking, string> = {
   NORMAL: "Normale",
   LIGHTLY_COOKED: "Pas trop cuite",
 };
+
+export type SupplementFamily = "CHEESE" | "MEAT" | "FISH" | "VEGETABLE" | "OTHER";
+
+/** Display order of supplement families on the product sheet. */
+export const SUPPLEMENT_FAMILIES: { value: SupplementFamily; label: string }[] = [
+  { value: "CHEESE", label: "Fromages" },
+  { value: "MEAT", label: "Viandes" },
+  { value: "FISH", label: "Poissons" },
+  { value: "VEGETABLE", label: "Légumes" },
+  { value: "OTHER", label: "Autres" },
+];

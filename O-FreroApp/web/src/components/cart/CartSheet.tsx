@@ -62,7 +62,11 @@ export function CartSheet() {
                   </p>
                 </div>
                 <p className="mt-0.5 text-xs text-muted">
-                  {[line.cooking !== "NORMAL" ? COOKING_LABELS[line.cooking] : null, ...line.supplementNames.map((n) => `+ ${n}`)]
+                  {[
+                    line.cooking !== "NORMAL" ? COOKING_LABELS[line.cooking] : null,
+                    ...(line.choiceNames ?? []),
+                    ...line.supplementNames.map((n) => `+ ${n}`),
+                  ]
                     .filter(Boolean)
                     .join(" · ")}
                 </p>
