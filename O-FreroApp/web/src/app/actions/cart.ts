@@ -16,12 +16,13 @@ const linesSchema = z
       quantity: z.number(),
       cooking: z.enum(["NORMAL", "WELL_DONE", "LIGHTLY_COOKED"]),
       supplementIds: z.array(z.string()).max(10),
+      choices: z.array(z.object({ slotId: z.string(), optionId: z.string() })).max(12).default([]),
     }),
   )
   .max(30);
 
 const clean = (lines: CartLineInput[]): CartLineInput[] =>
-  lines.map(({ productId, quantity, cooking, supplementIds }) => ({ productId, quantity, cooking, supplementIds }));
+  lines.map(({ productId, quantity, cooking, supplementIds, choices }) => ({ productId, quantity, cooking, supplementIds, choices: choices ?? [] }));
 
 export type QuoteResult = { ok: true; quote: PricedCart } | { ok: false; message: string };
 

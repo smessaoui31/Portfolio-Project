@@ -186,6 +186,9 @@ export async function makeOrder(
     mode?: FulfillmentMode;
     paymentMethod?: PaymentMethod;
     pizzas?: number;
+    /** Flags of the single order item (default: a pizza). */
+    isPizza?: boolean;
+    isMenu?: boolean;
     productId?: string;
     editionId?: string;
     stripePaymentIntentId?: string;
@@ -215,7 +218,7 @@ export async function makeOrder(
       createdAt: o.createdAt,
       items: {
         create: [
-          { productId, name: "Pizza test", unitPriceCents: 1050, quantity, isPizza: true },
+          { productId, name: "Pizza test", unitPriceCents: 1050, quantity, isPizza: o.isPizza ?? true, isMenu: o.isMenu ?? false },
         ],
       },
     },

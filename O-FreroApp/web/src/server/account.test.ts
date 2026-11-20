@@ -69,7 +69,17 @@ describe("reorder", () => {
 
     const result = await reorderLines(user.id, order.id, new Date("2026-11-20T12:00:00Z"));
     expect(result?.lines).toEqual([
-      { productId: marg.id, quantity: 2, cooking: "WELL_DONE", supplementIds: [egg.id], name: "Margherita", imageUrl: null, supplementNames: ["Œuf"] },
+      {
+        productId: marg.id,
+        quantity: 2,
+        cooking: "WELL_DONE",
+        supplementIds: [egg.id],
+        choices: [],
+        name: "Margherita",
+        imageUrl: null,
+        supplementNames: ["Œuf"],
+        choiceNames: [],
+      },
     ]);
     expect(result?.skipped).toEqual(["BBQ fumée"]);
   });

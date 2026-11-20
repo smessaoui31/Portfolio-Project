@@ -15,7 +15,7 @@ export async function attachGuestOrders(
   return prisma.$transaction(async (tx) => {
     const orders = await tx.order.findMany({
       where: { userId: null, customerEmail },
-      select: { id: true, status: true, rewardCents: true, items: { select: { isPizza: true, quantity: true } } },
+      select: { id: true, status: true, mode: true, rewardCents: true, items: { select: { isPizza: true, isMenu: true } } },
     });
     if (orders.length === 0) return { attached: 0, stampsCredited: 0 };
 
@@ -26,8 +26,11 @@ export async function attachGuestOrders(
 
     let stampsCredited = 0;
     for (const order of orders.filter((o) => o.status === "COMPLETED")) {
-      const pizzaCount = order.items.filter((i) => i.isPizza).reduce((sum, i) => sum + i.quantity, 0);
-      const stamps = stampsEarned({ pizzaCount, rewardCents: order.rewardCents });
+      const stamps = stampsEarned({
+        mode: order.mode,
+        rewardCents: order.rewardCents,
+        hasPizzaOrMenu: order.items.some((i) => i.isPizza || i.isMenu),
+      });
       if (stamps === 0) continue;
       const created = await tx.loyaltyEntry.createMany({
         data: [{ userId, orderId: order.id, kind: "EARN", stamps }],

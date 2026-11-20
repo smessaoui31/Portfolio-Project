@@ -25,6 +25,7 @@ const lineSchema = z.object({
   quantity: z.number(),
   cooking: z.enum(["NORMAL", "WELL_DONE", "LIGHTLY_COOKED"]),
   supplementIds: z.array(z.string()).max(10),
+  choices: z.array(z.object({ slotId: z.string(), optionId: z.string() })).max(12).default([]),
 });
 
 export const placeOrderSchema = z.object({
@@ -60,6 +61,7 @@ export type PlaceOrderError =
   | "OUT_OF_ZONE"
   | "BELOW_MINIMUM"
   | "REWARD_UNAVAILABLE"
+  | "REWARD_PICKUP_ONLY"
   | "PAYMENT_UNAVAILABLE"
   | "ONLINE_MINIMUM"
   | CartErrorCode;
@@ -73,6 +75,7 @@ export const ORDER_ERROR_MESSAGES: Record<PlaceOrderError, string> = {
   OUT_OF_ZONE: "Nous ne livrons pas encore à cette adresse. Tu peux commander à emporter ou nous appeler.",
   BELOW_MINIMUM: "Le minimum de commande pour la livraison n'est pas atteint.",
   REWARD_UNAVAILABLE: "Ta pizza offerte n'est pas disponible.",
+  REWARD_PICKUP_ONLY: "La pizza offerte est réservée aux commandes à emporter.",
   PAYMENT_UNAVAILABLE: "Le paiement en ligne est indisponible pour le moment. Tu peux payer au retrait ou nous appeler.",
   ONLINE_MINIMUM: "Le paiement en ligne n'est possible qu'à partir de 0,50 €. Choisis le paiement au retrait.",
   EMPTY: "Ton panier est vide.",
@@ -81,6 +84,8 @@ export const ORDER_ERROR_MESSAGES: Record<PlaceOrderError, string> = {
   UNAVAILABLE: "Un produit de ton panier n'est plus disponible.",
   OUT_OF_STOCK: "Il n'y en a plus assez en stock.",
   SUPPLEMENT_NOT_ALLOWED: "Un supplément n'est pas proposé pour ce produit.",
+  OPTION_NOT_ALLOWED: "Un choix n'est pas proposé pour ce produit.",
+  OPTIONS_INCOMPLETE: "Il manque un choix pour un produit de ton panier.",
   EDITION_OVER: "Cette pizza n'est plus à la carte : son édition est terminée.",
   REWARD_NOT_PIZZA: "La pizza offerte doit être une pizza.",
 };
@@ -94,6 +99,8 @@ export function orderErrorMessage(error: PlaceOrderError, detail: { productName?
   if (name && error === "OUT_OF_STOCK") return `Il ne reste plus assez de ${name} en stock.`;
   if (name && error === "EDITION_OVER") return `${name} n'est plus à la carte : son édition est terminée.`;
   if (name && error === "SUPPLEMENT_NOT_ALLOWED") return `Un supplément n'est pas proposé pour ${name}.`;
+  if (name && error === "OPTION_NOT_ALLOWED") return `Un choix n'est pas proposé pour ${name}.`;
+  if (name && error === "OPTIONS_INCOMPLETE") return `Il manque un choix pour ${name}.`;
   return ORDER_ERROR_MESSAGES[error];
 }
 
@@ -123,6 +130,7 @@ export async function placeOrder(input: unknown, ctx: { userId: string | null; n
 
   if (data.mode === "DELIVERY" && data.paymentMethod === "AT_PICKUP") return fail("DELIVERY_REQUIRES_ONLINE");
   if (data.mode === "DELIVERY" && !data.address) return fail("ADDRESS_REQUIRED");
+  if (data.rewardLineIndex !== undefined && data.mode === "DELIVERY") return fail("REWARD_PICKUP_ONLY");
   if (data.rewardLineIndex !== undefined && !ctx.userId) return fail("REWARD_UNAVAILABLE");
   if (data.paymentMethod === "ONLINE" && !isOnlinePaymentEnabled()) return fail("PAYMENT_UNAVAILABLE");
 
@@ -223,10 +231,21 @@ export async function placeOrder(input: unknown, ctx: { userId: string | null; n
               quantity: line.quantity,
               cooking: line.cooking,
               supplementsTotalCents: line.supplementsTotalCents,
+              choicesTotalCents: line.choicesTotalCents,
               isPizza: line.isPizza,
+              isMenu: line.isMenu,
               isReward: line.isReward,
               supplements: {
                 create: line.supplements.map((s) => ({ supplementId: s.id, name: s.name, unitPriceCents: s.unitPriceCents })),
+              },
+              choices: {
+                create: line.choices.map((c) => ({
+                  slotId: c.slotId,
+                  optionId: c.optionId,
+                  label: c.label,
+                  name: c.name,
+                  unitPriceCents: c.unitPriceCents,
+                })),
               },
             })),
           },

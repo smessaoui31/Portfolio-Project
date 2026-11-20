@@ -13,7 +13,7 @@ import {
 } from "./lifecycle";
 import { placeOrder } from "./orders";
 import { resetDb } from "./test/db";
-import { makeUser } from "./test/fixtures";
+import { makeOrder, makeUser } from "./test/fixtures";
 
 const sent: { to: string }[] = [];
 vi.mock("@/lib/email", () => ({
@@ -91,7 +91,7 @@ describe("Stripe events", () => {
 
   test("a canceled payment restocks and refunds the reward once", async () => {
     const user = await makeUser({ email: "fidele@exemple.fr", stamps: 10 });
-    const order = await place(delivery({ lines: line(3), rewardLineIndex: 0 }), user.id);
+    const order = await place(pickup({ paymentMethod: "ONLINE", lines: line(3), rewardLineIndex: 0 }), user.id);
     expect((await prisma.product.findUniqueOrThrow({ where: { id: MARG } })).stockQuantity).toBe(2);
     await handleStripeEvent(event("payment_intent.canceled", order.stripePaymentIntentId!));
     await handleStripeEvent(event("payment_intent.canceled", order.stripePaymentIntentId!));
@@ -125,10 +125,32 @@ describe("admin transitions", () => {
     }
     expect(await prisma.loyaltyEntry.count({ where: { userId: user.id } })).toBe(0);
     expect(await advanceOrderStatus(order.id, "COMPLETED", "admin@ofrero.test")).toEqual({ ok: true });
-    expect(await prisma.loyaltyEntry.findFirst({ where: { orderId: order.id, kind: "EARN" } })).toMatchObject({ stamps: 2 });
+    // One stamp per pickup order, even with two pizzas.
+    expect(await prisma.loyaltyEntry.findFirst({ where: { orderId: order.id, kind: "EARN" } })).toMatchObject({ stamps: 1 });
     const logs = await prisma.orderLog.findMany({ where: { orderId: order.id }, orderBy: { createdAt: "asc" } });
     expect(logs.map((l) => l.status)).toEqual(["RECEIVED", "IN_OVEN", "READY", "COMPLETED"]);
     expect(logs.at(-1)?.createdBy).toBe("admin@ofrero.test");
+  });
+
+  test("a completed delivery order earns no stamp", async () => {
+    const user = await makeUser({ email: "livre@exemple.fr" });
+    const order = await makeOrder({ userId: user.id, mode: "DELIVERY", paymentMethod: "ONLINE", status: "OUT_FOR_DELIVERY", pizzas: 3 });
+    expect(await advanceOrderStatus(order.id, "COMPLETED", "admin@ofrero.test")).toEqual({ ok: true });
+    expect(await prisma.loyaltyEntry.count({ where: { orderId: order.id } })).toBe(0);
+  });
+
+  test("a completed pickup order with only a menu earns one stamp", async () => {
+    const user = await makeUser({ email: "menu@exemple.fr" });
+    const order = await makeOrder({ userId: user.id, status: "READY", isPizza: false, isMenu: true });
+    expect(await advanceOrderStatus(order.id, "COMPLETED", "admin@ofrero.test")).toEqual({ ok: true });
+    expect(await prisma.loyaltyEntry.findFirst({ where: { orderId: order.id, kind: "EARN" } })).toMatchObject({ stamps: 1 });
+  });
+
+  test("a completed pickup order with only drinks earns no stamp", async () => {
+    const user = await makeUser({ email: "boisson@exemple.fr" });
+    const order = await makeOrder({ userId: user.id, status: "READY", isPizza: false });
+    expect(await advanceOrderStatus(order.id, "COMPLETED", "admin@ofrero.test")).toEqual({ ok: true });
+    expect(await prisma.loyaltyEntry.count({ where: { orderId: order.id } })).toBe(0);
   });
 
   test("invalid transitions are refused", async () => {
@@ -163,7 +185,7 @@ test("getTracking hides contact details and marks done steps", async () => {
   expect(Object.keys(view!)).not.toContain("customerPhone");
   expect(JSON.stringify(view)).not.toContain("karim@exemple.fr");
   expect(JSON.stringify(view)).not.toContain("0612345678");
-  expect(view).toMatchObject({ number: order.number, status: "IN_OVEN", firstName: "Karim", addressShort: null, stamps: 2, isGuest: true });
+  expect(view).toMatchObject({ number: order.number, status: "IN_OVEN", firstName: "Karim", addressShort: null, stamps: 1, isGuest: true });
   expect(view!.steps.map((s) => s.done)).toEqual([true, true, false, false]);
   expect(view!.items[0]).toMatchObject({ name: "Margherita", quantity: 2, cooking: "NORMAL", supplements: [] });
   expect(await getTracking("unknown-token")).toBeNull();
@@ -174,7 +196,7 @@ describe("unpaid online orders", () => {
 
   test("stale unpaid orders expire, are cancelled at Stripe and give stock and reward back", async () => {
     const user = await makeUser({ email: "abandon@exemple.fr", stamps: 10 });
-    const stale = await place(delivery({ lines: line(3), rewardLineIndex: 0 }), user.id);
+    const stale = await place(pickup({ paymentMethod: "ONLINE", lines: line(3), rewardLineIndex: 0 }), user.id);
     const fresh = await place(delivery());
     await prisma.order.update({ where: { id: stale.id }, data: { createdAt: minutesAfter(NOW, -45) } });
     await prisma.order.update({ where: { id: fresh.id }, data: { createdAt: minutesAfter(NOW, -5) } });
@@ -191,7 +213,7 @@ describe("unpaid online orders", () => {
 
   test("a new order using the free pizza frees the customer's unpaid orders", async () => {
     const user = await makeUser({ email: "retente@exemple.fr", stamps: 10 });
-    const first = await place(delivery({ lines: line(3), rewardLineIndex: 0 }), user.id);
+    const first = await place(pickup({ paymentMethod: "ONLINE", lines: line(3), rewardLineIndex: 0 }), user.id);
     const second = await place(pickup({ lines: line(1), rewardLineIndex: 0 }), user.id);
     expect((await prisma.order.findUniqueOrThrow({ where: { id: first.id } })).status).toBe("FAILED");
     expect(second.rewardCents).toBe(1050);

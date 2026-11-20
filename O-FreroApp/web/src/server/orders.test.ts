@@ -172,11 +172,11 @@ test("a Stripe failure cancels the order and gives back stock and reward", async
   vi.mocked(createPaymentIntent).mockRejectedValueOnce(new Error("stripe down"));
   vi.spyOn(console, "error").mockImplementationOnce(() => {});
   const r = await placeOrder(
-    validDelivery({ lines: [{ productId: MARG, quantity: 3, cooking: "NORMAL", supplementIds: [] }], rewardLineIndex: 0 }),
+    validPickup({ paymentMethod: "ONLINE", lines: [{ productId: MARG, quantity: 3, cooking: "NORMAL", supplementIds: [] }], rewardLineIndex: 0 }),
     { userId: user.id, now: NOW },
   );
   expect(r).toMatchObject({ ok: false, error: "PAYMENT_UNAVAILABLE" });
-  const o = await prisma.order.findFirstOrThrow({ where: { userId: user.id, mode: "DELIVERY" } });
+  const o = await prisma.order.findFirstOrThrow({ where: { userId: user.id, mode: "PICKUP", paymentMethod: "ONLINE" } });
   expect(o.status).toBe("CANCELLED");
   expect((await prisma.product.findUniqueOrThrow({ where: { id: MARG } })).stockQuantity).toBe(5);
   expect(await prisma.loyaltyEntry.count({ where: { orderId: o.id, kind: "REDEEM" } })).toBe(0);

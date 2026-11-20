@@ -1,3 +1,4 @@
+import { resolveChoices, type LineChoice } from "@/domain/options";
 import type { CartLineInput, FulfillmentMode, OrderStatus } from "@/domain/types";
 import { prisma } from "@/lib/db";
 import { describeLines, type DescribedLine } from "./cart";
@@ -43,7 +44,7 @@ export async function reorderLines(
 ): Promise<{ lines: DescribedLine[]; skipped: string[] } | null> {
   const order = await prisma.order.findFirst({
     where: { id: orderId, userId },
-    include: { items: { include: { supplements: true } } },
+    include: { items: { include: { supplements: true, choices: { orderBy: { id: "asc" } } } } },
   });
   if (!order) return null;
 
@@ -62,12 +63,19 @@ export async function reorderLines(
       skipped.push(item.name);
       continue;
     }
+    // Choices must all still exist and still be complete; otherwise the line is not reordered.
+    const choices: LineChoice[] = item.choices.map((c) => ({ slotId: c.slotId ?? "", optionId: c.optionId ?? "" }));
+    if (!resolveChoices(product.optionSlots, choices).ok) {
+      skipped.push(item.name);
+      continue;
+    }
     const allowed = new Set(product.allowedSupplements.map((s) => s.id));
     lines.push({
       productId: item.productId,
       quantity: item.quantity,
       cooking: item.cooking,
       supplementIds: item.supplements.flatMap((s) => (s.supplementId && allowed.has(s.supplementId) ? [s.supplementId] : [])),
+      choices,
     });
   }
   return { lines: await describeLines(lines), skipped };

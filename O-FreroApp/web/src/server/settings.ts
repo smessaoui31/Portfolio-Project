@@ -40,5 +40,6 @@ export async function getSlotOptions(mode: FulfillmentMode, now: Date): Promise<
     hours,
     closures,
     leadMinutes: mode === "PICKUP" ? settings.pickupLeadMinutes : settings.deliveryLeadMinutes,
+    lastSlotBeforeCloseMinutes: mode === "DELIVERY" ? settings.deliveryCutoffMinutes : undefined,
   };
 }

@@ -23,7 +23,8 @@ test("attachGuestOrders attaches case-insensitively and credits completed orders
   await makeOrder({ customerEmail: "karim@exemple.fr", status: "RECEIVED", pizzas: 1 });
   await makeOrder({ customerEmail: "autre@exemple.fr", status: "COMPLETED", pizzas: 3 });
 
-  expect(await attachGuestOrders(user.id, "Karim@Exemple.fr")).toEqual({ attached: 2, stampsCredited: 2 });
+  // One completed pickup order with two pizzas: one stamp.
+  expect(await attachGuestOrders(user.id, "Karim@Exemple.fr")).toEqual({ attached: 2, stampsCredited: 1 });
   expect(await prisma.order.count({ where: { userId: user.id } })).toBe(2);
   expect(await attachGuestOrders(user.id, "karim@exemple.fr")).toEqual({ attached: 0, stampsCredited: 0 });
   expect(await prisma.loyaltyEntry.count()).toBe(1);
@@ -56,7 +57,7 @@ test("verification attaches guest orders when clicked in the account's own sessi
   expect(after.emailVerified).toBe(true);
   expect(after.ordersLinkedAt).not.toBeNull();
   expect(await prisma.order.count({ where: { userId: user.id } })).toBe(1);
-  expect(await prisma.loyaltyEntry.aggregate({ where: { userId: user.id }, _sum: { stamps: true } })).toMatchObject({ _sum: { stamps: 3 } });
+  expect(await prisma.loyaltyEntry.aggregate({ where: { userId: user.id }, _sum: { stamps: true } })).toMatchObject({ _sum: { stamps: 1 } }); // one completed pickup order
 });
 
 test("someone who signs up with another person's e-mail gets nothing when that person clicks", async () => {
@@ -82,7 +83,7 @@ test("a linked account gets its later guest orders at the next sign-in", async (
 
   await auth.api.signInEmail({ body: { email: "fidele@exemple.fr", password: "motdepasse1" } });
   expect(await prisma.order.count({ where: { userId: user.id } })).toBe(1);
-  expect(await prisma.loyaltyEntry.aggregate({ where: { userId: user.id }, _sum: { stamps: true } })).toMatchObject({ _sum: { stamps: 2 } });
+  expect(await prisma.loyaltyEntry.aggregate({ where: { userId: user.id }, _sum: { stamps: true } })).toMatchObject({ _sum: { stamps: 1 } }); // one completed pickup order
 });
 
 test("orders link tokens are signed, bound to the account and expire", () => {

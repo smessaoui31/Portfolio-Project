@@ -1,6 +1,8 @@
 import { currentEdition, pastEditions, type EditionLike } from "@/domain/editions";
+import type { OptionSlot } from "@/domain/options";
 import { unitPriceCents, type PricedProduct } from "@/domain/pricing";
 import type { Prisma } from "@/generated/prisma/client";
+import type { SupplementFamily } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/db";
 import { getSettings } from "./settings";
 
@@ -13,8 +15,10 @@ export interface MenuProduct {
   unitPriceCents: number;
   discountPercent: number;
   isPizza: boolean;
+  isMenu: boolean;
   soldOut: boolean;
-  supplements: { id: string; name: string; priceCents: number }[];
+  supplements: { id: string; name: string; priceCents: number; family: SupplementFamily }[];
+  optionSlots: OptionSlot[];
 }
 
 export interface MenuCategory {
@@ -25,8 +29,12 @@ export interface MenuCategory {
 }
 
 const productInclude = {
-  category: { select: { isPizza: true } },
+  category: { select: { isPizza: true, isMenu: true } },
   supplements: { include: { supplement: true }, orderBy: { supplement: { name: "asc" } } },
+  optionGroups: {
+    orderBy: { position: "asc" },
+    include: { group: { include: { options: { where: { isActive: true }, orderBy: { displayOrder: "asc" } } } } },
+  },
 } satisfies Prisma.ProductInclude;
 
 type ProductRow = Prisma.ProductGetPayload<{ include: typeof productInclude }>;
@@ -38,7 +46,18 @@ const activeSupplements = (p: ProductRow) =>
       id: ps.supplement.id,
       name: ps.supplement.name,
       priceCents: ps.overridePriceCents ?? ps.supplement.priceCents,
+      family: ps.supplement.family,
     }));
+
+/** Each attachment of a group is a slot; its label replaces the group name when set. */
+const optionSlots = (p: ProductRow): OptionSlot[] =>
+  p.optionGroups.map((slot) => ({
+    id: slot.id,
+    label: slot.label ?? slot.group.name,
+    minSelect: slot.group.minSelect,
+    maxSelect: slot.group.maxSelect,
+    options: slot.group.options.map((o) => ({ id: o.id, name: o.name, priceCents: o.priceCents })),
+  }));
 
 function toMenuProduct(p: ProductRow): MenuProduct {
   return {
@@ -50,8 +69,10 @@ function toMenuProduct(p: ProductRow): MenuProduct {
     unitPriceCents: unitPriceCents(p),
     discountPercent: p.discountPercent,
     isPizza: p.category?.isPizza ?? false,
+    isMenu: p.category?.isMenu ?? false,
     soldOut: p.stockQuantity === 0,
     supplements: activeSupplements(p),
+    optionSlots: optionSlots(p),
   };
 }
 
@@ -101,10 +122,12 @@ export async function getPricedProducts(ids: string[]): Promise<Map<string, Pric
         priceCents: p.priceCents,
         discountPercent: p.discountPercent,
         isPizza: p.category?.isPizza ?? false,
+        isMenu: p.category?.isMenu ?? false,
         isAvailable: p.isAvailable,
         stockQuantity: p.stockQuantity,
         isEditionOnly: p.isEditionOnly,
         allowedSupplements: activeSupplements(p),
+        optionSlots: optionSlots(p),
       },
     ]),
   );

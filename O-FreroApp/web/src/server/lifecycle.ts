@@ -1,5 +1,6 @@
 import type Stripe from "stripe";
 import { stampsEarned } from "@/domain/loyalty";
+import { choiceText } from "@/domain/options";
 import { nextStatuses, trackingSteps } from "@/domain/order-status";
 import type { Cooking, FulfillmentMode, OrderStatus, PaymentMethod } from "@/domain/types";
 import type { Prisma } from "@/generated/prisma/client";
@@ -63,11 +64,14 @@ export async function releasePendingOrdersOfUser(userId: string): Promise<void> 
 async function creditStamps(tx: Prisma.TransactionClient, orderId: string) {
   const order = await tx.order.findUniqueOrThrow({
     where: { id: orderId },
-    select: { userId: true, rewardCents: true, items: { select: { isPizza: true, quantity: true } } },
+    select: { userId: true, mode: true, rewardCents: true, items: { select: { isPizza: true, isMenu: true } } },
   });
   if (!order.userId) return;
-  const pizzaCount = order.items.filter((i) => i.isPizza).reduce((sum, i) => sum + i.quantity, 0);
-  const stamps = stampsEarned({ pizzaCount, rewardCents: order.rewardCents });
+  const stamps = stampsEarned({
+    mode: order.mode,
+    rewardCents: order.rewardCents,
+    hasPizzaOrMenu: order.items.some((i) => i.isPizza || i.isMenu),
+  });
   if (stamps === 0) return;
   await tx.loyaltyEntry.createMany({
     data: [{ userId: order.userId, orderId, kind: "EARN", stamps }],
@@ -186,7 +190,7 @@ export interface TrackingView {
   paymentMethod: PaymentMethod;
   slotAt: string;
   firstName: string;
-  items: { name: string; quantity: number; cooking: Cooking; supplements: string[]; isReward: boolean }[];
+  items: { name: string; quantity: number; cooking: Cooking; supplements: string[]; choices: string[]; isReward: boolean }[];
   totalCents: number;
   addressShort: string | null;
   steps: { status: OrderStatus; label: string; done: boolean }[];
@@ -199,7 +203,7 @@ export interface TrackingView {
 export async function getTracking(token: string): Promise<TrackingView | null> {
   const order = await prisma.order.findUnique({
     where: { trackingToken: token },
-    include: { items: { include: { supplements: true } } },
+    include: { items: { include: { supplements: true, choices: { orderBy: { id: "asc" } } } } },
   });
   if (!order) return null;
 
@@ -221,14 +225,16 @@ export async function getTracking(token: string): Promise<TrackingView | null> {
       quantity: i.quantity,
       cooking: i.cooking,
       supplements: i.supplements.map((s) => s.name),
+      choices: i.choices.map(choiceText),
       isReward: i.isReward,
     })),
     totalCents: order.totalCents,
     addressShort: order.mode === "DELIVERY" ? `${order.addressLine1}, ${order.postalCode} ${order.city}` : null,
     steps: steps.map((s, index) => ({ ...s, done: reached >= 0 && index <= reached })),
     stamps: stampsEarned({
-      pizzaCount: order.items.filter((i) => i.isPizza).reduce((sum, i) => sum + i.quantity, 0),
+      mode: order.mode,
       rewardCents: order.rewardCents,
+      hasPizzaOrMenu: order.items.some((i) => i.isPizza || i.isMenu),
     }),
     isGuest: order.userId === null,
   };

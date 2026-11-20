@@ -10,11 +10,11 @@ test("mergeIntoAccount merges stored and local carts", async () => {
   const user = await makeUser();
   const marg = await makeProduct({ name: "Margherita" });
   const coke = await makeProduct({ name: "Coca-Cola", categoryId: null, priceCents: 250 });
-  await saveCart(user.id, [{ productId: marg.id, quantity: 1, cooking: "NORMAL", supplementIds: [] }]);
+  await saveCart(user.id, [{ productId: marg.id, quantity: 1, cooking: "NORMAL", supplementIds: [], choices: [] }]);
 
   const merged = await mergeIntoAccount(user.id, [
-    { productId: marg.id, quantity: 2, cooking: "NORMAL", supplementIds: [] },
-    { productId: coke.id, quantity: 1, cooking: "NORMAL", supplementIds: [] },
+    { productId: marg.id, quantity: 2, cooking: "NORMAL", supplementIds: [], choices: [] },
+    { productId: coke.id, quantity: 1, cooking: "NORMAL", supplementIds: [], choices: [] },
   ]);
 
   expect(merged.map((l) => [l.productId, l.quantity])).toEqual([
@@ -34,10 +34,20 @@ test("describeLines adds display data and drops products that no longer exist", 
   const egg = await makeSupplement({ name: "Œuf" });
   const marg = await makeProduct({ name: "Margherita", supplementIds: [egg.id] });
   const items = await describeLines([
-    { productId: marg.id, quantity: 2, cooking: "WELL_DONE", supplementIds: [egg.id] },
-    { productId: "gone", quantity: 1, cooking: "NORMAL", supplementIds: [] },
+    { productId: marg.id, quantity: 2, cooking: "WELL_DONE", supplementIds: [egg.id], choices: [] },
+    { productId: "gone", quantity: 1, cooking: "NORMAL", supplementIds: [], choices: [] },
   ]);
   expect(items).toEqual([
-    { productId: marg.id, quantity: 2, cooking: "WELL_DONE", supplementIds: [egg.id], name: "Margherita", imageUrl: null, supplementNames: ["Œuf"] },
+    {
+      productId: marg.id,
+      quantity: 2,
+      cooking: "WELL_DONE",
+      supplementIds: [egg.id],
+      choices: [],
+      name: "Margherita",
+      imageUrl: null,
+      supplementNames: ["Œuf"],
+      choiceNames: [],
+    },
   ]);
 });
