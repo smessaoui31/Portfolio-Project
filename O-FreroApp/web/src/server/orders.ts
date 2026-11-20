@@ -48,6 +48,8 @@ export const placeOrderSchema = z.object({
     .optional(),
   lines: z.array(lineSchema).max(30),
   rewardLineIndex: z.number().int().min(0).optional(),
+  /** REORDER when the order comes from "Recommander"; only used for the retention metrics. */
+  source: z.enum(["WEB", "REORDER"]).default("WEB"),
 });
 
 export type PlaceOrderInput = z.input<typeof placeOrderSchema>;
@@ -223,6 +225,7 @@ export async function placeOrder(input: unknown, ctx: { userId: string | null; n
           postalCode,
           city: data.mode === "DELIVERY" ? data.address?.city : null,
           editionId: edition && quantities.has(edition.productId) ? edition.id : null,
+          source: data.source,
           items: {
             create: cart.lines.map((line) => ({
               productId: line.productId,

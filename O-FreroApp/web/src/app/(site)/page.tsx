@@ -5,6 +5,7 @@ import { HomeActionBar } from "@/components/home/HomeActionBar";
 import { LoyaltyCard } from "@/components/home/LoyaltyCard";
 import { MenuPreview } from "@/components/home/MenuPreview";
 import { ProductSheetProvider } from "@/components/home/ProductSheetProvider";
+import { ReorderCard } from "@/components/home/ReorderCard";
 import { VisitInfo } from "@/components/home/VisitInfo";
 import { editionLabel, editionProgress } from "@/domain/editions";
 import { groupServiceWindows } from "@/domain/hours";
@@ -13,6 +14,7 @@ import { now } from "@/lib/clock";
 import { getSession } from "@/lib/session";
 import { getHomeData, getMenu } from "@/server/catalog";
 import { getLoyaltySummary } from "@/server/loyalty";
+import { getLastAccountOrderSummary } from "@/server/reorder";
 import { getServiceWindows, getSettings } from "@/server/settings";
 
 export default async function HomePage() {
@@ -25,7 +27,9 @@ export default async function HomePage() {
     getSession(),
     getSettings(),
   ]);
-  const loyalty = session ? await getLoyaltySummary(session.user.id) : null;
+  const [loyalty, lastAccountOrder] = session
+    ? await Promise.all([getLoyaltySummary(session.user.id), getLastAccountOrderSummary(session.user.id)])
+    : [null, null];
 
   const product = home.edition?.product ?? home.featured;
   let poster: PosterEdition | null = null;
@@ -47,6 +51,7 @@ export default async function HomePage() {
 
   return (
     <ProductSheetProvider>
+      <ReorderCard account={lastAccountOrder} />
       {product ? <EditionPoster product={product} edition={poster} /> : null}
 
       {home.edition ? (

@@ -8,6 +8,7 @@ import { getSession } from "@/lib/session";
 import { describeLines, mergeIntoAccount, saveCart, type DescribedLine } from "@/server/cart";
 import { getCurrentEditionProductId, getPricedProducts } from "@/server/catalog";
 import { orderErrorMessage } from "@/server/orders";
+import { checkOrderableLines } from "@/server/reorder";
 
 const linesSchema = z
   .array(
@@ -41,6 +42,14 @@ export async function quoteCartAction(lines: CartLineInput[], rewardLineIndex?: 
     if (error instanceof CartError) return { ok: false, message: orderErrorMessage(error.code, { productName: error.productName }) };
     throw error;
   }
+}
+
+/** Lines remembered on the phone, re-checked now: what can still be ordered, and what cannot. */
+export async function checkLinesAction(lines: (CartLineInput & { name?: string })[]): Promise<{ lines: DescribedLine[]; skipped: string[] }> {
+  const parsed = linesSchema.safeParse(clean(lines));
+  if (!parsed.success) return { lines: [], skipped: [] };
+  const named = parsed.data.map((line, index) => ({ ...line, name: typeof lines[index]?.name === "string" ? lines[index].name : undefined }));
+  return checkOrderableLines(named, now());
 }
 
 export async function syncCartAction(lines: CartLineInput[]): Promise<void> {

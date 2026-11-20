@@ -6,6 +6,7 @@ import { useState } from "react";
 import { reorderAction } from "@/app/actions/account";
 import { useCart } from "@/components/cart/cart-store";
 import { Button } from "@/components/ui/Button";
+import { markReorder } from "@/lib/device-storage";
 
 export function ReorderButton({ orderId }: { orderId: string }) {
   const router = useRouter();
@@ -19,6 +20,7 @@ export function ReorderButton({ orderId }: { orderId: string }) {
     setBusy(false);
     if (!result) return;
     result.lines.forEach((line) => add(line));
+    markReorder();
     if (result.skipped.length === 0) router.push("/commande");
     else setSkipped(result.skipped);
   }

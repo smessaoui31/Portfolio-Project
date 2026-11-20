@@ -7,6 +7,7 @@ import { placeOrderAction, type DeliveryQuoteResult } from "@/app/actions/order"
 import { cartCount, useCart, useCartReady } from "@/components/cart/cart-store";
 import { buttonClasses } from "@/components/ui/Button";
 import type { FulfillmentMode, PaymentMethod } from "@/domain/types";
+import { clearReorder, isReorder, readLastOrder, saveLastOrder } from "@/lib/device-storage";
 import { SITE } from "@/lib/site";
 import { formatParisTime } from "@/lib/time";
 import { DetailsStep } from "./DetailsStep";
@@ -31,18 +32,24 @@ export function Checkout({
   const clear = useCart((s) => s.clear);
 
   const defaultAddress = account?.addresses.find((a) => a.isDefault) ?? account?.addresses[0];
+  // What this phone remembers from the last order fills the gaps the account leaves.
+  const [remembered] = useState(() => (typeof window === "undefined" ? null : readLastOrder()));
   const [step, setStep] = useState<Step>("mode");
   const [mode, setMode] = useState<FulfillmentMode>("PICKUP");
   const [slot, setSlot] = useState<string | null>(null);
   const [asap, setAsap] = useState(false);
   const [address, setAddress] = useState<AddressDraft>({
-    line1: defaultAddress?.line1 ?? "",
-    line2: defaultAddress?.line2 ?? "",
-    postalCode: defaultAddress?.postalCode ?? "",
-    city: defaultAddress?.city ?? "Toulouse",
+    line1: defaultAddress?.line1 ?? remembered?.address?.line1 ?? "",
+    line2: defaultAddress?.line2 ?? remembered?.address?.line2 ?? "",
+    postalCode: defaultAddress?.postalCode ?? remembered?.address?.postalCode ?? "",
+    city: defaultAddress?.city ?? remembered?.address?.city ?? "Toulouse",
   });
   const [delivery, setDelivery] = useState<DeliveryQuoteResult | null>(null);
-  const [customer, setCustomer] = useState<CustomerDraft>({ firstName: account?.name ?? "", phone: "", email: account?.email ?? "" });
+  const [customer, setCustomer] = useState<CustomerDraft>({
+    firstName: account?.name || remembered?.customer.firstName || "",
+    phone: remembered?.customer.phone ?? "",
+    email: account?.email || remembered?.customer.email || "",
+  });
   const [payment, setPayment] = useState<PaymentMethod>(onlinePayment ? "ONLINE" : "AT_PICKUP");
   const [rewardLineIndex, setRewardLineIndex] = useState<number | undefined>(undefined);
   const [placing, setPlacing] = useState(false);
@@ -90,6 +97,7 @@ export function Checkout({
         choices: choices ?? [],
       })),
       rewardLineIndex,
+      source: isReorder() ? "REORDER" : "WEB",
       });
     } catch {
       setPlacing(false);
@@ -97,6 +105,16 @@ export function Checkout({
       return;
     }
     setPlacing(false);
+    if (result.ok) {
+      clearReorder();
+      saveLastOrder({
+        lines,
+        mode,
+        customer,
+        address: mode === "DELIVERY" ? { ...address, line2: address.line2 || undefined } : undefined,
+        savedAt: new Date().toISOString(),
+      });
+    }
     if (!result.ok) {
       setError(result.message);
       if (result.error === "INVALID_SLOT") {
