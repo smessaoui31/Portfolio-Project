@@ -60,3 +60,17 @@ export function isReorder(): boolean {
 export function clearReorder(): void {
   write(session, REORDER_FLAG, null);
 }
+
+const REFERRAL = "ofrero-parrain";
+const REFERRAL_DAYS = 30;
+
+/** A referral code from a shared link, kept 30 days on this phone. */
+export function saveReferralCode(code: string): void {
+  write(local, REFERRAL, { code, expiresAt: Date.now() + REFERRAL_DAYS * 24 * 60 * 60_000 });
+}
+
+export function readReferralCode(): string | null {
+  const saved = read<{ code: string; expiresAt: number }>(local, REFERRAL);
+  if (!saved || typeof saved.code !== "string" || saved.expiresAt < Date.now()) return null;
+  return saved.code;
+}

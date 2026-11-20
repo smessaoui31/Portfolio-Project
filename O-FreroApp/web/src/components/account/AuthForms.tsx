@@ -10,6 +10,7 @@ import { safeNext } from "@/lib/redirect";
 import { useCart } from "@/components/cart/cart-store";
 import { CART_OWNER_KEY } from "@/components/cart/CartSync";
 import { authErrorMessage } from "./auth-errors";
+import { readReferralCode } from "@/lib/device-storage";
 
 function FormShell({ title, intro, children }: { title: string; intro?: ReactNode; children: ReactNode }) {
   return (
@@ -76,6 +77,7 @@ export function SignUpForm({ defaultEmail }: { defaultEmail: string }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState(defaultEmail);
   const [password, setPassword] = useState("");
+  const [referral, setReferral] = useState(() => (typeof window === "undefined" ? "" : (readReferralCode() ?? "")));
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -83,7 +85,13 @@ export function SignUpForm({ defaultEmail }: { defaultEmail: string }) {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const { error: authError } = await authClient.signUp.email({ name, email, password, callbackURL: "/compte?verifie=1" });
+    const { error: authError } = await authClient.signUp.email({
+      name,
+      email,
+      password,
+      referralCodeUsed: referral.trim() || undefined,
+      callbackURL: "/compte?verifie=1",
+    });
     setBusy(false);
     if (authError) return setError(authErrorMessage(authError));
     router.push(`/compte/verification?email=${encodeURIComponent(email)}`);
@@ -104,6 +112,9 @@ export function SignUpForm({ defaultEmail }: { defaultEmail: string }) {
           {(p) => (
             <Input {...p} type="password" autoComplete="new-password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} required />
           )}
+        </Field>
+        <Field label="Code de parrainage" hint="Facultatif : le code d'un ami qui t'a invité.">
+          {(p) => <Input {...p} autoComplete="off" value={referral} onChange={(e) => setReferral(e.target.value.toUpperCase())} maxLength={12} />}
         </Field>
         <ErrorText message={error} />
         <Button type="submit" size="lg" className="w-full" disabled={busy}>

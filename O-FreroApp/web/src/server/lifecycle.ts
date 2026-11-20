@@ -1,5 +1,6 @@
 import type Stripe from "stripe";
 import { stampsEarned } from "@/domain/loyalty";
+import { creditReferralBonus } from "./referrals";
 import { choiceText } from "@/domain/options";
 import { nextStatuses, trackingSteps } from "@/domain/order-status";
 import type { Cooking, FulfillmentMode, OrderStatus, PaymentMethod } from "@/domain/types";
@@ -72,11 +73,13 @@ async function creditStamps(tx: Prisma.TransactionClient, orderId: string) {
     rewardCents: order.rewardCents,
     hasPizzaOrMenu: order.items.some((i) => i.isPizza || i.isMenu),
   });
-  if (stamps === 0) return;
-  await tx.loyaltyEntry.createMany({
-    data: [{ userId: order.userId, orderId, kind: "EARN", stamps }],
-    skipDuplicates: true,
-  });
+  if (stamps > 0) {
+    await tx.loyaltyEntry.createMany({
+      data: [{ userId: order.userId, orderId, kind: "EARN", stamps }],
+      skipDuplicates: true,
+    });
+  }
+  await creditReferralBonus(tx, { id: orderId, userId: order.userId, mode: order.mode });
 }
 
 export async function advanceOrderStatus(

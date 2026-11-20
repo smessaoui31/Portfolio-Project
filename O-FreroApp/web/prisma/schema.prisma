@@ -14,24 +14,26 @@ datasource db {
  */
 
 model User {
-  id             String    @id
-  name           String
-  email          String
-  emailVerified  Boolean   @default(false)
-  image          String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id               String    @id
+  name             String
+  email            String
+  emailVerified    Boolean   @default(false)
+  image            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
   /// "USER" or "ADMIN" (Better Auth additional field, not user-editable)
-  role           String    @default("USER")
+  role             String    @default("USER")
   /// Set once the owner proved, while signed in, control of the e-mail: guest orders attach from then on.
-  ordersLinkedAt DateTime?
+  ordersLinkedAt   DateTime?
   /// Short code to share; created on first need.
-  referralCode   String?   @unique
-  referredById   String?
-  referredBy     User?     @relation("Referrals", fields: [referredById], references: [id], onDelete: SetNull)
-  referrals      User[]    @relation("Referrals")
-  sessions       Session[]
-  accounts       Account[]
+  referralCode     String?   @unique
+  /// Code typed at sign-up, kept for the record.
+  referralCodeUsed String?
+  referredById     String?
+  referredBy       User?     @relation("Referrals", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals        User[]    @relation("Referrals")
+  sessions         Session[]
+  accounts         Account[]
 
   orders         Order[]
   addresses      Address[]

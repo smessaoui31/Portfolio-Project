@@ -17,6 +17,8 @@ import { getOrderHistory } from "@/server/account-orders";
 import { listAddresses } from "@/server/addresses";
 import { getHomeData } from "@/server/catalog";
 import { getLoyaltySummary } from "@/server/loyalty";
+import { ReferralCard } from "@/components/account/ReferralCard";
+import { getReferralSummary } from "@/server/referrals";
 
 export const metadata: Metadata = { title: "Mon compte", robots: { index: false } };
 
@@ -24,8 +26,9 @@ export default async function ComptePage({ searchParams }: PageProps<"/compte">)
   await connection();
   const session = await requireUser("/compte");
   const { verifie, rattache } = await searchParams;
-  const [loyalty, history, addresses, home, linkState] = await Promise.all([
+  const [loyalty, referral, history, addresses, home, linkState] = await Promise.all([
     getLoyaltySummary(session.user.id),
+    getReferralSummary(session.user.id),
     getOrderHistory(session.user.id),
     listAddresses(session.user.id),
     getHomeData(now()),
@@ -78,7 +81,12 @@ export default async function ComptePage({ searchParams }: PageProps<"/compte">)
           <LoyaltyCard balance={loyalty.balance} stampsForReward={loyalty.stampsForReward} signedIn onAccountPage />
         </section>
 
-        <section aria-labelledby="collection">
+        <section aria-labelledby="parrainage" className="md:col-start-1">
+          <h2 id="parrainage" className="font-display mb-5 text-4xl">Parrainage</h2>
+          <ReferralCard code={referral.code} friends={referral.friends} stampsEarned={referral.stampsEarned} />
+        </section>
+
+        <section aria-labelledby="collection" className="md:col-start-2 md:row-start-1">
           <h2 id="collection" className="font-display mb-5 text-4xl">Ma collection</h2>
           {editions.length > 0 ? (
             <EditionsGrid editions={editions} tastedIds={loyalty.tastedEditionIds} />

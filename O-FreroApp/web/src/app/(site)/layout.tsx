@@ -4,6 +4,7 @@ import { Footer } from "@/components/site/Footer";
 import { Header } from "@/components/site/Header";
 import { SiteActionBar } from "@/components/site/SiteActionBar";
 import { getSession } from "@/lib/session";
+import { ReferralCapture } from "@/components/site/ReferralCapture";
 
 export default async function SiteLayout({ children }: LayoutProps<"/">) {
   const session = await getSession();
@@ -16,6 +17,7 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
         Aller au contenu
       </a>
       <Header />
+      <ReferralCapture />
       <main id="contenu" className="pb-action-bar flex-1">
         {children}
       </main>
