@@ -160,5 +160,6 @@ Le site est prévu pour Vercel, avec une base PostgreSQL hébergée (Neon, Supab
    ```
 
 3. Dans le tableau de bord Stripe, crée un webhook vers `https://<domaine>/api/stripe/webhook` avec les événements `payment_intent.succeeded` et `payment_intent.canceled`, puis copie son secret dans `STRIPE_WEBHOOK_SECRET`.
+   Pour Apple Pay et Google Pay : active-les dans Stripe (Paramètres > Moyens de paiement), puis enregistre le domaine du site (Paramètres > Domaines de paiement). Les boutons n'apparaissent qu'ensuite, et seulement sur les appareils qui les proposent.
 4. Pour envoyer de vrais e-mails, ajoute `RESEND_API_KEY` et un `EMAIL_FROM` dont le domaine est vérifié chez Resend.
 5. Complète les mentions légales et les CGV : les passages à remplir sont marqués « À compléter ».

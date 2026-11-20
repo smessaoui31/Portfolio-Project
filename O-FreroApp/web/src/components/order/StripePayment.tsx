@@ -1,6 +1,6 @@
 "use client";
 
-import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
+import { Elements, ExpressCheckoutElement, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe, type Stripe } from "@stripe/stripe-js";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
@@ -50,6 +50,8 @@ function PaymentForm({ trackingToken, totalCents }: { trackingToken: string; tot
   const elements = useElements();
   const [error, setError] = useState<string | null>(null);
   const [paying, setPaying] = useState(false);
+  // Apple Pay / Google Pay buttons, shown only when this device offers one of them.
+  const [wallets, setWallets] = useState(false);
 
   async function pay() {
     if (!stripe || !elements) return;
@@ -66,6 +68,14 @@ function PaymentForm({ trackingToken, totalCents }: { trackingToken: string; tot
 
   return (
     <div className="space-y-6">
+      <div className={wallets ? "" : "hidden"}>
+        <ExpressCheckoutElement
+          options={{ buttonHeight: 48, paymentMethods: { applePay: "always", googlePay: "always", link: "never", paypal: "never", amazonPay: "never", klarna: "never" } }}
+          onReady={(event) => setWallets(Boolean(event.availablePaymentMethods))}
+          onConfirm={pay}
+        />
+        <p className="mt-4 text-center text-xs uppercase tracking-[0.16em] text-muted">ou par carte</p>
+      </div>
       <PaymentElement />
       {error ? (
         <p role="alert" className="text-sm text-danger">
