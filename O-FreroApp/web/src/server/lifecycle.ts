@@ -200,13 +200,16 @@ export interface TrackingView {
   /** Stamps this order is worth once completed. */
   stamps: number;
   isGuest: boolean;
+  /** Completed and not rated yet. */
+  canRate: boolean;
+  rating: { score: number; comment: string | null } | null;
 }
 
 /** Public view of an order for its private tracking link: no e-mail, no phone. */
 export async function getTracking(token: string): Promise<TrackingView | null> {
   const order = await prisma.order.findUnique({
     where: { trackingToken: token },
-    include: { items: { include: { supplements: true, choices: { orderBy: { id: "asc" } } } } },
+    include: { items: { include: { supplements: true, choices: { orderBy: { id: "asc" } } } }, rating: true },
   });
   if (!order) return null;
 
@@ -240,5 +243,7 @@ export async function getTracking(token: string): Promise<TrackingView | null> {
       hasPizzaOrMenu: order.items.some((i) => i.isPizza || i.isMenu),
     }),
     isGuest: order.userId === null,
+    canRate: order.status === "COMPLETED" && !order.rating,
+    rating: order.rating ? { score: order.rating.score, comment: order.rating.comment } : null,
   };
 }

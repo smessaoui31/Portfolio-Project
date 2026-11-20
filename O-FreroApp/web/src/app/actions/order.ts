@@ -8,6 +8,8 @@ import { getSession } from "@/lib/session";
 import { orderErrorMessage, placeOrder, type PlaceOrderInput, type PlaceOrderResult } from "@/server/orders";
 import { getActiveZones, getSlotOptions } from "@/server/settings";
 import { quoteCartAction } from "./cart";
+import type { RatingScore } from "@/domain/ratings";
+import { rateOrder } from "@/server/ratings";
 
 export interface SlotsResult {
   slots: string[];
@@ -43,6 +45,10 @@ export async function quoteDeliveryAction(
   const quote = quoteDelivery(postalCode, cart.quote.subtotalCents - cart.quote.rewardCents, await getActiveZones());
   if (!quote.ok) return { ok: false, message: orderErrorMessage(quote.reason, { minOrderCents: quote.minOrderCents }) };
   return { ok: true, feeCents: quote.feeCents, minOrderCents: quote.zone.minOrderCents, zoneName: quote.zone.name };
+}
+
+export async function rateOrderAction(token: string, score: RatingScore, comment?: string) {
+  return rateOrder(token, score, comment);
 }
 
 export async function placeOrderAction(input: PlaceOrderInput): Promise<PlaceOrderResult> {

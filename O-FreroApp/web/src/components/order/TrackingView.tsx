@@ -11,6 +11,7 @@ import { SITE } from "@/lib/site";
 import { formatParisDay, formatParisTime, parisDateKey } from "@/lib/time";
 import type { TrackingView as View } from "@/server/lifecycle";
 import { LAST_EMAIL_KEY } from "./types";
+import { RateOrder } from "./RateOrder";
 
 const subscribeNoop = () => () => {};
 const readLastEmail = () => {
@@ -140,6 +141,8 @@ export function TrackingView({
           </Link>
         </section>
       ) : null}
+
+      {view.canRate || view.rating ? <RateOrder token={token} initial={view.rating} /> : null}
 
       <section>
         <h2 className="text-xs uppercase tracking-[0.16em] text-muted">Détail</h2>

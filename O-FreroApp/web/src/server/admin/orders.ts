@@ -60,6 +60,7 @@ export async function getAdminOrder(id: string) {
       logs: { orderBy: { createdAt: "asc" } },
       user: { select: { id: true, name: true, email: true } },
       edition: { select: { number: true } },
+      rating: true,
     },
   });
 }

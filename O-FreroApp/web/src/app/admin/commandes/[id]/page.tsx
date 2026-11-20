@@ -13,6 +13,7 @@ import { getAdminOrder } from "@/server/admin/orders";
 import { refundPending } from "@/server/lifecycle";
 import { RefundDoneButton } from "@/components/admin/RefundDoneButton";
 import { requireAdmin } from "@/lib/session";
+import { RATING_LABELS, type RatingScore } from "@/domain/ratings";
 
 export const metadata: Metadata = { title: "Commande" };
 
@@ -115,6 +116,12 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/comma
             <p className="text-sm">{order.paymentMethod === "ONLINE" ? "En ligne (Stripe)" : "Au retrait"}</p>
             {order.stripePaymentIntentId ? <p className="mt-1 break-all text-xs text-muted">{order.stripePaymentIntentId}</p> : null}
           </Card>
+          {order.rating ? (
+            <Card title="Note du client">
+              <p className="text-sm font-semibold">{RATING_LABELS[order.rating.score as RatingScore]}</p>
+              {order.rating.comment ? <p className="mt-1 text-sm text-muted-2">« {order.rating.comment} »</p> : null}
+            </Card>
+          ) : null}
           <Card title="Historique">
             <ol className="space-y-2 text-sm">
               {order.logs.map((log) => (
