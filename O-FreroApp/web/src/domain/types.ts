@@ -1,3 +1,5 @@
+import type { LineChoice } from "./options";
+
 export type FulfillmentMode = "PICKUP" | "DELIVERY";
 export type PaymentMethod = "ONLINE" | "AT_PICKUP";
 export type Cooking = "NORMAL" | "WELL_DONE" | "LIGHTLY_COOKED";
@@ -24,6 +26,7 @@ export interface CartLineInput {
   quantity: number;
   cooking: Cooking;
   supplementIds: string[];
+  choices: LineChoice[];
 }
 
 /** Display order of the cooking choices; NORMAL is the default. */

@@ -7,6 +7,7 @@ const l = (productId: string, quantity: number, supplementIds: string[] = [], co
   quantity,
   cooking,
   supplementIds,
+  choices: [],
 });
 
 test("lineKey ignores supplement order", () => {
@@ -18,4 +19,19 @@ test("mergeCartLines sums equal lines regardless of supplement order and caps at
   const merged = mergeCartLines([l("marg", 15, ["egg", "ham"]), l("coke", 1)], [l("marg", 10, ["ham", "egg"]), l("reine", 2)]);
   expect(MAX_LINE_QUANTITY).toBe(20);
   expect(merged).toEqual([l("marg", 20, ["egg", "ham"]), l("coke", 1), l("reine", 2)]);
+});
+
+test("line identity ignores the order of choices", () => {
+  const a: CartLineInput = {
+    productId: "p",
+    quantity: 1,
+    cooking: "NORMAL",
+    supplementIds: [],
+    choices: [
+      { slotId: "1", optionId: "a" },
+      { slotId: "2", optionId: "b" },
+    ],
+  };
+  expect(lineKey(a)).toBe(lineKey({ ...a, choices: [...a.choices].reverse() }));
+  expect(lineKey(a)).not.toBe(lineKey({ ...a, choices: [{ slotId: "1", optionId: "a" }] }));
 });

@@ -2,9 +2,10 @@ import type { CartLineInput } from "./types";
 
 export const MAX_LINE_QUANTITY = 20;
 
-/** Identity of a cart line: product, cooking and the set of supplements. */
+/** Identity of a cart line: product, cooking, the set of supplements and the set of choices. */
 export function lineKey(line: CartLineInput): string {
-  return [line.productId, line.cooking, [...line.supplementIds].sort().join(",")].join("|");
+  const choices = (line.choices ?? []).map((c) => `${c.slotId}:${c.optionId}`).sort();
+  return [line.productId, line.cooking, [...line.supplementIds].sort().join(","), choices.join(",")].join("|");
 }
 
 /** Lines of `a`, then new lines of `b`; equal lines add up, capped at MAX_LINE_QUANTITY. */

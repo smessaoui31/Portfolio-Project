@@ -1,4 +1,5 @@
 import { MAX_LINE_QUANTITY } from "./cart";
+import { resolveChoices, type OptionSlot, type PricedChoice } from "./options";
 import type { CartLineInput, Cooking } from "./types";
 
 export interface PricedProduct {
@@ -7,12 +8,15 @@ export interface PricedProduct {
   priceCents: number;
   discountPercent: number;
   isPizza: boolean;
+  isMenu: boolean;
   isAvailable: boolean;
   /** null = unlimited */
   stockQuantity: number | null;
   isEditionOnly: boolean;
   /** Supplement prices already include per-product overrides. */
   allowedSupplements: { id: string; name: string; priceCents: number }[];
+  /** Active options only, in display order. */
+  optionSlots: OptionSlot[];
 }
 
 export interface PricedLine {
@@ -20,12 +24,17 @@ export interface PricedLine {
   name: string;
   quantity: number;
   cooking: Cooking;
+  /** Base price after discount, without options or supplements. */
   unitPriceCents: number;
+  choices: PricedChoice[];
+  /** Options per unit times quantity. */
+  choicesTotalCents: number;
   supplements: { id: string; name: string; unitPriceCents: number }[];
   /** Supplements per unit times quantity. */
   supplementsTotalCents: number;
   lineTotalCents: number;
   isPizza: boolean;
+  isMenu: boolean;
   isReward: boolean;
 }
 
@@ -43,6 +52,8 @@ export type CartErrorCode =
   | "UNAVAILABLE"
   | "OUT_OF_STOCK"
   | "SUPPLEMENT_NOT_ALLOWED"
+  | "OPTION_NOT_ALLOWED"
+  | "OPTIONS_INCOMPLETE"
   | "EDITION_OVER"
   | "REWARD_NOT_PIZZA";
 
@@ -85,9 +96,13 @@ export function priceCart(
       return { id: supplement.id, name: supplement.name, unitPriceCents: supplement.priceCents };
     });
 
+    const resolved = resolveChoices(product.optionSlots, line.choices ?? []);
+    if (!resolved.ok) throw new CartError(resolved.code, product.name);
+
     quantities.set(product.id, (quantities.get(product.id) ?? 0) + line.quantity);
 
     const unit = unitPriceCents(product);
+    const perUnitChoices = resolved.choices.reduce((sum, c) => sum + c.unitPriceCents, 0);
     const perUnitSupplements = supplements.reduce((sum, s) => sum + s.unitPriceCents, 0);
     return {
       productId: product.id,
@@ -95,10 +110,13 @@ export function priceCart(
       quantity: line.quantity,
       cooking: line.cooking,
       unitPriceCents: unit,
+      choices: resolved.choices,
+      choicesTotalCents: perUnitChoices * line.quantity,
       supplements,
       supplementsTotalCents: perUnitSupplements * line.quantity,
-      lineTotalCents: (unit + perUnitSupplements) * line.quantity,
+      lineTotalCents: (unit + perUnitChoices + perUnitSupplements) * line.quantity,
       isPizza: product.isPizza,
+      isMenu: product.isMenu,
       isReward: false,
     };
   });
@@ -115,7 +133,8 @@ export function priceCart(
     const rewarded = priced[opts.rewardLineIndex];
     if (!rewarded?.isPizza) throw new CartError("REWARD_NOT_PIZZA");
     rewarded.isReward = true;
-    rewardCents = rewarded.unitPriceCents;
+    // One unit of the pizza with its options (the size); supplements stay paid.
+    rewardCents = rewarded.unitPriceCents + rewarded.choicesTotalCents / rewarded.quantity;
   }
 
   return {
