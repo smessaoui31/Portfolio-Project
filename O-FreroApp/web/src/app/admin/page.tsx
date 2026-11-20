@@ -3,11 +3,12 @@ import { connection } from "next/server";
 import { BarChart } from "@/components/admin/BarChart";
 import { Card, Kpi, PageTitle } from "@/components/admin/ui";
 import { STATUS_LABELS } from "@/domain/order-status";
+import { RATING_LABELS, type RatingScore } from "@/domain/ratings";
 import type { OrderStatus } from "@/domain/types";
 import { now } from "@/lib/clock";
 import { formatEuros } from "@/lib/money";
 import { countRefundsToDo } from "@/server/admin/orders";
-import { getDashboardStats } from "@/server/admin/stats";
+import { getDashboardStats, getRecentRatings, getRetentionStats } from "@/server/admin/stats";
 import { expireStalePendingOrders } from "@/server/lifecycle";
 import { requireAdmin } from "@/lib/session";
 
@@ -17,7 +18,13 @@ export default async function AdminDashboard() {
   await requireAdmin();
   await connection();
   await expireStalePendingOrders(now());
-  const [stats, refunds] = await Promise.all([getDashboardStats(now()), countRefundsToDo()]);
+  const at = now();
+  const [stats, refunds, retention, ratings] = await Promise.all([
+    getDashboardStats(at),
+    countRefundsToDo(),
+    getRetentionStats(at),
+    getRecentRatings(at),
+  ]);
   return (
     <>
       <PageTitle title="Tableau de bord">
@@ -49,6 +56,45 @@ export default async function AdminDashboard() {
               </div>
             ))}
           </dl>
+        </Card>
+      </div>
+
+      <h2 className="font-display mt-10 mb-4 text-3xl">Clients qui reviennent</h2>
+      <p className="mb-4 text-sm text-muted">Sur 90 jours. Un client = une adresse e-mail, avec ou sans compte.</p>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Kpi label="Reviennent" value={`${retention.returningPercent} %`} hint={`${retention.customers} client${retention.customers > 1 ? "s" : ""} au total`} />
+        <Kpi
+          label="Entre deux commandes"
+          value={retention.medianDaysBetweenOrders === null ? "–" : `${String(retention.medianDaysBetweenOrders).replace(".", ",")} j`}
+          hint="Délai médian"
+        />
+        <Kpi label="Via « Recommander »" value={`${retention.reorderPercent} %`} hint="Part des commandes" />
+        <Kpi label="Parrainages" value={String(retention.referrals)} hint="Récompensés" />
+      </div>
+
+      <div className="mt-6">
+        <Card title="Notes, 30 jours">
+          <p className="text-sm">
+            {ratings.average === null ? (
+              <span className="text-muted-2">Pas encore de note.</span>
+            ) : (
+              <>
+                <span className="font-display text-3xl">{String(ratings.average).replace(".", ",")}</span>
+                <span className="text-muted-2"> / 3 · {ratings.count} note{ratings.count > 1 ? "s" : ""} (1 = Bof, 3 = Excellent)</span>
+              </>
+            )}
+          </p>
+          {ratings.comments.length > 0 ? (
+            <ul className="mt-4 space-y-2 text-sm">
+              {ratings.comments.map((c) => (
+                <li key={c.orderId} className="border-b border-line pb-2">
+                  <Link href={`/admin/commandes/${c.orderId}`} className="hover:underline">
+                    <span className="font-semibold">{RATING_LABELS[c.score as RatingScore]}</span> · « {c.comment} »
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </Card>
       </div>
     </>
