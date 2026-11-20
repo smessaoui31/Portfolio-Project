@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { checkoutPickupAtCounter } from "./helpers";
+import { checkoutPickupAtCounter, openCart } from "./helpers";
 
 test("a guest orders the pizza of the moment for pickup and pays at the counter", async ({ page }) => {
   await page.goto("/");
@@ -9,6 +9,7 @@ test("a guest orders the pizza of the moment for pickup and pays at the counter"
   await page.getByRole("button", { name: /^Commander/ }).first().click();
   await page.getByRole("radio", { name: "Bien cuite" }).click();
   await page.getByRole("button", { name: /Ajouter au panier/ }).click();
+  await openCart(page);
 
   const cart = page.getByRole("dialog", { name: "Ton panier" });
   await expect(cart.getByText("10,00 €").first()).toBeVisible();
@@ -43,6 +44,8 @@ test("a guest composes a Menu Tribu with two pizzas", async ({ page }) => {
   await slot("Pizza 2").getByRole("radio", { name: /^Duchesse/ }).check();
   await expect(sheet.getByRole("button", { name: /Ajouter au panier/ })).toContainText("30,90");
   await sheet.getByRole("button", { name: /Ajouter au panier/ }).click();
+  await expect(sheet.getByRole("button", { name: /Ajouté/ })).toBeVisible();
+  await openCart(page);
 
   const cart = page.getByRole("dialog", { name: "Ton panier" });
   await expect(cart.getByText(/Pizza 1 : Reine/)).toBeVisible();

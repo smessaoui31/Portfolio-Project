@@ -1,6 +1,9 @@
 "use client";
 
-import { useRef, type KeyboardEvent } from "react";
+import { motion } from "motion/react";
+import { useId, useRef, type KeyboardEvent } from "react";
+import { SNAPPY } from "@/components/motion/springs";
+import { haptic } from "@/lib/haptics";
 
 /** Accessible radio group shown as a segmented control. */
 export function Segmented<T extends string>({
@@ -15,13 +18,18 @@ export function Segmented<T extends string>({
   onChange: (value: T) => void;
 }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  const pill = useId();
+  const choose = (next: T) => {
+    if (next !== value) haptic(6);
+    onChange(next);
+  };
 
   function onKeyDown(event: KeyboardEvent, index: number) {
     const delta = event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : event.key === "ArrowLeft" || event.key === "ArrowUp" ? -1 : 0;
     if (!delta) return;
     event.preventDefault();
     const next = (index + delta + options.length) % options.length;
-    onChange(options[next].value);
+    choose(options[next].value);
     refs.current[next]?.focus();
   }
 
@@ -44,13 +52,14 @@ export function Segmented<T extends string>({
             role="radio"
             aria-checked={checked}
             tabIndex={checked ? 0 : -1}
-            onClick={() => onChange(option.value)}
+            onClick={() => choose(option.value)}
             onKeyDown={(e) => onKeyDown(e, index)}
-            className={`rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
-              checked ? "bg-fg text-ember-ink" : "text-muted-2 hover:text-fg"
+            className={`relative rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+              checked ? "text-ember-ink" : "text-muted-2 hover:text-fg"
             }`}
           >
-            {option.label}
+            {checked ? <motion.span layoutId={pill} className="absolute inset-0 rounded-xl bg-fg" transition={SNAPPY} /> : null}
+            <span className="relative">{option.label}</span>
           </button>
         );
       })}

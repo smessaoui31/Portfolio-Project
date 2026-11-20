@@ -1,13 +1,16 @@
 "use client";
 
+import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { getSlotsAction, quoteDeliveryAction, type DeliveryQuoteResult, type SlotsResult } from "@/app/actions/order";
 import { useCart } from "@/components/cart/cart-store";
+import { SNAPPY } from "@/components/motion/springs";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Field";
 import { Segmented } from "@/components/ui/Segmented";
 import { normalizePostalCode } from "@/domain/delivery";
 import type { FulfillmentMode } from "@/domain/types";
+import { haptic } from "@/lib/haptics";
 import { formatEuros } from "@/lib/money";
 import { SITE } from "@/lib/site";
 import { formatParisTime } from "@/lib/time";
@@ -188,11 +191,17 @@ export function ModeStep({
                     key={s}
                     type="button"
                     aria-pressed={slot === s}
-                    onClick={() => onSlotChange(s, false)}
-                    className="rounded-xl border border-line-2 py-2.5 text-sm tabular-nums transition hover:border-muted aria-pressed:border-ember aria-pressed:bg-ember aria-pressed:font-bold aria-pressed:text-ember-ink"
+                    onClick={() => {
+                      haptic(6);
+                      onSlotChange(s, false);
+                    }}
+                    className="relative rounded-xl border border-line-2 py-2.5 text-sm tabular-nums transition hover:border-muted aria-pressed:border-ember aria-pressed:font-bold aria-pressed:text-ember-ink"
                   >
-                    {mode === "DELIVERY" ? "~" : ""}
-                    {formatParisTime(new Date(s))}
+                    {slot === s ? <motion.span layoutId="slot-pick" className="absolute inset-0 rounded-[10px] bg-ember" transition={SNAPPY} /> : null}
+                    <span className="relative">
+                      {mode === "DELIVERY" ? "~" : ""}
+                      {formatParisTime(new Date(s))}
+                    </span>
                   </button>
                 ))}
               </div>

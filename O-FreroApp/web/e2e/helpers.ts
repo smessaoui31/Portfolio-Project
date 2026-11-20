@@ -17,13 +17,21 @@ export function lastEmailLink(to: string, subjectPart: string): string {
   return link;
 }
 
-/** Adds a product from the menu page with its default options. */
+/** Opens the cart from the header bag (adding a product no longer opens it). */
+export async function openCart(page: Page) {
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.getByRole("button", { name: /^Panier/ }).click();
+  await expect(page.getByRole("dialog", { name: "Ton panier" })).toBeVisible();
+}
+
+/** Adds a product from the menu page with its default options, then opens the cart. */
 export async function addFromMenu(page: Page, productName: string, quantity = 1) {
   await page.goto("/carte");
   await page.getByRole("button", { name: new RegExp(`^${productName},`) }).click();
   for (let i = 1; i < quantity; i++) await page.getByRole("button", { name: "Ajouter un" }).click();
   await page.getByRole("button", { name: /Ajouter au panier/ }).click();
-  await expect(page.getByRole("dialog", { name: "Ton panier" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Ajouté/ })).toBeVisible();
+  await openCart(page);
 }
 
 /** Step 1 pickup at a given time, step 2 details, pay at pickup, then the tracking page. */
