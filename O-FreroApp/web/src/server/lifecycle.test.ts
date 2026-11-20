@@ -35,10 +35,18 @@ vi.mock("@/server/payments", () => ({
 
 const NOW = new Date("2026-11-19T18:02:00Z");
 let MARG = "";
+let MEDIUM: { slotId: string; optionId: string }[] = [];
+
+/** The Médium size choice of a seeded pizza (every seeded pizza has a required size). */
+async function medium(productId: string) {
+  const slot = await prisma.productOptionGroup.findFirstOrThrow({ where: { productId, group: { name: "Taille" } }, include: { group: { include: { options: true } } } });
+  return [{ slotId: slot.id, optionId: slot.group.options.find((o) => o.name === "Médium 26 cm")!.id }];
+}
+
 
 const event = (type: string, id: string) => ({ type, data: { object: { id } } }) as unknown as Stripe.Event;
 
-const line = (quantity = 1) => [{ productId: MARG, quantity, cooking: "NORMAL", supplementIds: [] }];
+const line = (quantity = 1) => [{ productId: MARG, quantity, cooking: "NORMAL", supplementIds: [], choices: MEDIUM }];
 const pickup = (over: Record<string, unknown> = {}) => ({
   mode: "PICKUP",
   slotAt: "2026-11-19T18:30:00Z",
@@ -65,7 +73,8 @@ async function place(input: Record<string, unknown>, userId: string | null = nul
 beforeAll(async () => {
   await resetDb();
   await runSeed(prisma);
-  MARG = (await prisma.product.findFirstOrThrow({ where: { name: "Margherita" } })).id;
+  MARG = (await prisma.product.findFirstOrThrow({ where: { name: "Margarita" } })).id;
+  MEDIUM = await medium(MARG);
 });
 
 beforeEach(async () => {
@@ -187,7 +196,7 @@ test("getTracking hides contact details and marks done steps", async () => {
   expect(JSON.stringify(view)).not.toContain("0612345678");
   expect(view).toMatchObject({ number: order.number, status: "IN_OVEN", firstName: "Karim", addressShort: null, stamps: 1, isGuest: true });
   expect(view!.steps.map((s) => s.done)).toEqual([true, true, false, false]);
-  expect(view!.items[0]).toMatchObject({ name: "Margherita", quantity: 2, cooking: "NORMAL", supplements: [] });
+  expect(view!.items[0]).toMatchObject({ name: "Margarita", quantity: 2, cooking: "NORMAL", supplements: [], choices: ["Taille : Médium 26 cm"] });
   expect(await getTracking("unknown-token")).toBeNull();
 });
 
@@ -216,7 +225,7 @@ describe("unpaid online orders", () => {
     const first = await place(pickup({ paymentMethod: "ONLINE", lines: line(3), rewardLineIndex: 0 }), user.id);
     const second = await place(pickup({ lines: line(1), rewardLineIndex: 0 }), user.id);
     expect((await prisma.order.findUniqueOrThrow({ where: { id: first.id } })).status).toBe("FAILED");
-    expect(second.rewardCents).toBe(1050);
+    expect(second.rewardCents).toBe(900);
   });
 
   test("cancelling an unpaid order from the admin cancels it at Stripe", async () => {

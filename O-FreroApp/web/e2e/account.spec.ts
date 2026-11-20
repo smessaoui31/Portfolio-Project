@@ -17,7 +17,7 @@ async function completeOrderAsAdmin(page: Page, firstName: string) {
 }
 
 test("a guest creates an account with the same e-mail and gets the order and its stamps", async ({ page, browser }) => {
-  await addFromMenu(page, "Margherita", 2);
+  await addFromMenu(page, "Margarita", 2);
   await checkoutPickupAtCounter(page, { firstName: "Inès", email: EMAIL });
   await page.getByRole("link", { name: "Garder mes tampons" }).click();
   await expect(page.getByLabel("E-mail")).toHaveValue(EMAIL);
@@ -29,7 +29,7 @@ test("a guest creates an account with the same e-mail and gets the order and its
 
   await page.goto(lastEmailLink(EMAIL, "Confirme"));
   await expect(page).toHaveURL(/\/compte\?verifie=1/);
-  await expect(page.getByText("2 × Margherita")).toBeVisible();
+  await expect(page.getByText("2 × Margarita")).toBeVisible();
   await expect(page.getByText("0 / 10")).toBeVisible();
 
   const admin = await browser.newPage();
@@ -37,16 +37,17 @@ test("a guest creates an account with the same e-mail and gets the order and its
   await admin.close();
 
   await page.reload();
-  await expect(page.getByText("2 / 10")).toBeVisible();
+  // One stamp per pickup order, even with two pizzas.
+  await expect(page.getByText("1 / 10")).toBeVisible();
 });
 
 test("an account with 10 stamps gets a free pizza", async ({ page }) => {
-  grantStamps(EMAIL, 8);
+  grantStamps(EMAIL, 9);
 
   await signIn(page, EMAIL, PASSWORD);
   await expect(page.getByText("Ta pizza offerte t'attend")).toBeVisible();
 
-  await addFromMenu(page, "Margherita", 1);
+  await addFromMenu(page, "Margarita", 1);
   await page.goto("/commande");
   await page.getByRole("button", { name: "19:30", exact: true }).click();
   await page.getByRole("button", { name: "Continuer" }).click();

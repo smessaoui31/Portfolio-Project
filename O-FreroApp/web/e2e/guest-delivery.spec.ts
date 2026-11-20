@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { addFromMenu } from "./helpers";
 
 test("delivery checks the postal code against the zones", async ({ page }) => {
-  await addFromMenu(page, "Margherita", 2);
+  await addFromMenu(page, "Margarita", 2);
   await page.goto("/commande");
   await page.getByRole("radio", { name: "Livraison" }).click();
   await page.getByLabel("Adresse", { exact: true }).fill("12 rue des Lois");
@@ -12,7 +12,7 @@ test("delivery checks the postal code against the zones", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Passer en retrait" })).toBeVisible();
 
   await page.getByLabel("Code postal").fill("31 100");
-  await expect(page.getByText(/Zone livrée · frais 2,50/)).toBeVisible();
+  await expect(page.getByText(/Zone livrée · frais 3,00/)).toBeVisible();
   await page.getByRole("button", { name: /~20:00/ }).click();
   await page.getByRole("button", { name: "Continuer" }).click();
   await expect(page.getByText("Livraison", { exact: true }).first()).toBeVisible();
@@ -21,7 +21,7 @@ test("delivery checks the postal code against the zones", async ({ page }) => {
 
 test("pays a delivery online with a Stripe test card", async ({ page }) => {
   test.skip(process.env.E2E_STRIPE !== "1", "Needs real Stripe test keys in .env.test, E2E_STRIPE=1 and `stripe listen` forwarding to /api/stripe/webhook.");
-  await addFromMenu(page, "Margherita", 2);
+  await addFromMenu(page, "Margarita", 2);
   await page.goto("/commande");
   await page.getByRole("radio", { name: "Livraison" }).click();
   await page.getByLabel("Adresse", { exact: true }).fill("12 rue des Lois");

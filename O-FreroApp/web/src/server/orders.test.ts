@@ -26,12 +26,23 @@ let MARG = "";
 let EGG = "";
 let NOT_LINKED = "";
 let SAVOYARDE = "";
+let MEDIUM: { slotId: string; optionId: string }[] = [];
+let MEME_MEDIUM: { slotId: string; optionId: string }[] = [];
+
+/** The Médium size choice of a seeded pizza (every seeded pizza has a required size). */
+async function medium(productId: string) {
+  const slot = await prisma.productOptionGroup.findFirstOrThrow({ where: { productId, group: { name: "Taille" } }, include: { group: { include: { options: true } } } });
+  return [{ slotId: slot.id, optionId: slot.group.options.find((o) => o.name === "Médium 26 cm")!.id }];
+}
+
 
 beforeAll(async () => {
   await resetDb();
   await runSeed(prisma);
-  MARG = (await prisma.product.findFirstOrThrow({ where: { name: "Margherita" } })).id;
-  SAVOYARDE = (await prisma.product.findFirstOrThrow({ where: { name: "Savoyarde d'hiver" } })).id;
+  MARG = (await prisma.product.findFirstOrThrow({ where: { name: "Margarita" } })).id;
+  SAVOYARDE = (await prisma.product.findFirstOrThrow({ where: { name: "La pizza de mémé" } })).id;
+  MEDIUM = await medium(MARG);
+  MEME_MEDIUM = await medium(SAVOYARDE);
   EGG = (await prisma.supplement.findUniqueOrThrow({ where: { name: "Œuf" } })).id;
   NOT_LINKED = (await prisma.supplement.create({ data: { name: "Truffe", priceCents: 500 } })).id;
 });
@@ -46,7 +57,7 @@ const validPickup = (over: Record<string, unknown> = {}) => ({
   slotAt: "2026-11-19T18:30:00Z",
   paymentMethod: "AT_PICKUP",
   customer: { firstName: "Karim", phone: "06 12 34 56 78", email: "Karim@Exemple.fr" },
-  lines: [{ productId: MARG, quantity: 2, cooking: "NORMAL", supplementIds: [EGG] }],
+  lines: [{ productId: MARG, quantity: 2, cooking: "NORMAL", supplementIds: [EGG], choices: MEDIUM }],
   ...over,
 });
 
@@ -61,7 +72,7 @@ const validDelivery = (over: Record<string, unknown> = {}) => ({
 
 test("guest pickup paid at pickup is RECEIVED with no client secret and a confirmation e-mail", async () => {
   const r = await placeOrder(validPickup(), ctx);
-  expect(r).toMatchObject({ ok: true, clientSecret: null, totalCents: 2300 });
+  expect(r).toMatchObject({ ok: true, clientSecret: null, totalCents: 2100 });
   if (!r.ok) return;
   const o = await prisma.order.findUniqueOrThrow({ where: { id: r.orderId }, include: { items: { include: { supplements: true } }, logs: true } });
   expect(o).toMatchObject({
@@ -69,12 +80,12 @@ test("guest pickup paid at pickup is RECEIVED with no client secret and a confir
     userId: null,
     customerEmail: "karim@exemple.fr",
     customerPhone: "0612345678",
-    subtotalCents: 2300,
-    totalCents: 2300,
+    subtotalCents: 2100,
+    totalCents: 2100,
     mode: "PICKUP",
     paymentMethod: "AT_PICKUP",
   });
-  expect(o.items[0]).toMatchObject({ name: "Margherita", quantity: 2, unitPriceCents: 1050, supplementsTotalCents: 200, isPizza: true });
+  expect(o.items[0]).toMatchObject({ name: "Margarita", quantity: 2, unitPriceCents: 900, supplementsTotalCents: 300, isPizza: true });
   expect(o.items[0].supplements.map((s) => s.name)).toEqual(["Œuf"]);
   expect(o.logs.map((l) => l.status)).toEqual(["RECEIVED"]);
   expect(o.trackingToken.length).toBeGreaterThanOrEqual(32);
@@ -89,17 +100,17 @@ test("guest delivery online creates PENDING_PAYMENT with fee and client secret",
   expect(r).toMatchObject({ ok: true, clientSecret: "cs_test" });
   if (!r.ok) return;
   const o = await prisma.order.findUniqueOrThrow({ where: { id: r.orderId } });
-  expect(o).toMatchObject({ status: "PENDING_PAYMENT", deliveryFeeCents: 250, totalCents: 2550, postalCode: "31000", city: "Toulouse" });
+  expect(o).toMatchObject({ status: "PENDING_PAYMENT", deliveryFeeCents: 300, totalCents: 2400, postalCode: "31000", city: "Toulouse" });
   expect(o.stripePaymentIntentId).toMatch(/^pi_test_/);
   expect(o.confirmationSentAt).toBeNull();
   expect(sent).toHaveLength(0);
 });
 
 test("an order containing the current edition records the edition", async () => {
-  const r = await placeOrder(validPickup({ lines: [{ productId: SAVOYARDE, quantity: 1, cooking: "NORMAL", supplementIds: [] }] }), ctx);
+  const r = await placeOrder(validPickup({ lines: [{ productId: SAVOYARDE, quantity: 1, cooking: "NORMAL", supplementIds: [], choices: MEME_MEDIUM }] }), ctx);
   if (!r.ok) throw new Error(r.message);
   const o = await prisma.order.findUniqueOrThrow({ where: { id: r.orderId }, include: { edition: true } });
-  expect(o.edition?.number).toBe(7);
+  expect(o.edition?.number).toBe(1);
 });
 
 describe("rejections create nothing", () => {
@@ -109,9 +120,9 @@ describe("rejections create nothing", () => {
     ["slot too early", () => validPickup({ slotAt: "2026-11-19T18:15:00Z" }), "INVALID_SLOT"],
     ["slot in a later service", () => validPickup({ slotAt: "2026-11-20T17:00:00Z" }), "INVALID_SLOT"],
     ["out of zone", () => validDelivery({ address: { line1: "1 rue", postalCode: "75001", city: "Paris" } }), "OUT_OF_ZONE"],
-    ["below minimum", () => validDelivery({ lines: [{ productId: MARG, quantity: 1, cooking: "NORMAL", supplementIds: [] }] }), "BELOW_MINIMUM"],
-    ["tampered supplement", () => validPickup({ lines: [{ productId: MARG, quantity: 1, cooking: "NORMAL", supplementIds: [NOT_LINKED] }] }), "SUPPLEMENT_NOT_ALLOWED"],
-    ["quantity 99", () => validPickup({ lines: [{ productId: MARG, quantity: 99, cooking: "NORMAL", supplementIds: [] }] }), "INVALID_QUANTITY"],
+    ["below minimum", () => validDelivery({ lines: [{ productId: MARG, quantity: 1, cooking: "NORMAL", supplementIds: [], choices: MEDIUM }] }), "BELOW_MINIMUM"],
+    ["tampered supplement", () => validPickup({ lines: [{ productId: MARG, quantity: 1, cooking: "NORMAL", supplementIds: [NOT_LINKED], choices: MEDIUM }] }), "SUPPLEMENT_NOT_ALLOWED"],
+    ["quantity 99", () => validPickup({ lines: [{ productId: MARG, quantity: 99, cooking: "NORMAL", supplementIds: [], choices: MEDIUM }] }), "INVALID_QUANTITY"],
     ["reward as guest", () => validPickup({ rewardLineIndex: 0 }), "REWARD_UNAVAILABLE"],
     ["bad phone", () => validPickup({ customer: { firstName: "K", phone: "123", email: "k@exemple.fr" } }), "VALIDATION"],
   ] as const)("%s", async (_name, input, error) => {
@@ -123,8 +134,8 @@ describe("rejections create nothing", () => {
   });
 
   test("below minimum message gives the amount", async () => {
-    const r = await placeOrder(validDelivery({ lines: [{ productId: MARG, quantity: 1, cooking: "NORMAL", supplementIds: [] }] }), ctx);
-    expect(r.ok ? "" : r.message).toContain("20,00");
+    const r = await placeOrder(validDelivery({ lines: [{ productId: MARG, quantity: 1, cooking: "NORMAL", supplementIds: [], choices: MEDIUM }] }), ctx);
+    expect(r.ok ? "" : r.message).toContain("14,00");
   });
 });
 
@@ -132,18 +143,18 @@ test("account with 10 stamps redeems a pizza and decrements stock", async () => 
   const user = await makeUser({ email: "fidele@exemple.fr", stamps: 10 });
   await prisma.product.update({ where: { id: MARG }, data: { stockQuantity: 5 } });
   const r = await placeOrder(
-    validPickup({ lines: [{ productId: MARG, quantity: 1, cooking: "NORMAL", supplementIds: [] }], rewardLineIndex: 0 }),
+    validPickup({ lines: [{ productId: MARG, quantity: 1, cooking: "NORMAL", supplementIds: [], choices: MEDIUM }], rewardLineIndex: 0 }),
     { userId: user.id, now: NOW },
   );
   if (!r.ok) throw new Error(r.message);
   const o = await prisma.order.findUniqueOrThrow({ where: { id: r.orderId }, include: { items: true } });
-  expect(o).toMatchObject({ userId: user.id, rewardCents: 1050, totalCents: 0 });
+  expect(o).toMatchObject({ userId: user.id, rewardCents: 900, totalCents: 0 });
   expect(o.items[0].isReward).toBe(true);
   expect(await prisma.loyaltyEntry.findFirst({ where: { orderId: o.id, kind: "REDEEM" } })).toMatchObject({ stamps: 10 });
   expect((await prisma.product.findUniqueOrThrow({ where: { id: MARG } })).stockQuantity).toBe(4);
 
   const again = await placeOrder(
-    validPickup({ lines: [{ productId: MARG, quantity: 1, cooking: "NORMAL", supplementIds: [] }], rewardLineIndex: 0 }),
+    validPickup({ lines: [{ productId: MARG, quantity: 1, cooking: "NORMAL", supplementIds: [], choices: MEDIUM }], rewardLineIndex: 0 }),
     { userId: user.id, now: NOW },
   );
   expect(again).toMatchObject({ ok: false, error: "REWARD_UNAVAILABLE" });
@@ -151,7 +162,7 @@ test("account with 10 stamps redeems a pizza and decrements stock", async () => 
 
 test("stock is never oversold", async () => {
   await prisma.product.update({ where: { id: MARG }, data: { stockQuantity: 1 } });
-  const r = await placeOrder(validPickup({ lines: [{ productId: MARG, quantity: 2, cooking: "NORMAL", supplementIds: [] }] }), ctx);
+  const r = await placeOrder(validPickup({ lines: [{ productId: MARG, quantity: 2, cooking: "NORMAL", supplementIds: [], choices: MEDIUM }] }), ctx);
   expect(r).toMatchObject({ ok: false, error: "OUT_OF_STOCK" });
   expect((await prisma.product.findUniqueOrThrow({ where: { id: MARG } })).stockQuantity).toBe(1);
 });
@@ -159,11 +170,11 @@ test("stock is never oversold", async () => {
 test("edition product after its end is refused", async () => {
   const later = new Date("2027-01-05T18:02:00Z");
   const r = await placeOrder(
-    validPickup({ slotAt: "2027-01-05T18:30:00Z", lines: [{ productId: SAVOYARDE, quantity: 1, cooking: "NORMAL", supplementIds: [] }] }),
+    validPickup({ slotAt: "2027-01-05T18:30:00Z", lines: [{ productId: SAVOYARDE, quantity: 1, cooking: "NORMAL", supplementIds: [], choices: MEME_MEDIUM }] }),
     { userId: null, now: later },
   );
   expect(r).toMatchObject({ ok: false, error: "EDITION_OVER" });
-  if (!r.ok) expect(r.message).toContain("Savoyarde d'hiver");
+  if (!r.ok) expect(r.message).toContain("La pizza de mémé");
 });
 
 test("a Stripe failure cancels the order and gives back stock and reward", async () => {
@@ -172,7 +183,7 @@ test("a Stripe failure cancels the order and gives back stock and reward", async
   vi.mocked(createPaymentIntent).mockRejectedValueOnce(new Error("stripe down"));
   vi.spyOn(console, "error").mockImplementationOnce(() => {});
   const r = await placeOrder(
-    validPickup({ paymentMethod: "ONLINE", lines: [{ productId: MARG, quantity: 3, cooking: "NORMAL", supplementIds: [] }], rewardLineIndex: 0 }),
+    validPickup({ paymentMethod: "ONLINE", lines: [{ productId: MARG, quantity: 3, cooking: "NORMAL", supplementIds: [], choices: MEDIUM }], rewardLineIndex: 0 }),
     { userId: user.id, now: NOW },
   );
   expect(r).toMatchObject({ ok: false, error: "PAYMENT_UNAVAILABLE" });
@@ -202,7 +213,7 @@ describe("very small totals", () => {
     const user = await makeUser({ email: "gratuit@exemple.fr", stamps: 10 });
     vi.mocked(createPaymentIntent).mockClear();
     const r = await placeOrder(
-      validPickup({ paymentMethod: "ONLINE", lines: [{ productId: MARG, quantity: 1, cooking: "NORMAL", supplementIds: [] }], rewardLineIndex: 0 }),
+      validPickup({ paymentMethod: "ONLINE", lines: [{ productId: MARG, quantity: 1, cooking: "NORMAL", supplementIds: [], choices: MEDIUM }], rewardLineIndex: 0 }),
       { userId: user.id, now: NOW },
     );
     expect(r).toMatchObject({ ok: true, clientSecret: null, totalCents: 0 });
@@ -215,7 +226,7 @@ describe("very small totals", () => {
     const oregano = await prisma.supplement.create({ data: { name: "Origan", priceCents: 30 } });
     await prisma.productSupplement.create({ data: { productId: MARG, supplementId: oregano.id } });
     const r = await placeOrder(
-      validPickup({ paymentMethod: "ONLINE", lines: [{ productId: MARG, quantity: 1, cooking: "NORMAL", supplementIds: [oregano.id] }], rewardLineIndex: 0 }),
+      validPickup({ paymentMethod: "ONLINE", lines: [{ productId: MARG, quantity: 1, cooking: "NORMAL", supplementIds: [oregano.id], choices: MEDIUM }], rewardLineIndex: 0 }),
       { userId: user.id, now: NOW },
     );
     expect(r).toMatchObject({ ok: false, error: "ONLINE_MINIMUM" });

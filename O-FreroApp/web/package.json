@@ -17,6 +17,7 @@
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset --force",
     "db:seed": "prisma db seed",
+    "db:reseed": "tsx scripts/reseed-local.ts",
     "db:generate": "prisma generate",
     "postinstall": "prisma generate"
   },
