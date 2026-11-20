@@ -7,6 +7,8 @@ export interface SlotOptions {
   /** Closed Paris days, "YYYY-MM-DD". */
   closures: string[];
   leadMinutes: number;
+  /** When set, the last slot of a service is this many minutes before its closing (delivery). */
+  lastSlotBeforeCloseMinutes?: number;
   slotMinutes?: number;
   searchDays?: number;
 }
@@ -32,8 +34,10 @@ export function computeSlots(o: SlotOptions): { slots: Date[]; asap: Date } | nu
 
     for (const w of windows) {
       const close = atParisTime(day, w.closesAt).getTime();
+      // Pickup: every slot before closing. Delivery: up to closing minus the cutoff, inclusive.
+      const end = o.lastSlotBeforeCloseMinutes === undefined ? close : close - o.lastSlotBeforeCloseMinutes * 60_000 + 1;
       const slots: Date[] = [];
-      for (let t = ceilTo(Math.max(earliest, atParisTime(day, w.opensAt).getTime()), step); t < close; t += step) {
+      for (let t = ceilTo(Math.max(earliest, atParisTime(day, w.opensAt).getTime()), step); t < end; t += step) {
         slots.push(new Date(t));
       }
       if (slots.length > 0) return { slots, asap: slots[0] };

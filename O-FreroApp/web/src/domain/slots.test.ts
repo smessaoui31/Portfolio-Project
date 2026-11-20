@@ -97,3 +97,21 @@ describe("serviceLabel", () => {
     expect(serviceLabel(new Date(slot), new Date(now))).toBe(label);
   });
 });
+
+describe("delivery cutoff", () => {
+  // Saturday 2026-11-21: 12:00-13:30 and 18:00-22:00.
+  test("delivery stops 30 minutes before the lunch closing", () => {
+    const r = computeSlots(opts("2026-11-21T10:00:00Z", { leadMinutes: 30, lastSlotBeforeCloseMinutes: 30 }))!;
+    expect(formatParisTime(r.slots.at(-1)!)).toBe("13:00");
+  });
+
+  test("pickup keeps its lunch slots until closing", () => {
+    expect(formatParisTime(computeSlots(opts("2026-11-21T10:00:00Z"))!.slots.at(-1)!)).toBe("13:15");
+  });
+
+  test("evening: last delivery 21:30, last pickup 21:45", () => {
+    const delivery = computeSlots(opts("2026-11-21T18:00:00Z", { leadMinutes: 30, lastSlotBeforeCloseMinutes: 30 }))!;
+    expect(formatParisTime(delivery.slots.at(-1)!)).toBe("21:30");
+    expect(formatParisTime(computeSlots(opts("2026-11-21T18:00:00Z"))!.slots.at(-1)!)).toBe("21:45");
+  });
+});

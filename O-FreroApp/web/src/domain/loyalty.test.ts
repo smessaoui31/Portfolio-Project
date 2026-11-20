@@ -1,11 +1,14 @@
 import { expect, test } from "vitest";
 import { canRedeem, stampBalance, stampsEarned } from "./loyalty";
 
-test("stampsEarned excludes the free pizza", () => {
-  expect(stampsEarned({ pizzaCount: 3, rewardCents: 1050 })).toBe(2);
-  expect(stampsEarned({ pizzaCount: 3, rewardCents: 0 })).toBe(3);
-  expect(stampsEarned({ pizzaCount: 0, rewardCents: 0 })).toBe(0);
-  expect(stampsEarned({ pizzaCount: 1, rewardCents: 1050 })).toBe(0);
+test("one stamp per pickup order, whatever the number of pizzas", () => {
+  expect(stampsEarned({ mode: "PICKUP", rewardCents: 0, hasPizzaOrMenu: true })).toBe(1);
+});
+
+test("no stamp in delivery, with the free pizza, or without pizza or menu", () => {
+  expect(stampsEarned({ mode: "DELIVERY", rewardCents: 0, hasPizzaOrMenu: true })).toBe(0);
+  expect(stampsEarned({ mode: "PICKUP", rewardCents: 900, hasPizzaOrMenu: true })).toBe(0);
+  expect(stampsEarned({ mode: "PICKUP", rewardCents: 0, hasPizzaOrMenu: false })).toBe(0);
 });
 
 test("stampBalance and canRedeem", () => {
