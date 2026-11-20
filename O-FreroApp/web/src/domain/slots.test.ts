@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { formatParisTime, parisDateKey } from "@/lib/time";
-import { computeSlots, isValidSlot, serviceLabel, type SlotOptions } from "./slots";
+import { computeSlots, eveningSlots, isValidSlot, serviceLabel, type SlotOptions } from "./slots";
 import type { ServiceWindowLike } from "./types";
 
 const HOURS: ServiceWindowLike[] = [
@@ -113,5 +113,28 @@ describe("delivery cutoff", () => {
     const delivery = computeSlots(opts("2026-11-21T18:00:00Z", { leadMinutes: 30, lastSlotBeforeCloseMinutes: 30 }))!;
     expect(formatParisTime(delivery.slots.at(-1)!)).toBe("21:30");
     expect(formatParisTime(computeSlots(opts("2026-11-21T18:00:00Z"))!.slots.at(-1)!)).toBe("21:45");
+  });
+});
+
+describe("eveningSlots (match nights)", () => {
+  test("gives tomorrow's evening service the day before", () => {
+    const s = eveningSlots(opts("2026-11-20T10:00:00Z"), "2026-11-21");
+    expect(formatParisTime(s[0])).toBe("18:00");
+    expect(formatParisTime(s.at(-1)!)).toBe("21:45");
+  });
+
+  test("stops 30 minutes before closing for delivery", () => {
+    const s = eveningSlots(opts("2026-11-20T10:00:00Z", { leadMinutes: 30, lastSlotBeforeCloseMinutes: 30 }), "2026-11-21");
+    expect(formatParisTime(s.at(-1)!)).toBe("21:30");
+  });
+
+  test("on the day itself, keeps the lead time", () => {
+    const s = eveningSlots(opts("2026-11-21T18:02:00Z"), "2026-11-21");
+    expect(formatParisTime(s[0])).toBe("19:30");
+  });
+
+  test("respects closures and closed days", () => {
+    expect(eveningSlots(opts("2026-11-20T10:00:00Z", { closures: ["2026-11-21"] }), "2026-11-21")).toEqual([]);
+    expect(eveningSlots(opts("2026-11-20T10:00:00Z", { hours: [] }), "2026-11-21")).toEqual([]);
   });
 });

@@ -43,13 +43,16 @@ export function ModeStep({
 }) {
   const lines = useCart((s) => s.lines);
   const [slots, setSlots] = useState<SlotsResult | null | undefined>(undefined);
+  const [forMatch, setForMatch] = useState(false);
+  const shown = forMatch && slots?.match ? slots.match.slots : (slots?.slots ?? []);
 
   useEffect(() => {
     let cancelled = false;
     getSlotsAction(mode).then((result) => {
       if (cancelled) return;
       setSlots(result);
-      onSlotChange(result && slot && result.slots.includes(slot) ? slot : null);
+      const keep = result && slot && (result.slots.includes(slot) || result.match?.slots.includes(slot));
+      onSlotChange(keep ? slot : null);
     });
     return () => {
       cancelled = true;
@@ -164,8 +167,24 @@ export function ModeStep({
         <section>
           <h2 className="text-xs uppercase tracking-[0.16em] text-muted">
             {mode === "PICKUP" ? "Créneau de retrait" : "Heure de livraison"}
-            {slots ? ` · ${slots.serviceLabel}` : ""}
+            {slots ? ` · ${forMatch && slots.match ? `${slots.match.title}, ${slots.match.dayLabel}` : slots.serviceLabel}` : ""}
           </h2>
+          {slots?.match ? (
+            <div className="mt-4">
+              <Segmented
+                label="Quand"
+                value={forMatch ? "match" : "now"}
+                options={[
+                  { value: "now", label: "Maintenant" },
+                  { value: "match", label: "Pour le match" },
+                ]}
+                onChange={(value) => {
+                  setForMatch(value === "match");
+                  onSlotChange(null);
+                }}
+              />
+            </div>
+          ) : null}
           {slots === undefined ? (
             <p className="mt-4 text-sm text-muted">Chargement des créneaux…</p>
           ) : slots === null ? (
@@ -174,19 +193,21 @@ export function ModeStep({
             </p>
           ) : (
             <>
-              <button
-                type="button"
-                aria-pressed={slot === slots.asap}
-                onClick={() => onSlotChange(slots.asap, true)}
-                className="mt-4 flex w-full items-center justify-between rounded-2xl border border-line-2 px-4 py-3.5 text-left transition aria-pressed:border-ember aria-pressed:bg-ember/10"
-              >
-                <span className="font-semibold">Dès que possible</span>
-                <span className="text-sm text-muted-2">
-                  {formatParisTime(new Date(slots.asap))} · ~{slots.minutesToAsap} min
-                </span>
-              </button>
+              {forMatch ? null : (
+                <button
+                  type="button"
+                  aria-pressed={slot === slots.asap}
+                  onClick={() => onSlotChange(slots.asap, true)}
+                  className="mt-4 flex w-full items-center justify-between rounded-2xl border border-line-2 px-4 py-3.5 text-left transition aria-pressed:border-ember aria-pressed:bg-ember/10"
+                >
+                  <span className="font-semibold">Dès que possible</span>
+                  <span className="text-sm text-muted-2">
+                    {formatParisTime(new Date(slots.asap))} · ~{slots.minutesToAsap} min
+                  </span>
+                </button>
+              )}
               <div className="mt-3 grid grid-cols-4 gap-2" role="group" aria-label="Choisir une heure">
-                {slots.slots.map((s) => (
+                {shown.map((s) => (
                   <button
                     key={s}
                     type="button"

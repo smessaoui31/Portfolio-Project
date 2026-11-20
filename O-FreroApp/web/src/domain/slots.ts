@@ -15,6 +15,23 @@ export interface SlotOptions {
 
 const ceilTo = (t: number, step: number) => Math.ceil(t / step) * step;
 
+/** Slots of one service window on a given day, from the earliest allowed time. */
+function windowSlots(o: SlotOptions, day: string, w: ServiceWindowLike, earliest: number, step: number): Date[] {
+  const close = atParisTime(day, w.closesAt).getTime();
+  // Pickup: every slot before closing. Delivery: up to closing minus the cutoff, inclusive.
+  const end = o.lastSlotBeforeCloseMinutes === undefined ? close : close - o.lastSlotBeforeCloseMinutes * 60_000 + 1;
+  const slots: Date[] = [];
+  for (let t = ceilTo(Math.max(earliest, atParisTime(day, w.opensAt).getTime()), step); t < end; t += step) {
+    slots.push(new Date(t));
+  }
+  return slots;
+}
+
+const windowsOf = (o: SlotOptions, day: string) => {
+  const weekday = parisWeekday(atParisTime(day, "12:00"));
+  return o.hours.filter((w) => w.weekday === weekday).sort((a, b) => a.opensAt.localeCompare(b.opensAt));
+};
+
 /**
  * Slots of the first service (from now on) that still has a slot at least
  * `leadMinutes` away, rounded up to the slot size. Only that service is returned.
@@ -27,23 +44,24 @@ export function computeSlots(o: SlotOptions): { slots: Date[]; asap: Date } | nu
   for (let offset = 0; offset < (o.searchDays ?? 7); offset++) {
     const day = addDaysToKey(today, offset);
     if (o.closures.includes(day)) continue;
-    const weekday = parisWeekday(atParisTime(day, "12:00"));
-    const windows = o.hours
-      .filter((w) => w.weekday === weekday)
-      .sort((a, b) => a.opensAt.localeCompare(b.opensAt));
-
-    for (const w of windows) {
-      const close = atParisTime(day, w.closesAt).getTime();
-      // Pickup: every slot before closing. Delivery: up to closing minus the cutoff, inclusive.
-      const end = o.lastSlotBeforeCloseMinutes === undefined ? close : close - o.lastSlotBeforeCloseMinutes * 60_000 + 1;
-      const slots: Date[] = [];
-      for (let t = ceilTo(Math.max(earliest, atParisTime(day, w.opensAt).getTime()), step); t < end; t += step) {
-        slots.push(new Date(t));
-      }
+    for (const w of windowsOf(o, day)) {
+      const slots = windowSlots(o, day, w, earliest, step);
       if (slots.length > 0) return { slots, asap: slots[0] };
     }
   }
   return null;
+}
+
+/**
+ * Slots of the evening service (the last window) of a given Paris day, with the same rules
+ * as `computeSlots`: lead time from now, slot size, delivery cutoff, closures. Used on match nights.
+ */
+export function eveningSlots(o: SlotOptions, day: string): Date[] {
+  if (o.closures.includes(day)) return [];
+  const evening = windowsOf(o, day).at(-1);
+  if (!evening) return [];
+  const step = (o.slotMinutes ?? 15) * 60_000;
+  return windowSlots(o, day, evening, ceilTo(o.now.getTime() + o.leadMinutes * 60_000, step), step);
 }
 
 export function isValidSlot(slot: Date, o: SlotOptions): boolean {

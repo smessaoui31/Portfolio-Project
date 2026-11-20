@@ -10,20 +10,28 @@ import { getActiveZones, getSlotOptions } from "@/server/settings";
 import { quoteCartAction } from "./cart";
 import type { RatingScore } from "@/domain/ratings";
 import { rateOrder } from "@/server/ratings";
+import { atParisTime, formatParisDay } from "@/lib/time";
+import { matchSlotsFor } from "@/server/match-nights";
 
 export interface SlotsResult {
   slots: string[];
   asap: string;
   serviceLabel: string;
   minutesToAsap: number;
+  /** On match nights, the evening of the match, bookable from the day before. */
+  match: { title: string; dayLabel: string; slots: string[] } | null;
 }
 
 export async function getSlotsAction(mode: FulfillmentMode): Promise<SlotsResult | null> {
   if (mode !== "PICKUP" && mode !== "DELIVERY") return null;
   const at = now();
-  const result = computeSlots(await getSlotOptions(mode, at));
+  const [result, match] = await Promise.all([getSlotOptions(mode, at).then(computeSlots), matchSlotsFor(mode, at)]);
   if (!result) return null;
+  const matchSlots = match ? match.slots.map((s) => s.toISOString()) : [];
+  const sameAsNow = matchSlots.length > 0 && matchSlots.every((s) => result.slots.some((r) => r.toISOString() === s));
   return {
+    match:
+      match && !sameAsNow ? { title: match.title, dayLabel: formatParisDay(atParisTime(match.day, "12:00")), slots: matchSlots } : null,
     slots: result.slots.map((s) => s.toISOString()),
     asap: result.asap.toISOString(),
     serviceLabel: serviceLabel(result.asap, at),

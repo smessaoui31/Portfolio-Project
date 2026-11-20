@@ -8,6 +8,7 @@ import { prisma } from "@/lib/db";
 import { formatEuros } from "@/lib/money";
 import { getCurrentEditionRef, getPricedProducts } from "./catalog";
 import { expireStalePendingOrders, releasePendingOrdersOfUser } from "./lifecycle";
+import { matchSlotsFor } from "./match-nights";
 import { notifyOrderReceived } from "./notifications";
 import { releaseOrderResources } from "./order-resources";
 import { createPaymentIntent, isOnlinePaymentEnabled } from "./payments";
@@ -147,7 +148,9 @@ export async function placeOrder(input: unknown, ctx: { userId: string | null; n
     slotAt = first.asap;
   } else {
     slotAt = new Date(data.slotAt);
-    if (!isValidSlot(slotAt, slotOptions)) return fail("INVALID_SLOT");
+    // On match nights, the evening of the match can also be chosen the day before.
+    const forMatch = async () => (await matchSlotsFor(data.mode, ctx.now))?.slots.some((s) => s.getTime() === slotAt.getTime()) ?? false;
+    if (!isValidSlot(slotAt, slotOptions) && !(await forMatch())) return fail("INVALID_SLOT");
   }
 
   const [products, edition] = await Promise.all([
